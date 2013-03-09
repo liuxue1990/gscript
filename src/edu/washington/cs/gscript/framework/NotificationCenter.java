@@ -11,6 +11,8 @@ public class NotificationCenter {
 
 	public static int ITEMS_REMOVED_NOTIFICATION = 2;
 
+    public static int ITEMS_CHANGED_NOTIFICATION = 3;
+
 	private static NotificationCenter defaultCenter;
 
 
@@ -22,7 +24,7 @@ public class NotificationCenter {
     private LinkedList<Entry> entries;
 
     private NotificationCenter() {
-		entries = new LinkedList<>();
+		entries = new LinkedList<Entry>();
 	}
 
 	public void addObserver(NotificationObserver observer, int name, Object sender) {
@@ -51,7 +53,7 @@ public class NotificationCenter {
 	}
 
 	public void postNotification(int name, Object sender, Object arg) {
-		for (Entry entry : new LinkedList<>(entries)) {
+		for (Entry entry : new LinkedList<Entry>(entries)) {
 			if (entry.name == name && entry.sender == sender) {
 				entry.observer.onNotified(arg);
 			}

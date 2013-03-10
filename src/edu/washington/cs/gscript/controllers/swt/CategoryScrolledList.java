@@ -49,7 +49,6 @@ public class CategoryScrolledList extends ScrolledList {
         for (int i = 0; i < items.length; ++i) {
             if (selectedCategory == ((CategoryListItem)items[i]).getDataSource()) {
                 selectItem(i);
-                scrollItemIntoView(i);
                 break;
             }
         }

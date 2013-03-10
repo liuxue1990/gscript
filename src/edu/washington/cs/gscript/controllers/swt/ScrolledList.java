@@ -139,16 +139,12 @@ public class ScrolledList extends ScrolledComposite {
 
     private void onItemDisposed(ListItem listItem) {
         int index = items.indexOf(listItem);
-
-        if (index < selectedItemIndex) {
+        if (index == selectedItemIndex) {
+            selectedItemIndex = -1;
+        } else if (index < selectedItemIndex) {
             --selectedItemIndex;
         }
-
         items.remove(index);
-
-        if (items.size() == 0) {
-            selectedItemIndex = -1;
-        }
     }
 
     public void scrollItemIntoView(int index) {

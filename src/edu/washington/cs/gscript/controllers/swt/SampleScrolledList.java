@@ -92,7 +92,6 @@ public class SampleScrolledList extends ScrolledList {
         for (int i = 0; i < listItems.length; ++i) {
             if (((SampleListItem) listItems[i]).getDataSource() == selectedSample) {
                 selectItem(i);
-                scrollItemIntoView(i);
                 break;
             }
         }

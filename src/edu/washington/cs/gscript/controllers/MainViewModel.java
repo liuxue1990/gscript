@@ -94,12 +94,14 @@ public class MainViewModel {
 
         project.removeCategory(category);
 
-        if (index < project.getNumOfCategories()) {
-            selectCategory(project.getCategory(index));
-        } else if (index > 0) {
-            selectCategory(project.getCategory(index - 1));
-        } else {
-            selectCategory(null);
+        if (category == selectedCategory) {
+            if (index < project.getNumOfCategories()) {
+                selectCategory(project.getCategory(index));
+            } else if (index > 0) {
+                selectCategory(project.getCategory(index - 1));
+            } else {
+                selectCategory(null);
+            }
         }
     }
 
@@ -118,7 +120,7 @@ public class MainViewModel {
 
         project.removeSample(category, gesture);
 
-        if (category == selectedCategory) {
+        if (category == selectedCategory && gesture == selectedSample) {
             if (index < category.getNumOfSamples()) {
                 selectSample(category.getSample(index));
             } else if (index > 0) {

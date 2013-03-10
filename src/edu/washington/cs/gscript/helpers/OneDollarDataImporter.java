@@ -38,7 +38,7 @@ public class OneDollarDataImporter {
         }
     }
 
-    public static ArrayList<Category> importDiretory(String dirName) {
+    public static Project importDiretory(String dirName) {
         Project project = new Project();
 
         try {
@@ -56,15 +56,10 @@ public class OneDollarDataImporter {
                         new File(dir.getPath() + File.separator + fileName), handler);
 
                 if (!handler.points.isEmpty()) {
-                    int index = project.findCategoryIndexByName(name);
-
-                    if (index < 0) {
-                        Category category = new Category(name);
-                        project.importCategories(Arrays.asList(category));
-                        index = project.findCategoryIndexByName(name);
-                    }
-
-                    project.addSample(project.getCategories().get(index), new Gesture(handler.points));
+                    project.addCategory(name);
+                    project.addSample(
+                            project.getCategory(project.findCategoryIndexByName(name)),
+                            new Gesture(handler.points));
                 }
             }
 
@@ -72,10 +67,10 @@ public class OneDollarDataImporter {
             e.printStackTrace();
         }
 
-        return project.getCategories();
+        return project;
     }
 
-    public static ArrayList<Category> importTemplate(String fileName) {
+    public static Project importTemplate(String fileName) {
         Project project = new Project();
 
         try {
@@ -97,21 +92,13 @@ public class OneDollarDataImporter {
                     points.add(XYT.xyt(Double.parseDouble(values[i]), Double.parseDouble(values[i+1]), -1));
                 }
 
-                int index = project.findCategoryIndexByName(name);
-                if (index < 0) {
-                    Category category = new Category(name);
-                    project.importCategories(Arrays.asList(category));
-                    index = project.findCategoryIndexByName(name);
-                }
-
-                project.addSample(
-                        project.getCategories().get(index),
-                        new Gesture(points));
+                project.addCategory(name);
+                project.addSample(project.getCategory(project.findCategoryIndexByName(name)), new Gesture(points));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return project.getCategories();
+        return project;
     }
 }

@@ -60,10 +60,10 @@ public class SampleScrolledList extends ScrolledList {
 
 		if (category != null) {
 			NotificationCenter.getDefaultCenter().addObserver(
-					listObserver, NotificationCenter.ITEMS_ADDED_NOTIFICATION, category.getSamples());
+					listObserver, NotificationCenter.ITEMS_ADDED_NOTIFICATION, category.getSamplesProperty());
 
 			NotificationCenter.getDefaultCenter().addObserver(
-					listObserver, NotificationCenter.ITEMS_REMOVED_NOTIFICATION, category.getSamples());
+					listObserver, NotificationCenter.ITEMS_REMOVED_NOTIFICATION, category.getSamplesProperty());
 		}
 
 		for (ListItem item : getListItems()) {
@@ -71,8 +71,8 @@ public class SampleScrolledList extends ScrolledList {
 		}
 
 		if (category != null) {
-            for (Gesture gesture : category.getSamples()) {
-				addSample(gesture);
+            for (int i = 0, n = category.getNumOfSamples(); i < n; ++i) {
+				addSample(category.getSample(i));
 			}
 		}
 

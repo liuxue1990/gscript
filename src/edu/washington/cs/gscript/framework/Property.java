@@ -2,9 +2,10 @@ package edu.washington.cs.gscript.framework;
 
 import java.io.Serializable;
 
-public class Property<T> implements Serializable {
+public class Property<T> implements ReadOnlyProperty<T>, Serializable {
 
     private static final long serialVersionUID = 7202353088030374913L;
+
 
     private T value;
 
@@ -23,7 +24,8 @@ public class Property<T> implements Serializable {
 	public void setValue(T value) {
 		T oldValue = this.value;
 		this.value = value;
+
 		NotificationCenter.getDefaultCenter().postNotification(
-				NotificationCenter.VALUE_CHANGED_NOTIFICATION, this, oldValue);
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, this, oldValue);
 	}
 }

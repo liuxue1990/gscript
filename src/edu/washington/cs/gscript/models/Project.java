@@ -2,37 +2,44 @@ package edu.washington.cs.gscript.models;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
+import edu.washington.cs.gscript.framework.ReadOnlyProperty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 
 public class Project implements Serializable {
 
     private static final long serialVersionUID = 1446681795656083070L;
 
+    private Property<Integer> categoriesProperty;
 
     private ArrayList<Category> categories;
 
-    private Property<String> scriptTextProperty;
-
 	public Project() {
+        categoriesProperty = new Property<Integer>(0);
 		categories = new ArrayList<Category>();
-        scriptTextProperty = new Property<String>("");
 	}
 
-	public ArrayList<Category> getCategories() {
-		return categories;
+	public ReadOnlyProperty<Integer> getCategoriesProperty() {
+		return categoriesProperty;
 	}
 
-    public Property<String> getScriptTextProperty() {
-        return scriptTextProperty;
+    public int getNumOfCategories() {
+        return categories.size();
+    }
+
+    public Category getCategory(int index) {
+        return categories.get(index);
+    }
+
+    public int indexOfCategory(Category category) {
+        return categories.indexOf(category);
     }
 
     public int findCategoryIndexByName(String name) {
 		for (int i = 0, n = categories.size(); i < n; ++i) {
-			if (name.equals(categories.get(i).getNameProperty().getValue())) {
+			if (name.equals(categories.get(i).getNamePropertyReadOnly().getValue())) {
 				return i;
 			}
 		}
@@ -50,18 +57,24 @@ public class Project implements Serializable {
     }
 
 	public void addNewCategory() {
-		Category category = new Category(generateUnusedCategoryName());
-		categories.add(category);
-
-		NotificationCenter.getDefaultCenter().postNotification(
-				NotificationCenter.ITEMS_ADDED_NOTIFICATION, categories, Arrays.asList(category));
+		addCategory(generateUnusedCategoryName());
 	}
+
+    public void addCategory(String name) {
+        if (findCategoryIndexByName(name) < 0) {
+            Category category = new Category(name);
+            categories.add(category);
+
+            NotificationCenter.getDefaultCenter().postNotification(
+                    NotificationCenter.ITEMS_ADDED_NOTIFICATION, categoriesProperty, Arrays.asList(category));
+        }
+    }
 
     public void removeCategory(Category category) {
         categories.remove(category);
 
         NotificationCenter.getDefaultCenter().postNotification(
-                NotificationCenter.ITEMS_REMOVED_NOTIFICATION, categories, Arrays.asList(category));
+                NotificationCenter.ITEMS_REMOVED_NOTIFICATION, categoriesProperty, Arrays.asList(category));
     }
 
     public void addSample(Category category, Gesture gesture) {
@@ -78,31 +91,31 @@ public class Project implements Serializable {
         category.removeSample(gesture);
     }
 
-    public void importCategories(Collection<Category> newCategories) {
+    public void importCategories(Project project) {
         ArrayList<Category> modifiedCategories = new ArrayList<Category>();
         ArrayList<Category> addedCategories = new ArrayList<Category>();
 
-        for (Category newCategory : newCategories) {
-            int index = findCategoryIndexByName(newCategory.getNameProperty().getValue());
+        for (Category newCategory : project.categories) {
+            int index = findCategoryIndexByName(newCategory.getNamePropertyReadOnly().getValue());
             if (index < 0) {
 
                 categories.add(newCategory);
                 addedCategories.add(newCategory);
 
-            } else if (!newCategory.getSamples().isEmpty()) {
+            } else if (newCategory.getNumOfSamples() > 0) {
 
                 Category category = categories.get(index);
-                for (Gesture sample : newCategory.getSamples()) {
-                    category.addSample(sample);
+                for (int i = 0, n = newCategory.getNumOfSamples(); i < n; ++i) {
+                    category.addSample(newCategory.getSample(i));
                 }
                 modifiedCategories.add(category);
             }
         }
 
         NotificationCenter.getDefaultCenter().postNotification(
-                NotificationCenter.VALUE_CHANGED_NOTIFICATION, categories, modifiedCategories);
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, categoriesProperty, modifiedCategories);
         NotificationCenter.getDefaultCenter().postNotification(
-                NotificationCenter.ITEMS_ADDED_NOTIFICATION, categories, addedCategories);
+                NotificationCenter.ITEMS_ADDED_NOTIFICATION, categoriesProperty, addedCategories);
     }
 
 }

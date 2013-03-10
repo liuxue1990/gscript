@@ -72,8 +72,8 @@ public class MainViewModel {
 		selectedCategory = category;
 		NotificationCenter.getDefaultCenter().postNotification(CATEGORY_SELECTED_NOTIFICATION, this);
 
-		if (selectedCategory != null && selectedCategory.getSamples().size() > 0) {
-			selectSample(selectedCategory.getSamples().get(0));
+		if (selectedCategory != null && selectedCategory.getNumOfSamples() > 0) {
+			selectSample(selectedCategory.getSample(0));
 		} else {
 			selectSample(null);
 		}
@@ -86,18 +86,18 @@ public class MainViewModel {
 
 	public void addNewCategory() {
 		project.addNewCategory();
-		selectCategory(project.getCategories().get(project.getCategories().size() - 1));
+		selectCategory(project.getCategory(project.getNumOfCategories() - 1));
 	}
 
     public void removeCategory(Category category) {
-        int index = project.getCategories().indexOf(category);
+        int index = project.indexOfCategory(category);
 
         project.removeCategory(category);
 
-        if (index < project.getCategories().size()) {
-            selectCategory(project.getCategories().get(index));
+        if (index < project.getNumOfCategories()) {
+            selectCategory(project.getCategory(index));
         } else if (index > 0) {
-            selectCategory(project.getCategories().get(index - 1));
+            selectCategory(project.getCategory(index - 1));
         } else {
             selectCategory(null);
         }
@@ -114,15 +114,15 @@ public class MainViewModel {
 	}
 
     public void removeSample(Category category, Gesture gesture) {
-        int index = category.getSamples().indexOf(gesture);
+        int index = category.indexOfSample(gesture);
 
         project.removeSample(category, gesture);
 
         if (category == selectedCategory) {
-            if (index < category.getSamples().size()) {
-                selectSample(category.getSamples().get(index));
+            if (index < category.getNumOfSamples()) {
+                selectSample(category.getSample(index));
             } else if (index > 0) {
-                selectSample(category.getSamples().get(index - 1));
+                selectSample(category.getSample(index - 1));
             } else {
                 selectSample(null);
             }

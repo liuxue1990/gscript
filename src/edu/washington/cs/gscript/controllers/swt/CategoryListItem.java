@@ -5,7 +5,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
@@ -111,15 +110,15 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		NotificationCenter.getDefaultCenter().removeObserver(itemObserver);
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				itemObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, category.getNameProperty());
+				itemObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, category.getNamePropertyReadOnly());
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				itemObserver, NotificationCenter.ITEMS_ADDED_NOTIFICATION, category.getSamples());
+				itemObserver, NotificationCenter.ITEMS_ADDED_NOTIFICATION, category.getSamplesProperty());
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				itemObserver, NotificationCenter.ITEMS_REMOVED_NOTIFICATION, category.getSamples());
+				itemObserver, NotificationCenter.ITEMS_REMOVED_NOTIFICATION, category.getSamplesProperty());
 
-		name.setText(category.getNameProperty().getValue());
+		name.setText(category.getNamePropertyReadOnly().getValue());
 
 
 		int width = 110;
@@ -128,9 +127,9 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 		Image thumbnail = new Image(getDisplay(), 110, 110);
 		GC gc = new GC(thumbnail);
-		if (category.getSamples().size() > 0) {
+		if (category.getNumOfSamples() > 0) {
 			MainWindowController.drawSample(
-                    category.getSamples().get(0),
+                    category.getSample(0),
                     gc, padding, padding, width - padding * 2, height - padding * 2);
 		}
 

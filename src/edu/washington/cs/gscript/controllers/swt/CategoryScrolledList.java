@@ -59,18 +59,18 @@ public class CategoryScrolledList extends ScrolledList {
 		NotificationCenter.getDefaultCenter().removeObserver(listObserver);
 
 		NotificationCenter.getDefaultCenter().addObserver(listObserver,
-				NotificationCenter.ITEMS_ADDED_NOTIFICATION, mainViewModel.getProject().getCategories());
+				NotificationCenter.ITEMS_ADDED_NOTIFICATION, mainViewModel.getProject().getCategoriesProperty());
 
 		NotificationCenter.getDefaultCenter().addObserver(listObserver,
-				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, mainViewModel.getProject().getCategories());
+				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, mainViewModel.getProject().getCategoriesProperty());
 
 		for (ListItem item : getListItems()) {
 			item.dispose();
 		}
 
-		for (Category category : mainViewModel.getProject().getCategories()) {
-			addItem(category);
-		}
+        for (int i = 0, n = mainViewModel.getProject().getNumOfCategories(); i < n; ++i) {
+            addItem(mainViewModel.getProject().getCategory(i));
+        }
 
 		updateSelection();
         updateContentLayout();

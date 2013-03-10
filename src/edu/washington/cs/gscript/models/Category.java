@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
+import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
-import edu.washington.cs.gscript.framework.ReadOnlyProperty;
 
 public class Category implements Serializable {
 
@@ -14,7 +14,7 @@ public class Category implements Serializable {
 
     private ReadWriteProperty<String> nameProperty;
 
-    private ReadOnlyProperty<Integer> samplesProperty;
+    private Property<Integer> samplesProperty;
 
 	private ArrayList<Gesture> samples;
 
@@ -22,20 +22,20 @@ public class Category implements Serializable {
 
     public Category(String name) {
 		nameProperty = new ReadWriteProperty<String>(name);
-        samplesProperty = new ReadOnlyProperty<Integer>(0);
+        samplesProperty = new Property<Integer>(0);
 		samples = new ArrayList<Gesture>();
         scriptTextProperty = new ReadWriteProperty<String>(null);
 	}
 
-	public ReadOnlyProperty<String> getNamePropertyReadOnly() {
+	public Property<String> getNamePropertyReadOnly() {
 		return nameProperty;
 	}
 
-    public ReadOnlyProperty<Integer> getSamplesProperty() {
+    public Property<Integer> getSamplesProperty() {
         return samplesProperty;
     }
 
-    public ReadOnlyProperty<String> getScriptTextProperty() {
+    public Property<String> getScriptTextProperty() {
         return scriptTextProperty;
     }
 

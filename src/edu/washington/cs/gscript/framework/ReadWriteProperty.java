@@ -1,8 +1,6 @@
 package edu.washington.cs.gscript.framework;
 
-import java.io.Serializable;
-
-public class ReadWriteProperty<T> extends ReadOnlyProperty<T> {
+public class ReadWriteProperty<T> extends Property<T> {
 
     private static final long serialVersionUID = 7202353088030374913L;
 

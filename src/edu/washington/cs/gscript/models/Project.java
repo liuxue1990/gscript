@@ -1,7 +1,7 @@
 package edu.washington.cs.gscript.models;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
-import edu.washington.cs.gscript.framework.ReadOnlyProperty;
+import edu.washington.cs.gscript.framework.Property;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,16 +11,16 @@ public class Project implements Serializable {
 
     private static final long serialVersionUID = 1446681795656083070L;
 
-    private ReadOnlyProperty<Integer> categoriesProperty;
+    private Property<Integer> categoriesProperty;
 
     private ArrayList<Category> categories;
 
 	public Project() {
-        categoriesProperty = new ReadOnlyProperty<Integer>(0);
+        categoriesProperty = new Property<Integer>(0);
 		categories = new ArrayList<Category>();
 	}
 
-	public ReadOnlyProperty<Integer> getCategoriesProperty() {
+	public Property<Integer> getCategoriesProperty() {
 		return categoriesProperty;
 	}
 

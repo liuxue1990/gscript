@@ -2,6 +2,7 @@ package edu.washington.cs.gscript.controllers.swt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
@@ -86,9 +87,7 @@ public class GestureCanvas extends Canvas {
 
 	private void gesturePerformed() {
 		if (points.size() > 5) {
-			mainViewModel.recordSample(
-                    mainViewModel.getSelectedCategory(),
-                    new Gesture(points.toArray(new XYT[points.size()])));
+			mainViewModel.recordSample(mainViewModel.getSelectedCategory(), new Gesture(points));
 		}
 
 		points = null;
@@ -100,7 +99,7 @@ public class GestureCanvas extends Canvas {
 			renderTrajectory(gc, points);
 		} else {
 			if (mainViewModel.getSelectedSample() != null) {
-				renderTrajectory(gc, Arrays.asList(mainViewModel.getSelectedSample().getPoints()));
+				renderTrajectory(gc, mainViewModel.getSelectedSample());
 			}
 		}
 
@@ -115,17 +114,19 @@ public class GestureCanvas extends Canvas {
         gc.fillGradientRectangle(rect.width / 2, rect.height - 1, rect.width / 2, 1, false);
 	}
 
-	private void renderTrajectory(GC gc, List<XYT> points) {
+	private void renderTrajectory(GC gc, Iterable<XYT> points) {
 
 		Color fg = gc.getForeground();
 		gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLUE));
 
-		for (int i = 0, n = points.size(); i < n - 1; ++i) {
-			XYT pt1 = points.get(i);
-			XYT pt2 = points.get(i + 1);
-
-			gc.drawLine((int)pt1.getX(), (int)pt1.getY(), (int)pt2.getX(), (int)pt2.getY());
+        XYT pt1 = null;
+		for (XYT pt2 : points) {
+			if (pt1 != null) {
+                gc.drawLine((int)pt1.getX(), (int)pt1.getY(), (int)pt2.getX(), (int)pt2.getY());
+            }
+            pt1 = pt2;
 		}
+
 		gc.setForeground(fg);
 	}
 }

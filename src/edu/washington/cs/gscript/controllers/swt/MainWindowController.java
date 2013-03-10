@@ -261,8 +261,6 @@ public class MainWindowController {
 		gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
 		gc.fillRectangle(x, y, width, height);
 
-		XYT[] pts = gesture.getPoints();
-
 		double scale;
 
 		if (bounds.getHeight() == 0) {
@@ -276,11 +274,14 @@ public class MainWindowController {
 		x += (int)((width - bounds.getWidth() * scale) / 2);
 		y += (int)((height - bounds.getHeight() * scale) / 2);
 
-		for (int i = 1, n = pts.length; i < n; ++i) {
-			int x1 = (int)((pts[i - 1].getX() - bounds.getLeft()) * scale) + x;
-			int y1 = (int)((pts[i - 1].getY() - bounds.getTop()) * scale) + y;
-			int x2 = (int)((pts[i].getX() - bounds.getLeft()) * scale) + x;
-			int y2 = (int)((pts[i].getY() - bounds.getTop()) * scale) + y;
+		for (int i = 1, n = gesture.size(); i < n; ++i) {
+            XYT p1 = gesture.get(i - 1);
+            XYT p2 = gesture.get(i);
+
+			int x1 = (int)((p1.getX() - bounds.getLeft()) * scale) + x;
+			int y1 = (int)((p1.getY() - bounds.getTop()) * scale) + y;
+			int x2 = (int)((p2.getX() - bounds.getLeft()) * scale) + x;
+			int y2 = (int)((p2.getY() - bounds.getTop()) * scale) + y;
 
 			gc.drawLine(x1, y1, x2, y2);
 		}

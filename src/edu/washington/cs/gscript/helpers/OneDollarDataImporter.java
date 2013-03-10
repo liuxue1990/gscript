@@ -64,9 +64,7 @@ public class OneDollarDataImporter {
                         index = project.findCategoryIndexByName(name);
                     }
 
-                    project.addSample(
-                            project.getCategories().get(index),
-                            new Gesture(handler.points.toArray(new XYT[handler.points.size()])));
+                    project.addSample(project.getCategories().get(index), new Gesture(handler.points));
                 }
             }
 
@@ -108,7 +106,7 @@ public class OneDollarDataImporter {
 
                 project.addSample(
                         project.getCategories().get(index),
-                        new Gesture(points.toArray(new XYT[points.size()])));
+                        new Gesture(points));
             }
         } catch (IOException e) {
             e.printStackTrace();

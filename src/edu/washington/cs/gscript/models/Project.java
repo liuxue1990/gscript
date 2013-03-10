@@ -1,15 +1,12 @@
 package edu.washington.cs.gscript.models;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import edu.washington.cs.gscript.framework.NotificationCenter;
+import edu.washington.cs.gscript.framework.Property;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-
-import edu.washington.cs.gscript.framework.NotificationCenter;
-import edu.washington.cs.gscript.framework.Property;
 
 public class Project implements Serializable {
 

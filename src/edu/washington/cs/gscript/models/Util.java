@@ -1,9 +1,6 @@
 package edu.washington.cs.gscript.models;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Util {
 
@@ -234,7 +231,7 @@ public class Util {
 		return l;
 	}
 
-	public static Rect computeBoundingBox(List<XYT> points) {
+	public static Rect computeBoundingBox(Iterable<XYT> points) {
 		double xMin = Double.MAX_VALUE, yMin = Double.MAX_VALUE;
 		double xMax = Double.MIN_VALUE, yMax = Double.MIN_VALUE;
 

@@ -2,18 +2,18 @@ package edu.washington.cs.gscript.framework;
 
 import java.io.Serializable;
 
-public class Property<T> implements ReadOnlyProperty<T>, Serializable {
+public class ReadWritwProperty<T> implements ReadOnlyProperty<T>, Serializable {
 
     private static final long serialVersionUID = 7202353088030374913L;
 
 
     private T value;
 
-	public Property() {
+	public ReadWritwProperty() {
 		this.value = null;
 	}
 
-	public Property(T value) {
+	public ReadWritwProperty(T value) {
 		this.value = value;
 	}
 

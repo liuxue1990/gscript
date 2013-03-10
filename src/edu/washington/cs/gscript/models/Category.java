@@ -5,26 +5,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
-import edu.washington.cs.gscript.framework.Property;
+import edu.washington.cs.gscript.framework.ReadWritwProperty;
 import edu.washington.cs.gscript.framework.ReadOnlyProperty;
 
 public class Category implements Serializable {
 
     private static final long serialVersionUID = -5268932728384743356L;
 
-    private Property<String> nameProperty;
+    private ReadWritwProperty<String> nameProperty;
 
-    private Property<Integer> samplesProperty;
+    private ReadWritwProperty<Integer> samplesProperty;
 
 	private ArrayList<Gesture> samples;
 
-    private Property<String> scriptTextProperty;
+    private ReadWritwProperty<String> scriptTextProperty;
 
     public Category(String name) {
-		nameProperty = new Property<String>(name);
-        samplesProperty = new Property<Integer>(0);
+		nameProperty = new ReadWritwProperty<String>(name);
+        samplesProperty = new ReadWritwProperty<Integer>(0);
 		samples = new ArrayList<Gesture>();
-        scriptTextProperty = new Property<String>();
+        scriptTextProperty = new ReadWritwProperty<String>();
 	}
 
 	public ReadOnlyProperty<String> getNamePropertyReadOnly() {
@@ -35,7 +35,7 @@ public class Category implements Serializable {
         return samplesProperty;
     }
 
-    public Property<String> getScriptTextProperty() {
+    public ReadWritwProperty<String> getScriptTextProperty() {
         return scriptTextProperty;
     }
 

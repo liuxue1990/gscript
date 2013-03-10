@@ -14,7 +14,7 @@ public class Category implements Serializable {
 
     private ReadWritwProperty<String> nameProperty;
 
-    private ReadWritwProperty<Integer> samplesProperty;
+    private ReadOnlyProperty<Integer> samplesProperty;
 
 	private ArrayList<Gesture> samples;
 
@@ -22,9 +22,9 @@ public class Category implements Serializable {
 
     public Category(String name) {
 		nameProperty = new ReadWritwProperty<String>(name);
-        samplesProperty = new ReadWritwProperty<Integer>(0);
+        samplesProperty = new ReadOnlyProperty<Integer>(0);
 		samples = new ArrayList<Gesture>();
-        scriptTextProperty = new ReadWritwProperty<String>();
+        scriptTextProperty = new ReadWritwProperty<String>(null);
 	}
 
 	public ReadOnlyProperty<String> getNamePropertyReadOnly() {

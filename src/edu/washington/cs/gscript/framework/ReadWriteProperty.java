@@ -2,11 +2,11 @@ package edu.washington.cs.gscript.framework;
 
 import java.io.Serializable;
 
-public class ReadWritwProperty<T> extends ReadOnlyProperty<T> {
+public class ReadWriteProperty<T> extends ReadOnlyProperty<T> {
 
     private static final long serialVersionUID = 7202353088030374913L;
 
-	public ReadWritwProperty(T value) {
+	public ReadWriteProperty(T value) {
 		super(value);
 	}
 

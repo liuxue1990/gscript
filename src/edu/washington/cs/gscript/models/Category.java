@@ -35,7 +35,7 @@ public class Category implements Serializable {
         return samplesProperty;
     }
 
-    public ReadWriteProperty<String> getScriptTextProperty() {
+    public ReadOnlyProperty<String> getScriptTextProperty() {
         return scriptTextProperty;
     }
 

@@ -49,6 +49,10 @@ public class SampleScrolledList extends ScrolledList {
 				MainViewModel.SAMPLE_SELECTED_NOTIFICATION, mainViewModel);
 	}
 
+    public Category getDataSource() {
+        return category;
+    }
+
 	private void reloadData() {
 		NotificationCenter.getDefaultCenter().removeObserver(listObserver);
 

@@ -60,6 +60,27 @@ public class Project implements Serializable {
 				NotificationCenter.ITEMS_ADDED_NOTIFICATION, categories, Arrays.asList(category));
 	}
 
+    public void removeCategory(Category category) {
+        categories.remove(category);
+
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.ITEMS_REMOVED_NOTIFICATION, categories, Arrays.asList(category));
+    }
+
+    public void addSample(Category category, Gesture gesture) {
+        if (categories.indexOf(category) < 0) {
+            return;
+        }
+        category.addSample(gesture);
+    }
+
+    public void removeSample(Category category, Gesture gesture) {
+        if (categories.indexOf(category) < 0) {
+            return;
+        }
+        category.removeSample(gesture);
+    }
+
     public void importCategories(Collection<Category> newCategories) {
         ArrayList<Category> modifiedCategories = new ArrayList<Category>();
         ArrayList<Category> addedCategories = new ArrayList<Category>();

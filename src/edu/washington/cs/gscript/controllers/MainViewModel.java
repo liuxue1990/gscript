@@ -89,15 +89,45 @@ public class MainViewModel {
 		selectCategory(project.getCategories().get(project.getCategories().size() - 1));
 	}
 
+    public void removeCategory(Category category) {
+        int index = project.getCategories().indexOf(category);
+
+        project.removeCategory(category);
+
+        if (index < project.getCategories().size()) {
+            selectCategory(project.getCategories().get(index));
+        } else if (index > 0) {
+            selectCategory(project.getCategories().get(index - 1));
+        } else {
+            selectCategory(null);
+        }
+    }
+
 	public void recordSample(Category category, Gesture gesture) {
 		if (category != null) {
-			category.addSample(gesture);
+			project.addSample(category, gesture);
 
 			if (category == selectedCategory) {
 				selectSample(gesture);
 			}
 		}
 	}
+
+    public void removeSample(Category category, Gesture gesture) {
+        int index = category.getSamples().indexOf(gesture);
+
+        project.removeSample(category, gesture);
+
+        if (category == selectedCategory) {
+            if (index < category.getSamples().size()) {
+                selectSample(category.getSamples().get(index));
+            } else if (index > 0) {
+                selectSample(category.getSamples().get(index - 1));
+            } else {
+                selectSample(null);
+            }
+        }
+    }
 
     public void importOneDollarGestures(String dirName) {
         project.importCategories(OneDollarDataImporter.importDiretory(dirName));

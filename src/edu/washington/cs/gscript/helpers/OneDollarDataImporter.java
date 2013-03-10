@@ -5,11 +5,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.xml.parsers.SAXParserFactory;
 
 import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.Gesture;
+import edu.washington.cs.gscript.models.Project;
 import edu.washington.cs.gscript.models.XYT;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -37,7 +39,7 @@ public class OneDollarDataImporter {
     }
 
     public static ArrayList<Category> importDiretory(String dirName) {
-        ArrayList<Category> categories = new ArrayList<Category>();
+        Project project = new Project();
 
         try {
             File dir = new File(dirName);
@@ -54,35 +56,29 @@ public class OneDollarDataImporter {
                         new File(dir.getPath() + File.separator + fileName), handler);
 
                 if (!handler.points.isEmpty()) {
-                    Category category = null;
+                    int index = project.findCategoryIndexByName(name);
 
-                    for (Category c : categories) {
-                        if (name.equals(c.getNameProperty().getValue())) {
-                            category = c;
-                            break;
-                        }
+                    if (index < 0) {
+                        Category category = new Category(name);
+                        project.importCategories(Arrays.asList(category));
+                        index = project.findCategoryIndexByName(name);
                     }
 
-                    if (category == null) {
-                        category = new Category(name);
-                        categories.add(category);
-                    }
-
-                    category.addSample(new Gesture(handler.points.toArray(new XYT[handler.points.size()])));
+                    project.addSample(
+                            project.getCategories().get(index),
+                            new Gesture(handler.points.toArray(new XYT[handler.points.size()])));
                 }
             }
-
-            return categories;
 
         } catch (Throwable e) {
             e.printStackTrace();
         }
 
-        return categories;
+        return project.getCategories();
     }
 
     public static ArrayList<Category> importTemplate(String fileName) {
-        ArrayList<Category> categories = new ArrayList<Category>();
+        Project project = new Project();
 
         try {
             BufferedReader in = new BufferedReader(new FileReader(fileName));
@@ -96,19 +92,6 @@ public class OneDollarDataImporter {
 
                 String name = line.trim();
 
-                Category category = null;
-                for (Category c : categories) {
-                    if (name.equals(c.getNameProperty().getValue())) {
-                        category = c;
-                        break;
-                    }
-                }
-
-                if (category == null) {
-                    category = new Category(name);
-                    categories.add(category);
-                }
-
                 ArrayList<XYT> points = new ArrayList<XYT>();
 
                 String[] values = in.readLine().split(",");
@@ -116,13 +99,21 @@ public class OneDollarDataImporter {
                     points.add(XYT.xyt(Double.parseDouble(values[i]), Double.parseDouble(values[i+1]), -1));
                 }
 
-                category.addSample(new Gesture(
-                        points.toArray(new XYT[points.size()])));
+                int index = project.findCategoryIndexByName(name);
+                if (index < 0) {
+                    Category category = new Category(name);
+                    project.importCategories(Arrays.asList(category));
+                    index = project.findCategoryIndexByName(name);
+                }
+
+                project.addSample(
+                        project.getCategories().get(index),
+                        new Gesture(points.toArray(new XYT[points.size()])));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return categories;
+        return project.getCategories();
     }
 }

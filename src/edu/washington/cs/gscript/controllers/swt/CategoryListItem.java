@@ -2,14 +2,10 @@ package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
@@ -26,13 +22,11 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 	private Label name;
 
-	private Composite icon;
+	private IconWithButtonOverlay.IconWithRemoveButtonOverlay icon;
 
 	private Composite iconContainer;
 
 	private Category category;
-
-	private Image thumbnail;
 
 	private NotificationObserver itemObserver = new NotificationObserver() {
 		@Override
@@ -54,7 +48,18 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 		iconContainer = new Composite(this, SWT.BACKGROUND);
 
-		icon = new Composite(iconContainer, SWT.BACKGROUND | SWT.BORDER);
+		icon = new IconWithButtonOverlay.IconWithRemoveButtonOverlay(iconContainer, SWT.BACKGROUND | SWT.BORDER) {
+            @Override
+            protected void mouseDownOnIcon() {
+                mainViewModel.selectCategory(category);
+            }
+
+            @Override
+            protected void buttonClicked() {
+                mainViewModel.removeCategory(category);
+            }
+        };
+
 		icon.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
 		RowData rd = new RowData();
@@ -75,29 +80,14 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 		this.mainViewModel = viewModel;
 
-		icon.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				mainViewModel.selectCategory(category);
-			}
-		});
-
-		icon.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				if (thumbnail != null) {
-					e.gc.drawImage(thumbnail, 0, 0);
-				}
-			}
-		});
-
 		name.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseUp(MouseEvent e) {
+                mainViewModel.selectCategory(category);
 			}
 		});
 
-		this.addDisposeListener(new DisposeListener() {
+		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				NotificationCenter.getDefaultCenter().removeObserver(itemObserver);
@@ -136,7 +126,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		int height = 110;
 		int padding = 5;
 
-		thumbnail = new Image(getDisplay(), 110, 110);
+		Image thumbnail = new Image(getDisplay(), 110, 110);
 		GC gc = new GC(thumbnail);
 		if (category.getSamples().size() > 0) {
 			MainWindowController.drawSample(
@@ -146,7 +136,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 		gc.dispose();
 
-		redraw();
+        icon.setThumbnail(thumbnail);
 	}
 
     @Override

@@ -19,17 +19,19 @@ public class SampleListItem extends ScrolledList.ListItem {
 
 	private MainViewModel mainViewModel;
 
-	private Composite icon;
+    private SampleScrolledList parentList;
+
+	private IconWithButtonOverlay.IconWithRemoveButtonOverlay icon;
 
 	private Composite iconContainer;
 
 	private Gesture gesture;
 
-	private Image thumbnail;
-
 	public SampleListItem(SampleScrolledList parent, MainViewModel viewModel) {
 		super(parent, SWT.BACKGROUND);
 		setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+
+        parentList = parent;
 
 		RowLayout rowLayout = new RowLayout(SWT.VERTICAL);
 		rowLayout.spacing = 5;
@@ -37,8 +39,17 @@ public class SampleListItem extends ScrolledList.ListItem {
 
 		iconContainer = new Composite(this, SWT.BACKGROUND);
 
-		icon = new Composite(iconContainer, SWT.BACKGROUND | SWT.BORDER);
-		icon.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+		icon = new IconWithButtonOverlay.IconWithRemoveButtonOverlay(iconContainer, SWT.BACKGROUND | SWT.BORDER) {
+            @Override
+            protected void mouseDownOnIcon() {
+                mainViewModel.selectSample(gesture);
+            }
+
+            @Override
+            protected void buttonClicked() {
+                mainViewModel.removeSample(parentList.getDataSource(), gesture);
+            }
+        };
 
 		RowData rd = new RowData();
 		rd.width = 80;
@@ -50,26 +61,9 @@ public class SampleListItem extends ScrolledList.ListItem {
 		fillLayout.marginWidth = 5;
 		iconContainer.setLayout(fillLayout);
 
-		setSelected(false);
-
 		this.mainViewModel = viewModel;
 
-		icon.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				mainViewModel.selectSample(gesture);
-			}
-		});
-
-		icon.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				if (thumbnail != null) {
-					e.gc.drawImage(thumbnail, 0, 0);
-				}
-			}
-		});
-
+        setSelected(false);
         onSelectionChanged();
 	}
 
@@ -80,12 +74,12 @@ public class SampleListItem extends ScrolledList.ListItem {
 		int height = 70;
 		int padding = 5;
 
-		thumbnail = new Image(getDisplay(), width, height);
+		Image thumbnail = new Image(getDisplay(), width, height);
 		GC gc = new GC(thumbnail);
 		MainWindowController.drawSample(gesture, gc, padding, padding, width - padding * 2, height - padding * 2);
 		gc.dispose();
 
-		icon.redraw();
+		icon.setThumbnail(thumbnail);
 	}
 
 	public Gesture getDataSource() {

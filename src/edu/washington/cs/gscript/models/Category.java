@@ -28,13 +28,13 @@ public class Category implements Serializable {
 		return samples;
 	}
 
-	public void addSample(Gesture gesture) {
+	void addSample(Gesture gesture) {
 		samples.add(gesture);
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_ADDED_NOTIFICATION, samples, Arrays.asList(gesture));
 	}
 
-	public void removeSample(Gesture gesture) {
+	void removeSample(Gesture gesture) {
 		samples.remove(gesture);
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, samples, Arrays.asList(gesture));

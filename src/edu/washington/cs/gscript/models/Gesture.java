@@ -21,7 +21,7 @@ public class Gesture implements Serializable, Iterable<XYT> {
 
         @Override
         public boolean hasNext() {
-            return index + 1 < gesture.points.length;
+            return index < gesture.points.length;
         }
 
         @Override

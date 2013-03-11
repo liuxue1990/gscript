@@ -121,6 +121,10 @@ public class ScrolledList extends ScrolledComposite {
         return items.toArray(new ListItem[items.size()]);
     }
 
+    public int getSelectedItemIndex() {
+        return selectedItemIndex;
+    }
+
     protected void selectItem(int index) {
         if (selectedItemIndex == index) {
             return;

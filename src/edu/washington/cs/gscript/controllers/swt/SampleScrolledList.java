@@ -44,6 +44,10 @@ public class SampleScrolledList extends ScrolledList {
 					@Override
 					public void onNotified(Object arg) {
 						updateSelection();
+
+                        if (getSelectedItemIndex() >= 0) {
+                            scrollItemIntoView(getSelectedItemIndex());
+                        }
 					}
 				},
 				MainViewModel.SAMPLE_SELECTED_NOTIFICATION, mainViewModel);

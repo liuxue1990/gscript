@@ -33,6 +33,9 @@ public class CategoryScrolledList extends ScrolledList {
 					@Override
 					public void onNotified(Object arg) {
 						updateSelection();
+                        if (getSelectedItemIndex() >= 0) {
+                            scrollItemIntoView(getSelectedItemIndex());
+                        }
 					}
 				},
 				MainViewModel.CATEGORY_SELECTED_NOTIFICATION, mainViewModel);

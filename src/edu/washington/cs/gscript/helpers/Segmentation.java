@@ -46,15 +46,29 @@ public class Segmentation {
         XYT p0 = gesture.get(a);
         XYT p1 = gesture.get(b);
 
+        double dTotal = 0;
+
         for (int i = a + 1; i <= b; ++i) {
             XYT q0 = gesture.get(i - 1);
             XYT q1 = gesture.get(i);
 
-            diff += GSMath.areaFromLine(
-                    q0.getX(), q0.getY(), q1.getX(), q1.getY(),
-                    p0.getX(), p0.getY(), p1.getX(), p1.getY());
-
+            dTotal += GSMath.distance(q0.getX(), q0.getY(), q1.getX(), q1.getY());
         }
+
+        double d = 0;
+
+        for (int i = a + 1; i < b; ++i) {
+            XYT q0 = gesture.get(i - 1);
+            XYT q1 = gesture.get(i);
+
+            d += GSMath.distance(q0.getX(), q0.getY(), q1.getX(), q1.getY());
+
+            diff += GSMath.distance(
+                    q1.getX(), q1.getY(),
+                    GSMath.linearInterpolate(p0.getX(), p1.getX(), d / dTotal),
+                    GSMath.linearInterpolate(p0.getY(), p1.getY(), d / dTotal));
+        }
+
         return diff / (b - a);
     }
 

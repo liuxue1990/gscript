@@ -137,7 +137,7 @@ public class GestureCanvas extends Canvas {
 
     private void play(GC gc, Gesture gesture) {
         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE));
-        int[] as = Segmentation.segment(gesture, 0.5);
+        int[] as = Segmentation.segment(gesture, 1);
 
         for (int i : as) {
             XYT pt = gesture.get(i);

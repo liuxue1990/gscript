@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.helpers.Segmentation;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -127,6 +128,20 @@ public class GestureCanvas extends Canvas {
             pt1 = pt2;
 		}
 
+        if (points instanceof Gesture) {
+            play(gc, (Gesture)points);
+        }
+
 		gc.setForeground(fg);
 	}
+
+    private void play(GC gc, Gesture gesture) {
+        gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE));
+        int[] as = Segmentation.segment(gesture, 0.5);
+
+        for (int i : as) {
+            XYT pt = gesture.get(i);
+            gc.fillArc((int)pt.getX() - 5, (int)pt.getY() - 5, 10, 10, 0, 360);
+        }
+    }
 }

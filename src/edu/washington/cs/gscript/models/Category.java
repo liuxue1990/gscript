@@ -24,7 +24,7 @@ public class Category implements Serializable {
 		nameProperty = new ReadWriteProperty<String>(name);
         samplesProperty = new Property<Integer>(0);
 		samples = new ArrayList<Gesture>();
-        scriptTextProperty = new ReadWriteProperty<String>(null);
+        scriptTextProperty = new ReadWriteProperty<String>("");
 	}
 
 	public Property<String> getNamePropertyReadOnly() {
@@ -36,6 +36,10 @@ public class Category implements Serializable {
     }
 
     public Property<String> getScriptTextProperty() {
+        return scriptTextProperty;
+    }
+
+    ReadWriteProperty<String> getScriptTextReadWriteProperty() {
         return scriptTextProperty;
     }
 
@@ -62,5 +66,4 @@ public class Category implements Serializable {
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
 	}
-
 }

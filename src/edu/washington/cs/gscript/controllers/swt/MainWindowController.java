@@ -207,6 +207,15 @@ public class MainWindowController {
 			}
 		});
 
+        ToolItem itemAnalyze = new ToolItem(toolbar, SWT.PUSH);
+        itemAnalyze.setText("Analyze");
+        itemAnalyze.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mainViewModel.analyze();
+            }
+        });
+
 		return toolbar;
 	}
 
@@ -242,7 +251,7 @@ public class MainWindowController {
 	private Composite createRightPanel(Composite parent) {
 		SashForm rightPanel = new SashForm(parent, SWT.VERTICAL);
 
-		Text scriptComposite = new Text(rightPanel, SWT.MULTI);
+		new ScriptText(rightPanel, SWT.MULTI, mainViewModel);
 
 		Composite outputComposite = new Composite(rightPanel, SWT.BACKGROUND);
 		outputComposite.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));

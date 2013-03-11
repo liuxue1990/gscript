@@ -134,4 +134,14 @@ public class MainViewModel {
     public void importOneDollarGestures(String dirName) {
         project.importCategories(OneDollarDataImporter.importDiretory(dirName));
     }
+
+    public void setScript(Category category, String text) {
+        if (category != null) {
+            project.setScript(category, text);
+        }
+    }
+
+    public void analyze() {
+
+    }
 }

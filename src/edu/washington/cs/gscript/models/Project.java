@@ -117,4 +117,11 @@ public class Project implements Serializable {
                 NotificationCenter.ITEMS_ADDED_NOTIFICATION, categoriesProperty, addedCategories);
     }
 
+    public void setScript(Category category, String text) {
+        if (categories.indexOf(category) < 0) {
+            return;
+        }
+
+        category.getScriptTextReadWriteProperty().setValue(text);
+    }
 }

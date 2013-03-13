@@ -10,6 +10,10 @@ public class XYT implements Serializable {
         return new XYT(x, y, t);
     }
 
+    public static XYT xy(double x, double y) {
+        return new XYT(x, y, -1);
+    }
+
 
     private final double x;
 

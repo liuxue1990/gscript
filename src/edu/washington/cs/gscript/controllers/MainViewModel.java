@@ -157,8 +157,7 @@ public class MainViewModel {
 
     public void analyze() {
         if (getSelectedCategory() != null) {
-            parts = new ArrayList<Part>(Arrays.asList(new Part(), new Part()));
-            new Learner().learnParts(getSelectedCategory(), parts);
+            parts = new Learner().learnParts(getSelectedCategory());
         }
     }
 

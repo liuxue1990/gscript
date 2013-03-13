@@ -16,7 +16,7 @@ public class Learner {
     public Learner() {
     }
 
-    public void learnParts(Category category, ArrayList<Part> parts) {
+    public ArrayList<Part> learnParts(Category category) {
 
         final double error = 1.0;
         final int numOfSamples = category.getNumOfSamples();
@@ -38,11 +38,39 @@ public class Learner {
         PartFeatureVector initialPartFeatureVector = new PartFeatureVector(
                 normalize(computeFeatures(new Gesture(Arrays.asList(XYT.xyt(0, 0, -1), XYT.xyt(1, 0, -1))))));
 
+        String scriptText = category.getScriptTextProperty().getValue();
+        ArrayList<Part> parts = parseScript(scriptText);
+
         for (Part part : parts) {
             part.setTemplate(initialPartFeatureVector);
         }
 
         optimize(parts);
+
+        return parts;
+    }
+
+    public static ArrayList<Part> parseScript(String scriptText) {
+        ArrayList<Part> parts = new ArrayList<Part>();
+
+        for (String line : scriptText.split("\n")) {
+            if (line.trim().isEmpty()) {
+                continue;
+            }
+
+            Part part = new Part();
+            if (line.endsWith("*")) {
+                part.setRepeatable(true);
+            }
+
+            parts.add(part);
+        }
+
+        if (parts.size() == 0) {
+            parts.add(new Part());
+        }
+
+        return parts;
     }
 
     public void optimize(ArrayList<Part> parts) {

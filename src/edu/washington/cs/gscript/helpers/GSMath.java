@@ -1,14 +1,17 @@
 package edu.washington.cs.gscript.helpers;
 
+import edu.washington.cs.gscript.models.Gesture;
+import edu.washington.cs.gscript.models.XYT;
+
 public class GSMath {
 
     public static final double REAL_PRECISION = 1e-12;
 
-    public static int cmp(double a, double b) {
-        if (a + REAL_PRECISION < b) {
+    public static int compareDouble(double a, double b) {
+        if (Double.compare(a + REAL_PRECISION, b) < 0) {
             return -1;
         }
-        if (a - REAL_PRECISION > b) {
+        if (Double.compare(a - REAL_PRECISION, b) > 0) {
             return 1;
         }
         return 0;
@@ -30,4 +33,18 @@ public class GSMath {
         return x1 * x2 + y1 * y2;
     }
 
+    public static double length(Iterable<XYT> points) {
+        double l = 0;
+
+        XYT p0 = null;
+        for (XYT p1 : points) {
+            if (p0 != null) {
+                l += distance(p0.getX(), p0.getY(), p1.getX(), p1.getY());
+            }
+
+            p0 = p1;
+        }
+
+        return l;
+    }
 }

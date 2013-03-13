@@ -117,6 +117,16 @@ public class MainWindowController {
             }
         });
 
+        MenuItem fileLoadTestData = new MenuItem(fileMenu, SWT.PUSH);
+        fileLoadTestData.setText("Load test data");
+        fileLoadTestData.setAccelerator(SWT.MOD1 + '0');
+        fileLoadTestData.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mainViewModel.loadTestData();
+            }
+        });
+
 		shell.setMenuBar(mainMenu);
 	}
 

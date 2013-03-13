@@ -5,8 +5,12 @@ import edu.washington.cs.gscript.helpers.OneDollarDataImporter;
 import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.Project;
 import edu.washington.cs.gscript.models.Gesture;
+import edu.washington.cs.gscript.recognizers.Learner;
+import edu.washington.cs.gscript.recognizers.Part;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 public class MainViewModel {
@@ -51,6 +55,8 @@ public class MainViewModel {
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName));
         Project newProject = ((Project)in.readObject());
         in.close();
+
+        System.out.println(newProject.getNumOfCategories());
 
         project = newProject;
         NotificationCenter.getDefaultCenter().postNotification(PROJECT_CHANGED_NOTIFICATION, this);
@@ -141,7 +147,23 @@ public class MainViewModel {
         }
     }
 
-    public void analyze() {
-
+    public void loadTestData() {
+        project.importCategories(OneDollarDataImporter.importDiretory("/Users/hlv/repos/gscript/data/one_dollar/s02/medium"));
     }
+
+
+    // @TODO refactor
+    private ArrayList<Part> parts = null;
+
+    public void analyze() {
+        if (getSelectedCategory() != null) {
+            parts = new ArrayList<Part>(Arrays.asList(new Part(), new Part()));
+            new Learner().learnParts(getSelectedCategory(), parts);
+        }
+    }
+
+    public ArrayList<Part> getParts() {
+        return parts;
+    }
+
 }

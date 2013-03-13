@@ -7,6 +7,9 @@ import java.util.List;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.helpers.Segmentation;
+import edu.washington.cs.gscript.recognizers.Learner;
+import edu.washington.cs.gscript.recognizers.Part;
+import edu.washington.cs.gscript.recognizers.PartFeatureVector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -137,11 +140,59 @@ public class GestureCanvas extends Canvas {
 
     private void play(GC gc, Gesture gesture) {
         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE));
-        int[] as = Segmentation.segment(gesture, 1);
 
-        for (int i : as) {
+        double error = 1;
+
+        int[] endLocations = Segmentation.segment(gesture, error);
+
+        for (int i : endLocations) {
             XYT pt = gesture.get(i);
-            gc.fillArc((int)pt.getX() - 5, (int)pt.getY() - 5, 10, 10, 0, 360);
+            gc.fillArc((int)pt.getX() - 2, (int)pt.getY() - 2, 4, 4, 0, 360);
+        }
+
+        if (mainViewModel.getParts() != null) {
+            int[] breakLocations = new int[mainViewModel.getParts().size() - 1];
+            Learner.findPartsInGesture(gesture, endLocations, mainViewModel.getParts(), breakLocations);
+
+            System.out.println(Arrays.toString(breakLocations));
+
+            for (int breakLocation : breakLocations) {
+                XYT pt = gesture.get(endLocations[breakLocation]);
+                gc.fillArc((int)pt.getX() - 4, (int)pt.getY() - 4, 8, 8, 0, 360);
+            }
+        }
+
+        gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_DARK_RED));
+        if (mainViewModel.getParts() != null) {
+
+            int sx = 10;
+            int sy = 10;
+            int width = 100;
+            int spacing = 10;
+
+            for (Part part : mainViewModel.getParts()) {
+                gc.drawRectangle(sx, sy, width, width);
+
+                double[] fs = part.getTemplate().getFeatures();
+
+                double max = 0;
+                for (int i = 0; i < fs.length; ++i) {
+                    max = Math.max(max, Math.abs(fs[i]));
+                }
+
+                double scale = 40 / max;
+
+                for (int i = 2; i < fs.length; i += 2) {
+                    double x0 = fs[i - 2] * scale;
+                    double y0 = fs[i - 1] * scale;
+                    double x1 = fs[i] * scale;
+                    double y1 = fs[i + 1] * scale;
+
+                    gc.drawLine(sx + width / 2 + (int)x0, sy + width / 2 + (int)y0, sx + width / 2 + (int)x1, sy + width / 2 + (int)y1);
+                }
+
+                sx += width + spacing;
+            }
         }
     }
 }

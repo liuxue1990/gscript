@@ -25,7 +25,12 @@ public class CategoryScrolledList extends ScrolledList {
 		this.mainViewModel = viewModel;
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				listObserver,
+				new NotificationObserver() {
+                    @Override
+                    public void onNotified(Object arg) {
+                        reloadData();
+                    }
+                },
 				MainViewModel.PROJECT_CHANGED_NOTIFICATION, mainViewModel);
 
 		NotificationCenter.getDefaultCenter().addObserver(

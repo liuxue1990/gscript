@@ -151,14 +151,43 @@ public class GestureCanvas extends Canvas {
         }
 
         if (mainViewModel.getParts() != null) {
-            int[] breakLocations = new int[mainViewModel.getParts().size() - 1];
-            Learner.findPartsInGesture(gesture, endLocations, mainViewModel.getParts(), breakLocations);
+            int[][] breakLocations = new int[mainViewModel.getParts().size()][];
+            double[] angles = new double[mainViewModel.getParts().size()];
+            Learner.findPartsInGesture(gesture, endLocations, mainViewModel.getParts(), breakLocations, angles);
 
-            System.out.println(Arrays.toString(breakLocations));
+            final int numOfEndPoints = endLocations.length;
 
-            for (int breakLocation : breakLocations) {
-                XYT pt = gesture.get(endLocations[breakLocation]);
-                gc.fillArc((int)pt.getX() - 4, (int)pt.getY() - 4, 8, 8, 0, 360);
+            PartFeatureVector[][] sampleFeaturesMap = new PartFeatureVector[numOfEndPoints][numOfEndPoints];
+
+            for (int i = 0; i + 1 < numOfEndPoints; ++i) {
+                for (int j = i + 1; j < numOfEndPoints; ++j) {
+                    sampleFeaturesMap[i][j] = new PartFeatureVector(
+                            Learner.gestureFeatures(gesture.subGesture(endLocations[i], endLocations[j])));
+                }
+            }
+
+//            System.out.println("\n\n\n");
+//            Learner.findRepetitionInFragment(
+//                    mainViewModel.getParts().get(1).getTemplate(), sampleFeaturesMap, breakLocations[1][0], breakLocations[1][breakLocations[1].length - 1], new ArrayList<Integer>(), new double[1]);
+
+            System.out.println(Arrays.deepToString(breakLocations));
+
+            for (int i = 0; i < angles.length; ++i) {
+                angles[i] *= 180 / Math.PI;
+            }
+            System.out.println(Arrays.toString(angles));
+
+            for (int[] subBreakLocations : breakLocations) {
+                for (int i = 0, n = subBreakLocations.length; i < n; ++i) {
+                    int breakLocation = subBreakLocations[i];
+                    XYT pt = gesture.get(endLocations[breakLocation]);
+
+                    if (i == 0 || i == n - 1) {
+                        gc.fillArc((int) pt.getX() - 4, (int) pt.getY() - 4, 8, 8, 0, 360);
+                    } else {
+                        gc.fillRectangle((int)pt.getX() - 3, (int)pt.getY() - 3, 6, 6);
+                    }
+                }
             }
         }
 

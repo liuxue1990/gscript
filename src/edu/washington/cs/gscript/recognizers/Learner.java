@@ -24,7 +24,7 @@ public class Learner {
 
         PartFeatureVector initialPartFeatureVector = new PartFeatureVector(
                 GSMath.normalize(
-                        gestureFeatures(new Gesture(Arrays.asList(XYT.xyt(0, 0, -1), XYT.xyt(1, 0, -1)))), null));
+                        gestureFeatures(new Gesture(Arrays.asList(XYT.xyt(0, 0, -1), XYT.xyt(1, 0, -1), XYT.xyt(2, 0, -1)))), null));
 
         String scriptText = category.getScriptTextProperty().getValue();
         ArrayList<Part> parts = parseScript(scriptText);
@@ -130,7 +130,7 @@ public class Learner {
 
                         double[] v = new double[features.length];
                         GSMath.normalize(GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v), v);
-
+//                        GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v);
 //                        GSMath.rotate(features, Math.PI - Math.atan2(features[1], features[0]), features);
                         vectors.add(new PartFeatureVector(v));
                     }

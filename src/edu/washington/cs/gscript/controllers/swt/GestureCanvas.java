@@ -208,6 +208,8 @@ public class GestureCanvas extends Canvas {
 
             for (int partIndex = 0; partIndex < mainViewModel.getParts().size(); ++partIndex) {
                 Part part = mainViewModel.getParts().get(partIndex);
+
+                gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
                 gc.drawRectangle(sx, sy, width, width);
 
                 gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_DARK_RED));

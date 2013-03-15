@@ -85,6 +85,32 @@ public class GSMath {
         return output;
     }
 
+    public static double[] normalize2(double[] vector, double[] output) {
+        if (output == null || output.length != vector.length) {
+            output = new double[vector.length];
+        }
+
+        double xc = 0;
+        double yc = 0;
+
+        for (int i = 0; i < vector.length; i += 2) {
+            xc += vector[i] / vector.length * 2;
+            yc += vector[i + 1] / vector.length * 2;
+        }
+
+        double r = 0;
+
+        for (int i = 0; i < vector.length; i += 2) {
+            r = Math.max(r, distance(vector[i], vector[i + 1], xc, yc));
+        }
+
+        for (int i = 0; i < vector.length; ++i) {
+            output[i] = vector[i] / r;
+        }
+
+        return output;
+    }
+
     public static double[] rotate(double[] vector, double angle, double[] output) {
         if (output == null || output.length != vector.length) {
             output = new double[vector.length];

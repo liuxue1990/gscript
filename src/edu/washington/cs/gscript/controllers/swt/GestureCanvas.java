@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.Segmentation;
 import edu.washington.cs.gscript.recognizers.Learner;
 import edu.washington.cs.gscript.recognizers.Part;
@@ -26,6 +27,7 @@ import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.models.Gesture;
 import edu.washington.cs.gscript.models.XYT;
+import sun.font.GlyphLayout;
 
 public class GestureCanvas extends Canvas {
 
@@ -103,7 +105,7 @@ public class GestureCanvas extends Canvas {
 			renderTrajectory(gc, points);
 		} else {
 			if (mainViewModel.getSelectedSample() != null) {
-				renderTrajectory(gc, mainViewModel.getSelectedSample());
+				renderTrajectory(gc, mainViewModel.getSelectedSample().resample(100));
 			}
 		}
 
@@ -153,24 +155,33 @@ public class GestureCanvas extends Canvas {
         if (mainViewModel.getParts() != null) {
             int[][] breakLocations = new int[mainViewModel.getParts().size()][];
             double[] angles = new double[mainViewModel.getParts().size()];
-            Learner.findPartsInGesture(gesture, endLocations, mainViewModel.getParts(), breakLocations, angles);
+            double loss = Learner.findPartsInGesture(gesture, mainViewModel.getParts(), breakLocations, angles);
+            System.out.println("loss = " + loss);
 
-            final int numOfEndPoints = endLocations.length;
-
-            PartFeatureVector[][] sampleFeaturesMap = new PartFeatureVector[numOfEndPoints][numOfEndPoints];
-
-            for (int i = 0; i + 1 < numOfEndPoints; ++i) {
-                for (int j = i + 1; j < numOfEndPoints; ++j) {
-                    sampleFeaturesMap[i][j] = new PartFeatureVector(
-                            Learner.gestureFeatures(gesture.subGesture(endLocations[i], endLocations[j])));
-                }
-            }
+            PartFeatureVector[][] sampleFeaturesMap = Learner.sampleFeatureVectors(gesture);
 
 //            System.out.println("\n\n\n");
 //            Learner.findRepetitionInFragment(
 //                    mainViewModel.getParts().get(1).getTemplate(), sampleFeaturesMap, breakLocations[1][0], breakLocations[1][breakLocations[1].length - 1], new ArrayList<Integer>(), new double[1]);
 
             System.out.println(Arrays.deepToString(breakLocations));
+
+            for (int pi = 0; pi < mainViewModel.getParts().size(); ++pi) {
+
+                for (int i = 0; i < endLocations.length; ++i) {
+                    for (int j = i + 1; j < endLocations.length; ++j) {
+
+                        double[] f = sampleFeaturesMap[i][j].getFeatures();
+                        double mag = GSMath.magnitude(f);
+                        double len = Learner.length(f);
+                        double d = Learner.distanceToTemplateAligned(mainViewModel.getParts().get(pi).getTemplate().getFeatures(), f);
+//                        System.out.println(" partIndex : " + pi + " at " + "[" + i + ", " + j + "]" + ", score : " + d + ", mag : " + mag + ", length : " + len);
+//                        System.out.println(Arrays.toString(f));
+//                        System.out.println("......");
+//                        System.out.println(Arrays.toString(mainViewModel.getParts().get(pi).getTemplate().getFeatures()));
+                    }
+                }
+            }
 
             for (int i = 0; i < angles.length; ++i) {
                 angles[i] *= 180 / Math.PI;
@@ -189,39 +200,55 @@ public class GestureCanvas extends Canvas {
                     }
                 }
             }
-        }
-
-        gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_DARK_RED));
-        if (mainViewModel.getParts() != null) {
 
             int sx = 10;
             int sy = 10;
             int width = 100;
             int spacing = 10;
 
-            for (Part part : mainViewModel.getParts()) {
+            for (int partIndex = 0; partIndex < mainViewModel.getParts().size(); ++partIndex) {
+                Part part = mainViewModel.getParts().get(partIndex);
                 gc.drawRectangle(sx, sy, width, width);
 
-                double[] fs = part.getTemplate().getFeatures();
+                gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_DARK_RED));
+                renderFeatures(gc, part.getTemplate().getFeatures(), sx, sy, width);
 
-                double max = 0;
-                for (int i = 0; i < fs.length; ++i) {
-                    max = Math.max(max, Math.abs(fs[i]));
-                }
+                gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
 
-                double scale = 40 / max;
+                double[] u = part.getTemplate().getFeatures();
+                double[] v = sampleFeaturesMap[breakLocations[partIndex][0]][breakLocations[partIndex][breakLocations[partIndex].length - 1]].getFeatures();
 
-                for (int i = 2; i < fs.length; i += 2) {
-                    double x0 = fs[i - 2] * scale;
-                    double y0 = fs[i - 1] * scale;
-                    double x1 = fs[i] * scale;
-                    double y1 = fs[i + 1] * scale;
-
-                    gc.drawLine(sx + width / 2 + (int)x0, sy + width / 2 + (int)y0, sx + width / 2 + (int)x1, sy + width / 2 + (int)y1);
-                }
+                double angle = Learner.bestAlignedAngle2(GSMath.normalize(u, null), GSMath.normalize(v, null));
+                renderFeatures(gc, GSMath.normalize(
+                        GSMath.rotate(v, angle, null), null), sx, sy, width);
 
                 sx += width + spacing;
             }
+
         }
+
+        if (mainViewModel.getParts() != null) {
+
+        }
+    }
+
+    private void renderFeatures(GC gc, double[] fs, int sx, int sy, int width) {
+
+        double max = 0;
+        for (int i = 0; i < fs.length; ++i) {
+            max = Math.max(max, Math.abs(fs[i]));
+        }
+
+        double scale = 40 / max;
+
+        for (int i = 2; i < fs.length; i += 2) {
+            double x0 = fs[i - 2] * scale;
+            double y0 = fs[i - 1] * scale;
+            double x1 = fs[i] * scale;
+            double y1 = fs[i + 1] * scale;
+
+            gc.drawLine(sx + width / 2 + (int)x0, sy + width / 2 + (int)y0, sx + width / 2 + (int)x1, sy + width / 2 + (int)y1);
+        }
+
     }
 }

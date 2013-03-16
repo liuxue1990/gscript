@@ -8,7 +8,7 @@ import java.util.List;
 
 public class GSMath {
 
-    public static final double REAL_PRECISION = 1e-12;
+    public static final double REAL_PRECISION = 1e-16;
 
     public static int compareDouble(double a, double b) {
         if (Double.compare(a + REAL_PRECISION, b) < 0) {
@@ -72,24 +72,7 @@ public class GSMath {
         return Math.sqrt(mag2);
     }
 
-    public static double[] normalize(double[] vector, double[] output) {
-        if (output == null || output.length != vector.length) {
-            output = new double[vector.length];
-        }
-
-        double mag = magnitude(vector);
-        for (int i = 0; i < vector.length; ++i) {
-            output[i] = vector[i] / mag;
-        }
-
-        return output;
-    }
-
-    public static double[] normalize2(double[] vector, double[] output) {
-        if (output == null || output.length != vector.length) {
-            output = new double[vector.length];
-        }
-
+    public static double radius(double[] vector) {
         double xc = 0;
         double yc = 0;
 
@@ -104,11 +87,27 @@ public class GSMath {
             r = Math.max(r, distance(vector[i], vector[i + 1], xc, yc));
         }
 
+        return r;
+    }
+
+    public static double[] scale(double[] vector, double scale, double[] output) {
+        if (output == null || output.length < vector.length) {
+            output = new double[vector.length];
+        }
+
         for (int i = 0; i < vector.length; ++i) {
-            output[i] = vector[i] / r;
+            output[i] = vector[i] * scale;
         }
 
         return output;
+    }
+
+    public static double[] normalize(double[] vector, double[] output) {
+        return scale(vector, 1 / magnitude(vector), output);
+    }
+
+    public static double[] normalize2(double[] vector, double[] output) {
+        return scale(vector, 1 / radius(vector), output);
     }
 
     public static double[] rotate(double[] vector, double angle, double[] output) {

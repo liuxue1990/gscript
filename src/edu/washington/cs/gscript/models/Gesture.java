@@ -3,6 +3,7 @@ package edu.washington.cs.gscript.models;
 import edu.washington.cs.gscript.helpers.GSMath;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -67,6 +68,29 @@ public class Gesture implements Serializable, Iterable<XYT> {
 	public XYT get(int i) {
 		return points[i];
 	}
+
+    public Gesture normalize() {
+        Gesture resampled = resample(1024);
+
+        double xc = 0;
+        double yc = 0;
+        for (XYT point : resampled.points) {
+            xc += point.getX() / resampled.points.length;
+            yc += point.getY() / resampled.points.length;
+        }
+
+        double maxR = 0;
+        for (XYT point : points) {
+            maxR = Math.max(maxR, GSMath.distance(point.getX(), point.getY(), xc, yc));
+        }
+
+        ArrayList<XYT> normalizedPoints = new ArrayList<XYT>();
+        for (XYT point : points) {
+            normalizedPoints.add(XYT.xy((point.getX() - xc) / maxR, (point.getY() - yc) / maxR));
+        }
+
+        return new Gesture(normalizedPoints);
+    }
 
     public Gesture resample(int numOfSamples) {
         if (points.length < 2) {

@@ -66,59 +66,80 @@ public class GSMath {
 
     public static double magnitude(double[] vector) {
         double mag2 = 0;
-        for (int i = 0; i < vector.length; ++i) {
-            mag2 += vector[i] * vector[i];
+        for (double x : vector) {
+            mag2 += x * x;
         }
         return Math.sqrt(mag2);
     }
 
-    public static double radius(double[] vector) {
+    public static double[] boundingCircle(double[] trajectory) {
         double xc = 0;
         double yc = 0;
-
-        for (int i = 0; i < vector.length; i += 2) {
-            xc += vector[i] / vector.length * 2;
-            yc += vector[i + 1] / vector.length * 2;
-        }
-
         double r = 0;
 
-        for (int i = 0; i < vector.length; i += 2) {
-            r = Math.max(r, distance(vector[i], vector[i + 1], xc, yc));
+        final int n = trajectory.length / 2;
+        final int l = n * 2;
+
+        for (int i = 0; i < l; i += 2) {
+            xc += trajectory[i];
+            yc += trajectory[i + 1];
         }
 
-        return r;
+        xc /= n;
+        yc /= n;
+
+        for (int i = 0; i < l; i += 2) {
+            r = Math.max(r, distance(trajectory[i], trajectory[i + 1], xc, yc));
+        }
+
+        return new double[]{xc, yc, r};
     }
 
-    public static double[] scale(double[] vector, double scale, double[] output) {
-        if (output == null || output.length < vector.length) {
-            output = new double[vector.length];
-        }
+    public static double radius(double[] trajectory) {
+        return boundingCircle(trajectory)[2];
+    }
 
-        for (int i = 0; i < vector.length; ++i) {
-            output[i] = vector[i] * scale;
+    private static double[] makeArray(int length, double[] output) {
+        if (output == null || output.length < length) {
+            output = new double[length];
         }
 
         return output;
     }
 
-    public static double[] normalize(double[] vector, double[] output) {
-        return scale(vector, 1 / magnitude(vector), output);
+    public static double[] shift(double[] trajectory, double dx, double dy, double[] output) {
+        output = makeArray(trajectory.length, output);
+        for (int i = 0, l = trajectory.length; i < l; i += 2) {
+            output[i] = trajectory[i] + dx;
+            output[i + 1] = trajectory[i + 1] + dy;
+        }
+        return output;
     }
 
-    public static double[] normalize2(double[] vector, double[] output) {
-        return scale(vector, 1 / radius(vector), output);
+    public static double[] scale(double[] vector, double scale, double[] output) {
+        output = makeArray(vector.length, output);
+        for (int i = 0; i < vector.length; ++i) {
+            output[i] = vector[i] * scale;
+        }
+        return output;
+    }
+
+//    public static double[] normalize(double[] vector, double[] output) {
+//        return scale(vector, 1 / magnitude(vector), output);
+//    }
+
+    public static double[] normalizeTrajectoryByRadius(double[] trajectory, double[] output) {
+        double[] circle = boundingCircle(trajectory);
+        return scale(shift(trajectory, -circle[0], -circle[1], output), 1 / circle[2], output);
     }
 
     public static double[] rotate(double[] vector, double angle, double[] output) {
-        if (output == null || output.length != vector.length) {
-            output = new double[vector.length];
-        }
+        output = makeArray(vector.length, output);
 
         double cos = Math.cos(angle);
         double sin = Math.sin(angle);
 
-        for (int i = 0; i < vector.length; i += 2) {
+        for (int i = 0, l = vector.length; i < l; i += 2) {
             double x = vector[i];
             double y = vector[i + 1];
 

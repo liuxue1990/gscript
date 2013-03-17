@@ -51,10 +51,12 @@ public class Learner {
 
         int simplestSampleIndex = 0;
         for (int k = 1; k < numOfSamples; ++k) {
+            System.out.println(featuresMap[k].length);
             if (featuresMap[k].length < featuresMap[simplestSampleIndex].length) {
                 simplestSampleIndex = k;
             }
         }
+        System.out.println("Simplest " + featuresMap[simplestSampleIndex].length);
 
         ArrayList<int[]> candidates = new ArrayList<int[]>();
 
@@ -62,28 +64,19 @@ public class Learner {
 
         System.out.println(candidates.size());
 
-//        Random r = new Random();
-//
-//        for (int k = 0; k < 10; ++k) {
-
         Collections.shuffle(candidates);
         for (int[] candidate : candidates) {
             System.out.println(candidates.indexOf(candidate));
 
-            if (candidates.indexOf(candidate) > 20) {
+            if (candidates.indexOf(candidate) > 10) {
                 break;
             }
 
             ArrayList<Part> parts = parseScript(scriptText);
-            int sampleIndex = 0;
-
             for (int partIndex = 0; partIndex < parts.size(); ++partIndex) {
-
-//                int numOfEndLocations = featuresMap[sampleIndex].length;
                 int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
-
                 PartFeatureVector template = new PartFeatureVector(
-                        GSMath.normalize(featuresMap[simplestSampleIndex][a][b].getFeatures(), null));
+                        GSMath.normalizeTrajectoryByRadius(featuresMap[simplestSampleIndex][a][b].getFeatures(), null));
 
                 parts.get(partIndex).setTemplate(template);
             }
@@ -154,8 +147,8 @@ public class Learner {
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
 
                 double[] features = featuresMap[sampleIndex][0][featuresMap[sampleIndex][0].length - 1].getFeatures();
+
                 double length = length(features);
-                double mag = GSMath.magnitude(features);
                 loss += findPartsInSample(featuresMap[sampleIndex], parts, breakLocationMap[sampleIndex], angleMap[sampleIndex]);
 
 //                System.out.println("sample " + sampleIndex + " : " + mag + " , " + length);
@@ -188,7 +181,7 @@ public class Learner {
                         int b = breakLocationMap[k][partIndex][i];
 
                         double[] v = new double[features.length];
-                        GSMath.normalize(GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v), v);
+                        GSMath.normalizeTrajectoryByRadius(GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v), v);
 //                        GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v);
 //                        GSMath.rotate(features, Math.PI - Math.atan2(features[1], features[0]), features);
                         vectors.add(new PartFeatureVector(v));
@@ -285,7 +278,7 @@ public class Learner {
                         d = distanceToTemplateAligned(u.getFeatures(), vf) * length + loss[i + 1][k];
                         brList.add(j);
                         brList.add(k);
-                        angle[0] = bestAlignedAngle(u.getFeatures(), GSMath.normalize(v.getFeatures(), null));
+                        angle[0] = bestAlignedAngle(u.getFeatures(), GSMath.normalizeTrajectoryByRadius(v.getFeatures(), null));
                     }
 
                     if (GSMath.compareDouble(d, loss[i][j]) < 0) {
@@ -320,10 +313,6 @@ public class Learner {
             ArrayList<Integer> brList = new ArrayList<Integer>();
             double loss = findRepetitionInFragmentAtAngle(
                     partFeatureVector.getFeatures(), sampleFeaturesMap, beginIndex, endIndex, angle, brList);
-
-//            if (degree == 0) {
-//                System.out.println(degree + " ... " + loss);
-//            }
 
             if (GSMath.compareDouble(loss, minLoss) < 0) {
                 minLoss = loss;
@@ -432,7 +421,7 @@ public class Learner {
             }
         }
 
-        return new PartFeatureVector(GSMath.normalize(average, average));
+        return new PartFeatureVector(GSMath.normalizeTrajectoryByRadius(average, average));
     }
 
     public static double bestAlignedAngle(double[] template, double[] features) {
@@ -453,12 +442,12 @@ public class Learner {
     }
 
     public static double distanceToTemplateAligned(double[] template, double[] features) {
-        double angle = bestAlignedAngle(template, GSMath.normalize(features, null));
+        double angle = bestAlignedAngle(template, GSMath.normalizeTrajectoryByRadius(features, null));
         return distanceToTemplateAtAngle(template, features, angle);
     }
 
     public static double distanceToTemplateAtAngle(double[] template, double[] features, double angle) {
-        double[] normalized = GSMath.normalize(features, null);
+        double[] normalized = GSMath.normalizeTrajectoryByRadius(features, null);
         return distanceAtAngle(template, normalized, angle);
     }
 

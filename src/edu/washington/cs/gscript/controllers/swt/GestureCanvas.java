@@ -209,6 +209,8 @@ public class GestureCanvas extends Canvas {
             for (int partIndex = 0; partIndex < mainViewModel.getParts().size(); ++partIndex) {
                 Part part = mainViewModel.getParts().get(partIndex);
 
+                System.out.println(String.format("Radius of part %d is %f", partIndex, GSMath.radius(part.getTemplate().getFeatures())));
+
                 gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
                 gc.drawRectangle(sx, sy, width, width);
 

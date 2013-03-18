@@ -143,9 +143,7 @@ public class GestureCanvas extends Canvas {
     private void play(GC gc, Gesture gesture) {
         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_DARK_BLUE));
 
-        double error = 1;
-
-        int[] endLocations = Segmentation.segment(gesture, error);
+        int[] endLocations = Learner.computeEndLocations(gesture);
 
         for (int i : endLocations) {
             XYT pt = gesture.get(i);
@@ -153,53 +151,55 @@ public class GestureCanvas extends Canvas {
         }
 
         if (mainViewModel.getParts() != null) {
-//            int[][] breakLocations = new int[mainViewModel.getParts().size()][];
-//            double[] angles = new double[mainViewModel.getParts().size()];
-//            double loss = Learner.findPartsInGesture(gesture, mainViewModel.getParts(), breakLocations, angles);
-//            System.out.println("loss = " + loss);
-//
-//            PartFeatureVector[][] sampleFeaturesMap = Learner.sampleFeatureVectors(gesture);
-//
-////            System.out.println("\n\n\n");
-////            Learner.findRepetitionInFragment(
-////                    mainViewModel.getParts().get(1).getTemplate(), sampleFeaturesMap, breakLocations[1][0], breakLocations[1][breakLocations[1].length - 1], new ArrayList<Integer>(), new double[1]);
-//
-//            System.out.println(Arrays.deepToString(breakLocations));
-//
-//            for (int pi = 0; pi < mainViewModel.getParts().size(); ++pi) {
-//
-//                for (int i = 0; i < endLocations.length; ++i) {
-//                    for (int j = i + 1; j < endLocations.length; ++j) {
-//
-//                        double[] f = sampleFeaturesMap[i][j].getFeatures();
-//                        double mag = GSMath.magnitude(f);
-//                        double len = Learner.length(f);
-//                        double d = Learner.distanceToTemplateAligned(mainViewModel.getParts().get(pi).getTemplate().getFeatures(), f);
-////                        System.out.println(" partIndex : " + pi + " at " + "[" + i + ", " + j + "]" + ", score : " + d + ", mag : " + mag + ", length : " + len);
-////                        System.out.println(Arrays.toString(f));
-////                        System.out.println("......");
-////                        System.out.println(Arrays.toString(mainViewModel.getParts().get(pi).getTemplate().getFeatures()));
-//                    }
-//                }
-//            }
-//
-//            for (int i = 0; i < angles.length; ++i) {
-//                angles[i] *= 180 / Math.PI;
-//            }
-//            System.out.println(Arrays.toString(angles));
 
-//            for (int[] subBreakLocations : breakLocations) {
-//                for (int i = 0, n = subBreakLocations.length; i < n; ++i) {
-//                    int breakLocation = subBreakLocations[i];
-//                    XYT pt = gesture.get(endLocations[breakLocation]);
-//
-//                    if (i == 0 || i == n - 1) {
-//                        gc.fillArc((int) pt.getX() - 4, (int) pt.getY() - 4, 8, 8, 0, 360);
-//                    } else {
-//                        gc.fillRectangle((int)pt.getX() - 3, (int)pt.getY() - 3, 6, 6);
-//                    }
-//                }
-//            }
+            int[][] breakLocations = new int[mainViewModel.getParts().size()][];
+            double[] angles = new double[mainViewModel.getParts().size()];
+
+            double loss = Learner.findPartsInGesture(gesture, mainViewModel.getParts(), breakLocations, angles);
+            System.out.println("loss = " + loss);
+
+            PartFeatureVector[][] sampleFeaturesMap = Learner.sampleFeatureVectors(gesture);
+
+//            System.out.println("\n\n\n");
+//            Learner.findRepetitionInFragment(
+//                    mainViewModel.getParts().get(1).getTemplate(), sampleFeaturesMap, breakLocations[1][0], breakLocations[1][breakLocations[1].length - 1], new ArrayList<Integer>(), new double[1]);
+
+            System.out.println(Arrays.deepToString(breakLocations));
+
+            for (int pi = 0; pi < mainViewModel.getParts().size(); ++pi) {
+
+                for (int i = 0; i < endLocations.length; ++i) {
+                    for (int j = i + 1; j < endLocations.length; ++j) {
+
+                        double[] f = sampleFeaturesMap[i][j].getFeatures();
+                        double mag = GSMath.magnitude(f);
+                        double len = Learner.length(f);
+                        double d = Learner.distanceToTemplateAligned(mainViewModel.getParts().get(pi).getTemplate().getFeatures(), f);
+//                        System.out.println(" partIndex : " + pi + " at " + "[" + i + ", " + j + "]" + ", score : " + d + ", mag : " + mag + ", length : " + len);
+//                        System.out.println(Arrays.toString(f));
+//                        System.out.println("......");
+//                        System.out.println(Arrays.toString(mainViewModel.getParts().get(pi).getTemplate().getFeatures()));
+                    }
+                }
+            }
+
+            for (int i = 0; i < angles.length; ++i) {
+                angles[i] *= 180 / Math.PI;
+            }
+            System.out.println(Arrays.toString(angles));
+
+            for (int[] subBreakLocations : breakLocations) {
+                for (int i = 0, n = subBreakLocations.length; i < n; ++i) {
+                    int breakLocation = subBreakLocations[i];
+                    XYT pt = gesture.get(endLocations[breakLocation]);
+
+                    if (i == 0 || i == n - 1) {
+                        gc.fillArc((int) pt.getX() - 4, (int) pt.getY() - 4, 8, 8, 0, 360);
+                    } else {
+                        gc.fillRectangle((int)pt.getX() - 3, (int)pt.getY() - 3, 6, 6);
+                    }
+                }
+            }
 
             int sx = 10;
             int sy = 10;
@@ -220,11 +220,11 @@ public class GestureCanvas extends Canvas {
                 gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
 
                 double[] u = part.getTemplate().getFeatures();
-//                double[] v = sampleFeaturesMap[breakLocations[partIndex][0]][breakLocations[partIndex][breakLocations[partIndex].length - 1]].getFeatures();
-//
-//                double angle = Learner.bestAlignedAngle(GSMath.normalize(u, null), GSMath.normalize(v, null));
-//                renderFeatures(gc, GSMath.normalize(
-//                        GSMath.rotate(v, angle, null), null), sx, sy, width);
+                double[] v = sampleFeaturesMap[breakLocations[partIndex][0]][breakLocations[partIndex][breakLocations[partIndex].length - 1]].getFeatures();
+
+                double angle = Learner.bestAlignedAngle(GSMath.normalize(u, null), GSMath.normalize(v, null));
+                renderFeatures(gc, GSMath.normalize(
+                        GSMath.rotate(v, angle, null), null), sx, sy, width);
 
                 sx += width + spacing;
             }

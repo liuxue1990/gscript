@@ -11,6 +11,8 @@ public class Learner {
 
     public static int NUM_OF_RESAMPLING = 32;
 
+    public static int SEGMENTATION_ERROR = 1;
+
     private void search(int m, int n, int k, int total, int[] seq, ArrayList<int[]> list) {
         if (m == n - 1 && k == total) {
             System.out.println(Arrays.toString(seq));
@@ -40,7 +42,7 @@ public class Learner {
         PartFeatureVector[][][] featuresMap = new PartFeatureVector[numOfSamples][][];
 
         for (int k = 0; k < numOfSamples; ++k) {
-            featuresMap[k] = sampleFeatureVectors(category.getSample(k).normalize());
+            featuresMap[k] = sampleFeatureVectors(category.getSample(k));
         }
 
         double minLoss = Double.POSITIVE_INFINITY;
@@ -88,45 +90,6 @@ public class Learner {
         }
 
         return bestParts;
-    }
-
-    public static PartFeatureVector[][] sampleFeatureVectors(Gesture gesture) {
-        final double error = 0.01;
-
-        int[] endLocations = Segmentation.segment(gesture, error);
-        PartFeatureVector[][] featureVectors = new PartFeatureVector[endLocations.length][endLocations.length];
-
-        for (int i = 0; i + 1 < endLocations.length; ++i) {
-            for (int j = i + 1; j < endLocations.length; ++j) {
-                double[] v = gestureFeatures(gesture.subGesture(endLocations[i], endLocations[j]), NUM_OF_RESAMPLING);
-                featureVectors[i][j] = new PartFeatureVector(v);
-            }
-        }
-
-        return featureVectors;
-    }
-
-    public static ArrayList<Part> parseScript(String scriptText) {
-        ArrayList<Part> parts = new ArrayList<Part>();
-
-        for (String line : scriptText.split("\n")) {
-            if (line.trim().isEmpty()) {
-                continue;
-            }
-
-            Part part = new Part();
-            if (line.endsWith("*")) {
-                part.setRepeatable(true);
-            }
-
-            parts.add(part);
-        }
-
-        if (parts.size() == 0) {
-            parts.add(new Part());
-        }
-
-        return parts;
     }
 
     public static double optimize(ArrayList<Part> parts, PartFeatureVector[][][] featuresMap) {
@@ -188,6 +151,46 @@ public class Learner {
         }
 
         return minLoss;
+    }
+
+    public static PartFeatureVector[][] sampleFeatureVectors(Gesture gesture) {
+        int[] endLocations = computeEndLocations(gesture);
+
+        gesture = gesture.normalize();
+
+        PartFeatureVector[][] featureVectors = new PartFeatureVector[endLocations.length][endLocations.length];
+
+        for (int i = 0; i + 1 < endLocations.length; ++i) {
+            for (int j = i + 1; j < endLocations.length; ++j) {
+                double[] v = gestureFeatures(gesture.subGesture(endLocations[i], endLocations[j]), NUM_OF_RESAMPLING);
+                featureVectors[i][j] = new PartFeatureVector(v);
+            }
+        }
+
+        return featureVectors;
+    }
+
+    public static ArrayList<Part> parseScript(String scriptText) {
+        ArrayList<Part> parts = new ArrayList<Part>();
+
+        for (String line : scriptText.split("\n")) {
+            if (line.trim().isEmpty()) {
+                continue;
+            }
+
+            Part part = new Part();
+            if (line.endsWith("*")) {
+                part.setRepeatable(true);
+            }
+
+            parts.add(part);
+        }
+
+        if (parts.size() == 0) {
+            parts.add(new Part());
+        }
+
+        return parts;
     }
 
     public static double findPartsInGesture(
@@ -462,4 +465,7 @@ public class Learner {
         return dis;
     }
 
+    public static int[] computeEndLocations(Gesture gesture) {
+        return Segmentation.segment(gesture, Learner.SEGMENTATION_ERROR);
+    }
 }

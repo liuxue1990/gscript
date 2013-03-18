@@ -124,14 +124,57 @@ public class GSMath {
         return output;
     }
 
+    public static double[] scaleXY(double[] trajectory, double scaleX, double scaleY, double[] output) {
+        output = makeArray(trajectory.length, output);
+        for (int i = 0; i < trajectory.length; i += 2) {
+            output[i] = trajectory[i] * scaleX;
+            output[i + 1] = trajectory[i + 1] * scaleY;
+        }
+        return output;
+    }
+
 //    public static double[] normalize(double[] vector, double[] output) {
 //        return scale(vector, 1 / magnitude(vector), output);
 //    }
 
-    public static double[] normalizeTrajectoryByRadius(double[] trajectory, double[] output) {
+    public static double[] normalize(double[] trajectory, double[] output) {
+        return normalizeByRadius(trajectory, output);
+//        return normalizeByBox(trajectory, output);
+    }
+
+    public static double[] normalizeByRadius(double[] trajectory, double[] output) {
+        output = makeArray(trajectory.length, output);
         double[] circle = boundingCircle(trajectory);
         return scale(shift(trajectory, -circle[0], -circle[1], output), 1 / circle[2], output);
     }
+
+    public static double[] normalizeByBox(double[] trajectory, double[] output) {
+        output = makeArray(trajectory.length, output);
+
+        double[] circle = boundingCircle(trajectory);
+
+        output = shift(trajectory, -circle[0], -circle[1], output);
+
+        rotate(output, (Math.PI * 3 / 4 - Math.atan2(output[1], output[0])), output);
+
+        double xMin = Double.MAX_VALUE, yMin = Double.MAX_VALUE;
+        double xMax = Double.MIN_VALUE, yMax = Double.MIN_VALUE;
+
+        for (int i = 0; i < output.length; i += 2) {
+            xMin = Math.min(output[i], xMin);
+            yMin = Math.min(output[i + 1], yMin);
+            xMax = Math.max(output[i], xMax);
+            yMax = Math.max(output[i + 1], yMax);
+        }
+
+        for (int i = 0; i < output.length; i += 2) {
+            output[i] /= (xMax - xMin);
+            output[i + 1] /= (yMax - yMin);
+        }
+
+        return output;
+    }
+
 
     public static double[] rotate(double[] vector, double angle, double[] output) {
         output = makeArray(vector.length, output);

@@ -296,7 +296,7 @@ public class Learner {
         double minLoss = Double.POSITIVE_INFINITY;
         ArrayList<Integer> bestBreakLocations = null;
 
-        for (int degree = 0; degree < 360; degree += 5) {
+        for (int degree = 0; degree < 360; degree += 30) {
             double angle = degree * Math.PI / 180;
 
             ArrayList<Integer> brList = new ArrayList<Integer>();

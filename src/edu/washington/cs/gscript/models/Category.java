@@ -27,7 +27,7 @@ public class Category implements Serializable {
         scriptTextProperty = new ReadWriteProperty<String>("");
 	}
 
-	public Property<String> getNamePropertyReadOnly() {
+	public Property<String> getNameProperty() {
 		return nameProperty;
 	}
 
@@ -37,6 +37,10 @@ public class Category implements Serializable {
 
     public Property<String> getScriptTextProperty() {
         return scriptTextProperty;
+    }
+
+    ReadWriteProperty<String> getNameReadWriteProperty() {
+        return nameProperty;
     }
 
     ReadWriteProperty<String> getScriptTextReadWriteProperty() {

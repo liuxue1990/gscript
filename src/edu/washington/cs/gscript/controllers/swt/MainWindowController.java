@@ -3,9 +3,11 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -31,6 +33,50 @@ public class MainWindowController {
         messageBox.open();
     }
 
+    public static class ButtonRefresh extends SimpleButton {
+
+        public ButtonRefresh(Composite parent, int style) {
+            super(parent, style);
+        }
+
+        @Override
+        void paint(GC gc) {
+            Rectangle bounds = getClientArea();
+
+            Transform transform = new Transform(getDisplay());
+            transform.translate(bounds.x, bounds.y);
+            gc.setTransform(transform);
+
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
+            Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
+
+            if (isHover() && !isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
+            } else if (isHover() && isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+            }
+
+            gc.setBackground(bg);
+            gc.setForeground(fg);
+
+            gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
+
+            gc.setLineWidth(4);
+
+            gc.setLineCap(SWT.CAP_ROUND);
+            gc.drawArc(10, 10, bounds.width - 20, bounds.height - 20, 45, 270);
+
+            bg = gc.getBackground();
+            gc.setBackground(gc.getForeground());
+            int r = (bounds.width - 20) / 2;
+            int xc = bounds.width / 2 + (int)(r / 1.414 + 4.5);
+            int yc = bounds.height / 2 - (int)(r / 1.414 - 4.5);
+            gc.fillPolygon(new int[] {xc, yc, xc - 10, yc, xc, yc - 10});
+            gc.setBackground(bg);
+
+            transform.dispose();
+        }
+    }
 
 	private MainViewModel mainViewModel;
 
@@ -39,6 +85,8 @@ public class MainWindowController {
 	private CategoryScrolledList categoryScrolledList;
 
 	private SampleScrolledList sampleScrolledList;
+
+    private ScriptText scriptText;
 
 	public MainWindowController(Shell shell, MainViewModel mainViewModel) {
         this.shell = shell;
@@ -181,53 +229,108 @@ public class MainWindowController {
 		gridLayout.verticalSpacing = 0;
 		shell.setLayout(gridLayout);
 
-		ToolBar toolbar = createGlobalToolBar();
-        GridData gd = new GridData();
-        gd.grabExcessHorizontalSpace = true;
-        gd.horizontalAlignment = GridData.FILL;
-        toolbar.setLayoutData(gd);
+        GridData gd;
 
-        SashForm clientArea = new SashForm(shell, SWT.HORIZONTAL);
+        final Composite clientContainer = new Composite(shell, SWT.NONE);
+
         gd = new GridData();
         gd.grabExcessHorizontalSpace = true;
         gd.grabExcessVerticalSpace = true;
         gd.horizontalAlignment = GridData.FILL;
         gd.verticalAlignment = GridData.FILL;
-        clientArea.setLayoutData(gd);
+        clientContainer.setLayoutData(gd);
 
 
-		categoryScrolledList = new CategoryScrolledList(clientArea, SWT.NONE, mainViewModel);
+        FormLayout formLayout = new FormLayout();
+        formLayout.marginWidth = formLayout.marginHeight = 0;
+        clientContainer.setLayout(formLayout);
+
+        SashForm clientArea = new SashForm(clientContainer, SWT.HORIZONTAL);
+        createLeftPanel(clientArea);
 		createMidPanel(clientArea);
 		createRightPanel(clientArea);
 
 		clientArea.setWeights(new int[]{20, 60, 40});
 		clientArea.setFocus();
+
+//        final SimpleButton btnAnalyze = new ButtonRefresh(clientContainer, SWT.BACKGROUND) {
+//            @Override
+//            protected void buttonClicked() {
+//                mainViewModel.analyze();
+//            }
+//        };
+//        btnAnalyze.setBackground(clientContainer.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+//        btnAnalyze.setSize(48, 48);
+
+        final Button btnAnalyze = new Button(clientContainer, SWT.PUSH);
+        btnAnalyze.setText("R");
+
+        FormData fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.top = new FormAttachment(0);
+        fd.right = new FormAttachment(100);
+        fd.bottom = new FormAttachment(100);
+        clientArea.setLayoutData(fd);
+
+        fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.top = new FormAttachment(0);
+        btnAnalyze.setLayoutData(fd);
+        btnAnalyze.moveAbove(clientArea);
+
+        scriptText.addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e) {
+                Rectangle bounds = scriptText.getBounds();
+                Point loc = clientContainer.toControl(scriptText.toDisplay(bounds.x, bounds.y + bounds.height));
+                FormData fd = new FormData();
+                fd.left = new FormAttachment(0, loc.x - btnAnalyze.getSize().x / 2);
+                fd.top = new FormAttachment(0, loc.y - btnAnalyze.getSize().y / 2);
+                btnAnalyze.setLayoutData(fd);
+                clientContainer.layout();
+            }
+        });
 	}
 
-	private ToolBar createGlobalToolBar() {
-		ToolBar toolbar = new ToolBar(shell, SWT.HORIZONTAL | SWT.FLAT | SWT.BORDER);
+    private Composite createLeftPanel(Composite parent) {
+        Composite leftPanel = new Composite(parent, SWT.BACKGROUND);
+        leftPanel.setBackground(leftPanel.getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
-		ToolItem itemAdd = new ToolItem(toolbar, SWT.PUSH);
-		itemAdd.setText("Add");
-		itemAdd.setToolTipText("Add a new gesture category");
-		itemAdd.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				mainViewModel.addNewCategory();
-			}
-		});
+        FormLayout formLayout = new FormLayout();
+        formLayout.marginWidth = formLayout.marginHeight = 0;
+        leftPanel.setLayout(formLayout);
 
-        ToolItem itemAnalyze = new ToolItem(toolbar, SWT.PUSH);
-        itemAnalyze.setText("Analyze");
-        itemAnalyze.addSelectionListener(new SelectionAdapter() {
+        ToolBar toolbar = new ToolBar(leftPanel, SWT.HORIZONTAL | SWT.FILL | SWT.FLAT | SWT.BORDER | SWT.BACKGROUND);
+        toolbar.setBackground(leftPanel.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+
+        ToolItem itemAdd = new ToolItem(toolbar, SWT.PUSH);
+        itemAdd.setText("+ Add category");
+        itemAdd.setToolTipText("Add a new gesture category");
+        itemAdd.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                mainViewModel.analyze();
+                mainViewModel.addNewCategory();
             }
         });
 
-		return toolbar;
-	}
+        categoryScrolledList = new CategoryScrolledList(leftPanel, SWT.NONE, mainViewModel);
+
+        FormData fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.right = new FormAttachment(100);
+        fd.top = new FormAttachment(0);
+        fd.bottom = new FormAttachment(categoryScrolledList);
+        toolbar.setLayoutData(fd);
+
+        fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.right = new FormAttachment(100);
+        fd.top = new FormAttachment(toolbar);
+        fd.bottom = new FormAttachment(100);
+        categoryScrolledList.setLayoutData(fd);
+
+        return leftPanel;
+    }
 
 	private Composite createMidPanel(Composite parent) {
 		Composite midPanel = new Composite(parent, SWT.NONE);
@@ -261,7 +364,7 @@ public class MainWindowController {
 	private Composite createRightPanel(Composite parent) {
 		SashForm rightPanel = new SashForm(parent, SWT.VERTICAL);
 
-		new ScriptText(rightPanel, SWT.MULTI, mainViewModel);
+		scriptText = new ScriptText(rightPanel, SWT.MULTI, mainViewModel);
 
 		Composite outputComposite = new Composite(rightPanel, SWT.BACKGROUND);
 		outputComposite.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));

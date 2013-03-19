@@ -2,6 +2,7 @@ package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -14,12 +15,17 @@ import org.eclipse.swt.widgets.Label;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.models.Category;
+import org.eclipse.swt.widgets.Text;
 
 public class CategoryListItem extends ScrolledList.ListItem {
 
 	private MainViewModel mainViewModel;
 
-	private Label name;
+	private Label nameLabel;
+
+    private Text renameText;
+
+    private StackLayout stackLayout;
 
 	private IconWithButtonOverlay.IconWithRemoveButtonOverlay icon;
 
@@ -42,8 +48,17 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		rowLayout.spacing = 5;
 		setLayout(rowLayout);
 
-		name = new Label(this, SWT.NONE);
-		name.setAlignment(SWT.CENTER);
+        final Composite nameContainer = new Composite(this, SWT.BACKGROUND);
+        nameContainer.setBackground(getBackground());
+
+        stackLayout = new StackLayout();
+        nameContainer.setLayout(stackLayout);
+
+		nameLabel = new Label(nameContainer, SWT.NONE);
+		nameLabel.setAlignment(SWT.CENTER);
+
+        renameText = new Text(nameContainer, SWT.SINGLE | SWT.BORDER | SWT.CENTER);
+        stackLayout.topControl = nameLabel;
 
 		iconContainer = new Composite(this, SWT.BACKGROUND);
 
@@ -63,7 +78,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 		RowData rd = new RowData();
 		rd.width = 120;
-		name.setLayoutData(rd);
+		nameContainer.setLayoutData(rd);
 
 		rd = new RowData();
 		rd.width = 120;
@@ -79,19 +94,45 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 		this.mainViewModel = viewModel;
 
-		name.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-                mainViewModel.selectCategory(category);
-			}
-		});
+		nameLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseUp(MouseEvent e) {
+                stackLayout.topControl = renameText;
+                renameText.setText(category.getNameProperty().getValue());
+                nameContainer.layout();
+                renameText.setFocus();
+            }
+        });
+
+        renameText.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.keyCode == SWT.ESC) {
+                    stackLayout.topControl = nameLabel;
+                    nameContainer.layout();
+                } else if (e.keyCode == SWT.CR) {
+                    String newName = renameText.getText();
+
+                    if (newName.contains(" ")) {
+                        return;
+                    }
+
+                    stackLayout.topControl = nameLabel;
+                    nameContainer.layout();
+
+                    if (!newName.equals(category.getNameProperty().getValue())) {
+                        mainViewModel.getProject().renameCategory(category, renameText.getText());
+                    }
+                }
+            }
+        });
 
 		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				NotificationCenter.getDefaultCenter().removeObserver(itemObserver);
-			}
-		});
+            @Override
+            public void widgetDisposed(DisposeEvent e) {
+                NotificationCenter.getDefaultCenter().removeObserver(itemObserver);
+            }
+        });
 
         onSelectionChanged();
 	}
@@ -110,7 +151,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		NotificationCenter.getDefaultCenter().removeObserver(itemObserver);
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				itemObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, category.getNamePropertyReadOnly());
+				itemObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, category.getNameProperty());
 
 		NotificationCenter.getDefaultCenter().addObserver(
 				itemObserver, NotificationCenter.ITEMS_ADDED_NOTIFICATION, category.getSamplesProperty());
@@ -118,7 +159,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		NotificationCenter.getDefaultCenter().addObserver(
 				itemObserver, NotificationCenter.ITEMS_REMOVED_NOTIFICATION, category.getSamplesProperty());
 
-		name.setText(category.getNamePropertyReadOnly().getValue());
+		nameLabel.setText(category.getNameProperty().getValue());
 
 
 		int width = 110;

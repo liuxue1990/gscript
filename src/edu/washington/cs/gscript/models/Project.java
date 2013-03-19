@@ -38,7 +38,7 @@ public class Project implements Serializable {
 
     public int findCategoryIndexByName(String name) {
 		for (int i = 0, n = categories.size(); i < n; ++i) {
-			if (name.equals(categories.get(i).getNamePropertyReadOnly().getValue())) {
+			if (name.equals(categories.get(i).getNameProperty().getValue())) {
 				return i;
 			}
 		}
@@ -76,6 +76,14 @@ public class Project implements Serializable {
                 NotificationCenter.ITEMS_REMOVED_NOTIFICATION, categoriesProperty, Arrays.asList(category));
     }
 
+    public void renameCategory(Category category, String name) {
+        if (categories.indexOf(category) < 0) {
+            return;
+        }
+
+        category.getNameReadWriteProperty().setValue(name);
+    }
+
     public void addSample(Category category, Gesture gesture) {
         if (categories.indexOf(category) < 0) {
             return;
@@ -95,7 +103,7 @@ public class Project implements Serializable {
         ArrayList<Category> addedCategories = new ArrayList<Category>();
 
         for (Category newCategory : project.categories) {
-            int index = findCategoryIndexByName(newCategory.getNamePropertyReadOnly().getValue());
+            int index = findCategoryIndexByName(newCategory.getNameProperty().getValue());
             if (index < 0) {
 
                 categories.add(newCategory);

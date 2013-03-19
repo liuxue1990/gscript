@@ -253,23 +253,14 @@ public class MainWindowController {
 		clientArea.setWeights(new int[]{20, 60, 40});
 		clientArea.setFocus();
 
-//        final SimpleButton btnAnalyze = new ButtonRefresh(clientContainer, SWT.BACKGROUND) {
-//            @Override
-//            protected void buttonClicked() {
-//                mainViewModel.analyze();
-//            }
-//        };
-//        btnAnalyze.setBackground(clientContainer.getDisplay().getSystemColor(SWT.COLOR_WHITE));
-//        btnAnalyze.setSize(48, 48);
-
-        final Button btnAnalyze = new Button(clientContainer, SWT.PUSH);
-        btnAnalyze.setText("R");
-        btnAnalyze.addSelectionListener(new SelectionAdapter() {
+        final SimpleButton btnAnalyze = new ButtonRefresh(clientContainer, SWT.BACKGROUND) {
             @Override
-            public void widgetSelected(SelectionEvent e) {
+            protected void buttonClicked() {
                 mainViewModel.analyze();
             }
-        });
+        };
+        btnAnalyze.setBackground(clientContainer.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        btnAnalyze.setSize(48, 48);
 
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);

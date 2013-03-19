@@ -435,7 +435,7 @@ public class Learner {
 
     public static double distanceToTemplateAligned(double[] template, double[] features) {
         double angle = bestAlignedAngle(template, GSMath.normalize(features, null));
-        return distanceToTemplateAtAngle(template, features, angle);
+        return distanceAtAngle(template, features, angle);
     }
 
     public static double distanceToTemplateAtAngle(double[] template, double[] features, double angle) {
@@ -444,6 +444,61 @@ public class Learner {
     }
 
     public static double distanceAtAngle(double[] features1, double[] features2, double angle) {
+        return distanceAtAngle2(features1, features2, angle);
+    }
+
+    public static double distance3(double[] features1, double[] features2, double angle) {
+        double xu = 0;
+        double yy = 0;
+        double xy = 0;
+        double yu = 0;
+        double xx = 0;
+        double xv = 0;
+        double yv = 0;
+        for (int i = 0; i < features1.length; i += 2) {
+            xu += features2[i] * features1[i];
+            yy += features2[i + 1] * features2[i + 1];
+            xy += features2[i] * features2[i + 1];
+            yu += features2[i + 1] * features1[i];
+            xx += features2[i] * features2[i];
+            xv += features2[i] * features1[i + 1];
+            yv += features2[i + 1] * features1[i + 1];
+        }
+
+        double a = (xu * yy - xy * yu) / (yy * xx - xy * xy);
+        double b = (yu * xx - xy * xu) / (yy * xx - xy * xy);
+
+        double c = (xv * yy - xy * yv) / (yy * xx - xy * xy);
+        double d = (yv * xx - xy * xv) / (yy * xx - xy * xy);
+
+        double dis = 0;
+
+        for (int i = 0; i < features1.length; i += 2) {
+
+            double x = features2[i];
+            double y = features2[i + 1];
+
+            double xt = a * x + b * y;
+            double yt = c * x + d * y;
+
+            double dx = features1[i] - xt;
+            double dy = features1[i + 1] - yt;
+
+            dis += dx * dx + dy * dy;
+        }
+
+        double dis2 = distanceAtAngle1(features1, features2, angle);
+        if (Double.compare(dis, dis2) <= 0) {
+//            System.out.println("YES");
+            System.out.println(dis + " vs " + dis2);
+        } else {
+//            System.out.println("NO");
+        }
+
+        return dis2;
+    }
+
+    public static double distanceAtAngle1(double[] features1, double[] features2, double angle) {
         double dis = 0;
 
         double cos = Math.cos(angle);
@@ -463,6 +518,30 @@ public class Learner {
         }
 
         return dis;
+    }
+
+    public static double distanceAtAngle2(double[] features1, double[] features2, double angle) {
+        double dot = 0;
+
+        double l1 = GSMath.magnitude(features1);
+        double l2 = GSMath.magnitude(features2);
+
+        double cos = Math.cos(angle);
+        double sin = Math.sin(angle);
+
+        for (int i = 0; i < features1.length; i += 2) {
+            double x = features2[i];
+            double y = features2[i + 1];
+
+            double xt = cos * x - sin * y;
+            double yt = sin * x + cos * y;
+
+            dot += features1[i] * xt + features1[i + 1] * yt;
+        }
+
+
+        System.out.println(Math.acos(dot / l1 / l2));
+        return Math.acos(dot / l1 / l2);
     }
 
     public static int[] computeEndLocations(Gesture gesture) {

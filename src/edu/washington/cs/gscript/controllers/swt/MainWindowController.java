@@ -264,6 +264,12 @@ public class MainWindowController {
 
         final Button btnAnalyze = new Button(clientContainer, SWT.PUSH);
         btnAnalyze.setText("R");
+        btnAnalyze.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mainViewModel.analyze();
+            }
+        });
 
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);

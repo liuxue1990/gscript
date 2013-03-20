@@ -1,14 +1,11 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
-import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.recognizers.Learner;
 import edu.washington.cs.gscript.recognizers.Part;
-import edu.washington.cs.gscript.recognizers.PartFeatureVector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -34,6 +31,18 @@ public class GestureCanvas extends Canvas {
 
 	private boolean isMouseDown;
 
+    private boolean isGesturing;
+
+    private Gesture gesture;
+
+    private int[] endLocations;
+
+    private boolean[] isUserLabeledBreaks;
+
+    private Rectangle[] endLocationBoundingBoxes;
+
+    private int hoverEndLocation = -1;
+
     private NotificationObserver partsListener = new NotificationObserver() {
         @Override
         public void onNotified(Object arg) {
@@ -46,11 +55,20 @@ public class GestureCanvas extends Canvas {
         }
     };
 
+    private NotificationObserver sampleListener = new NotificationObserver() {
+        @Override
+        public void onNotified(Object arg) {
+            updateEndLocations();
+            redraw();
+        }
+    };
+
 	public GestureCanvas(Composite parent, MainViewModel viewModel) {
 		super(parent, SWT.BACKGROUND);
 		setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
 		isMouseDown = false;
+        isGesturing = false;
 
 		addPaintListener(new PaintListener() {
 			@Override
@@ -62,23 +80,50 @@ public class GestureCanvas extends Canvas {
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
-				isMouseDown = true;
-				points = new ArrayList<XYT>();
-				addPoint(e.x, e.y, e.time);
+                isMouseDown = true;
+
+                if (hoverEndLocation == -1) {
+                    isGesturing = true;
+                    points = new ArrayList<XYT>();
+                    addPoint(e.x, e.y, e.time);
+                }
 			}
 
 			@Override
 			public void mouseUp(MouseEvent e) {
-				isMouseDown = false;
-				gesturePerformed();
+                isMouseDown = false;
+
+                if (isGesturing) {
+    				isGesturing = false;
+	    			gesturePerformed();
+                } else {
+                    if (hoverEndLocation != -1 && endLocationBoundingBoxes[hoverEndLocation].contains(e.x, e.y)) {
+                        toggleUserLabelAtEndLocation(hoverEndLocation);
+                    }
+                    hoverEndLocation = getHoverEndLocation(e.x, e.y);
+                }
 			}
 		});
 
 		addMouseMoveListener(new MouseMoveListener() {
 			@Override
 			public void mouseMove(MouseEvent e) {
-				if (isMouseDown) {
+                if (!isGesturing) {
+
+                    if (!isMouseDown) {
+                        if (endLocations != null) {
+                            int i = getHoverEndLocation(e.x, e.y);
+
+                            if (i != hoverEndLocation) {
+                                hoverEndLocation = i;
+                                redraw();
+                            }
+                        }
+                    }
+
+                } else {
 					addPoint(e.x, e.y, e.time);
+                    redraw();
 				}
 			}
 		});
@@ -89,7 +134,7 @@ public class GestureCanvas extends Canvas {
 				new NotificationObserver() {
 					@Override
 					public void onNotified(Object arg) {
-						redraw();
+                        onSampleSelected(mainViewModel.getSelectedSample());
 					}
 				},
 				MainViewModel.SAMPLE_SELECTED_NOTIFICATION, mainViewModel);
@@ -112,6 +157,23 @@ public class GestureCanvas extends Canvas {
                 MainViewModel.CATEGORY_SELECTED_NOTIFICATION, mainViewModel);
 	}
 
+    private void toggleUserLabelAtEndLocation(int hoverEndLocation) {
+        mainViewModel.toggleUserLabelAtEndLocation(
+                mainViewModel.getSelectedCategory(), gesture, gesture.indexToRatio(endLocations[hoverEndLocation]));
+    }
+
+    private int getHoverEndLocation(int x, int y) {
+        int h = -1;
+        for (int i = 0; i < endLocations.length; ++i) {
+            if (endLocationBoundingBoxes[i].contains(x, y)) {
+                h = i;
+                break;
+            }
+        }
+
+        return h;
+    }
+
 	private void addPoint(double x, double y, long t) {
 		points.add(XYT.xyt(x, y, t & 0xFFFFFFFFL));
 		redraw();
@@ -126,12 +188,49 @@ public class GestureCanvas extends Canvas {
 		redraw();
 	}
 
+    private void updateEndLocations() {
+        final int boundingBoxSize = 6;
+
+        endLocations = Learner.computeEndLocations(gesture);
+        isUserLabeledBreaks = new boolean[endLocations.length];
+        endLocationBoundingBoxes = new Rectangle[endLocations.length];
+
+
+        for (int i = 0; i < endLocations.length; ++i) {
+            double t = gesture.indexToRatio(endLocations[i]);
+            isUserLabeledBreaks[i] = gesture.isUserLabeledBreak(t);
+
+            XYT point = gesture.get(endLocations[i]);
+            endLocationBoundingBoxes[i] = new Rectangle(
+                    (int)(point.getX() - boundingBoxSize / 2), (int)(point.getY() - boundingBoxSize / 2),
+                    boundingBoxSize, boundingBoxSize);
+        }
+    }
+
+    private void onSampleSelected(Gesture g) {
+        NotificationCenter.getDefaultCenter().removeObserver(sampleListener);
+
+        if (g == null) {
+            gesture = null;
+            return;
+        }
+
+        gesture = g;
+
+        NotificationCenter.getDefaultCenter().addObserver(
+                sampleListener, Gesture.USER_LABELED_BREAKS_CHANGED_NOTIFICATION, gesture);
+
+        updateEndLocations();
+        redraw();
+    }
+
 	private void paint(GC gc) {
 		if (points != null) {
 			renderTrajectory(gc, points);
 		} else {
 			if (mainViewModel.getSelectedSample() != null) {
 				renderTrajectory(gc, mainViewModel.getSelectedSample().resample(100));
+                renderEndPoints(gc);
 			}
 
             if (mainViewModel.getSelectedCategory() != null) {
@@ -195,14 +294,28 @@ public class GestureCanvas extends Canvas {
 
     }
 
-    private static void renderEndPoints(GC gc, Gesture gesture) {
-        gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_BLUE));
+    private void renderEndPoints(GC gc) {
 
-        int[] endLocations = Learner.computeEndLocations(gesture);
+        Color bgColor = gc.getBackground();
 
-        for (int i : endLocations) {
-            XYT pt = gesture.get(i);
-            gc.fillArc((int)pt.getX() - 2, (int)pt.getY() - 2, 4, 4, 0, 360);
+        for (int i = 0; i < endLocations.length; ++i) {
+            XYT pt = gesture.get(endLocations[i]);
+
+            if (isUserLabeledBreaks[i]) {
+                gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+            } else {
+                gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_BLUE));
+            }
+
+            if (hoverEndLocation != -1 && i == hoverEndLocation) {
+                Color c = gc.getBackground();
+                gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_GRAY));
+                gc.fillArc((int)pt.getX() - 5, (int)pt.getY() - 5, 10, 10, 0, 360);
+                gc.setBackground(c);
+            }
+            gc.fillArc((int)pt.getX() - 3, (int)pt.getY() - 3, 6, 6, 0, 360);
+
+            gc.setBackground(bgColor);
         }
 
 //        if (mainViewModel.getParts() != null) {
@@ -255,10 +368,6 @@ public class GestureCanvas extends Canvas {
 //                    }
 //                }
 //            }
-//
-//        }
-//
-//        if (mainViewModel.getParts() != null) {
 //
 //        }
     }

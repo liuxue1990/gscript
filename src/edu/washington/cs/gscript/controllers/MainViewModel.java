@@ -147,6 +147,10 @@ public class MainViewModel {
         }
     }
 
+    public void toggleUserLabelAtEndLocation(Category category, Gesture sample, double locationInRatio) {
+        project.toggleUserLabelAtEndLocation(category, sample, locationInRatio);
+    }
+
     public void loadTestData() {
         project.importCategories(OneDollarDataImporter.importDiretory("/Users/hlv/repos/gscript/data/one_dollar/s02/medium"));
     }

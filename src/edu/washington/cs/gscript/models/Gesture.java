@@ -1,16 +1,19 @@
 package edu.washington.cs.gscript.models;
 
+import edu.washington.cs.gscript.framework.NotificationCenter;
+import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.helpers.GSMath;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Gesture implements Serializable, Iterable<XYT> {
 
     private static final long serialVersionUID = 8629568863762988522L;
+
+    public static final int USER_LABELED_BREAKS_CHANGED_NOTIFICATION = 0;
 
     private class GestureIterator implements Iterator<XYT> {
 
@@ -43,6 +46,10 @@ public class Gesture implements Serializable, Iterable<XYT> {
 
 	private final Rect bounds;
 
+    private transient double length;
+
+    private ArrayList<Double> userLabeledBreaks;
+
 	public Gesture(List<XYT> trajectory) {
         this(trajectory.toArray(new XYT[trajectory.size()]));
 	}
@@ -50,6 +57,27 @@ public class Gesture implements Serializable, Iterable<XYT> {
     private Gesture(XYT[] points) {
         this.points = points;
         this.bounds = GSMath.boundingBox(Arrays.asList(points));
+
+        init();
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        init();
+    }
+
+    private void init() {
+        updateLength();
+        if (userLabeledBreaks == null) {
+            userLabeledBreaks = new ArrayList<Double>();
+        }
+    }
+
+    private void updateLength() {
+        length = 0;
+        for (int i = 1; i < points.length; ++i) {
+            length += GSMath.distance(points[i - 1].getX(), points[i - 1].getY(), points[i].getX(), points[i].getY());
+        }
     }
 
     @Override
@@ -68,6 +96,69 @@ public class Gesture implements Serializable, Iterable<XYT> {
 	public XYT get(int i) {
 		return points[i];
 	}
+
+    public double indexToRatio(int index) {
+        double d = 0;
+        for (int i = 1; i <= index; ++i) {
+            double x0 = points[i - 1].getX();
+            double y0 = points[i - 1].getY();
+            double x1 = points[i].getX();
+            double y1 = points[i].getY();
+            d += GSMath.distance(x0, y0, x1, y1);
+        }
+        return d / length;
+    }
+
+    public int ratioToIndex(double t) {
+
+        double dt = t * length;
+        double d = 0;
+
+        for (int i = 1; i < points.length; ++i) {
+
+            double x0 = points[i - 1].getX();
+            double y0 = points[i - 1].getY();
+            double x1 = points[i].getX();
+            double y1 = points[i].getY();
+
+            double di = GSMath.distance(x0, y0, x1, y1);
+
+            d += di;
+
+            if (GSMath.compareDouble(d, dt) >= 0) {
+                return i - 1;
+            }
+        }
+
+        return points.length - 1;
+    }
+
+    public boolean isUserLabeledBreak(double t) {
+        return indexOfUserLabeledBreak(t) >= 0;
+    }
+
+    private int indexOfUserLabeledBreak(double t) {
+        int numOfUserLabeledBreaks = userLabeledBreaks.size();
+        for (int i = 0; i < numOfUserLabeledBreaks; ++i) {
+            if  (GSMath.compareDouble(Math.abs(t - userLabeledBreaks.get(i)), 0.01) < 0) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    void toggleUserLabelAtLocation(double t) {
+        int index = indexOfUserLabeledBreak(t);
+        if (index < 0) {
+            userLabeledBreaks.add(t);
+            Collections.sort(userLabeledBreaks);
+        } else {
+            userLabeledBreaks.remove(index);
+        }
+
+        NotificationCenter.getDefaultCenter().postNotification(
+                USER_LABELED_BREAKS_CHANGED_NOTIFICATION, this);
+    }
 
     public Gesture normalize() {
         Gesture resampled = resample(1024);

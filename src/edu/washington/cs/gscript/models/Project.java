@@ -141,4 +141,13 @@ public class Project implements Serializable {
         checkCategory(category);
         category.setParts(parts);
     }
+
+    public void toggleUserLabelAtEndLocation(Category category, Gesture sample, double t) {
+        checkCategory(category);
+        if (category.indexOfSample(sample) < 0) {
+            throw new RuntimeException("Invalid sample");
+        }
+
+        sample.toggleUserLabelAtLocation(t);
+    }
 }

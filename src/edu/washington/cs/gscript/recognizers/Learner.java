@@ -448,6 +448,7 @@ public class Learner {
     }
 
     public static double distance3(double[] features1, double[] features2, double angle) {
+
         double xu = 0;
         double yy = 0;
         double xy = 0;
@@ -455,6 +456,7 @@ public class Learner {
         double xx = 0;
         double xv = 0;
         double yv = 0;
+
         for (int i = 0; i < features1.length; i += 2) {
             xu += features2[i] * features1[i];
             yy += features2[i + 1] * features2[i + 1];
@@ -467,9 +469,8 @@ public class Learner {
 
         double a = (xu * yy - xy * yu) / (yy * xx - xy * xy);
         double b = (yu * xx - xy * xu) / (yy * xx - xy * xy);
-
-        double c = (xv * yy - xy * yv) / (yy * xx - xy * xy);
-        double d = (yv * xx - xy * xv) / (yy * xx - xy * xy);
+        double d = (xv * yy - xy * yv) / (yy * xx - xy * xy);
+        double e = (yv * xx - xy * xv) / (yy * xx - xy * xy);
 
         double dis = 0;
 
@@ -479,7 +480,7 @@ public class Learner {
             double y = features2[i + 1];
 
             double xt = a * x + b * y;
-            double yt = c * x + d * y;
+            double yt = d * x + e * y;
 
             double dx = features1[i] - xt;
             double dy = features1[i + 1] - yt;
@@ -489,10 +490,8 @@ public class Learner {
 
         double dis2 = distanceAtAngle1(features1, features2, angle);
         if (Double.compare(dis, dis2) <= 0) {
-//            System.out.println("YES");
             System.out.println(dis + " vs " + dis2);
         } else {
-//            System.out.println("NO");
         }
 
         return dis2;
@@ -539,9 +538,8 @@ public class Learner {
             dot += features1[i] * xt + features1[i + 1] * yt;
         }
 
-
-        System.out.println(Math.acos(dot / l1 / l2));
         return Math.acos(dot / l1 / l2);
+//        return (1 - dot / l1 / l2);
     }
 
     public static int[] computeEndLocations(Gesture gesture) {

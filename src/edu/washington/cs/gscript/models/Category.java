@@ -1,5 +1,7 @@
 package edu.washington.cs.gscript.models;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,6 +9,7 @@ import java.util.Arrays;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
+import edu.washington.cs.gscript.recognizers.Part;
 
 public class Category implements Serializable {
 
@@ -20,12 +23,25 @@ public class Category implements Serializable {
 
     private ReadWriteProperty<String> scriptTextProperty;
 
+    private Property<Integer> partsProperty;
+
+    private ArrayList<Part> parts;
+
     public Category(String name) {
 		nameProperty = new ReadWriteProperty<String>(name);
         samplesProperty = new Property<Integer>(0);
 		samples = new ArrayList<Gesture>();
         scriptTextProperty = new ReadWriteProperty<String>("");
+        parts = new ArrayList<Part>();
 	}
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+
+        if (parts == null) {
+            parts = new ArrayList<Part>();
+        }
+    }
 
 	public Property<String> getNameProperty() {
 		return nameProperty;
@@ -37,6 +53,10 @@ public class Category implements Serializable {
 
     public Property<String> getScriptTextProperty() {
         return scriptTextProperty;
+    }
+
+    public Property<Integer> getPartsProperty() {
+        return partsProperty;
     }
 
     ReadWriteProperty<String> getNameReadWriteProperty() {
@@ -59,6 +79,14 @@ public class Category implements Serializable {
         return samples.indexOf(sample);
     }
 
+    public int getNumOfParts() {
+        return parts.size();
+    }
+
+    public Part getPart(int index) {
+        return parts.get(index);
+    }
+
 	void addSample(Gesture gesture) {
 		samples.add(gesture);
 		NotificationCenter.getDefaultCenter().postNotification(
@@ -70,4 +98,10 @@ public class Category implements Serializable {
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
 	}
+
+    void setParts(ArrayList<Part> parts) {
+        this.parts = new ArrayList<Part>(parts);
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsProperty);
+    }
 }

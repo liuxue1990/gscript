@@ -152,17 +152,17 @@ public class MainViewModel {
     }
 
 
-    // @TODO refactor
-    private ArrayList<Part> parts = null;
-
     public void analyze() {
         if (getSelectedCategory() != null) {
-            parts = new Learner().learnParts(getSelectedCategory());
+            Thread learningThread = new Thread() {
+                @Override
+                public void run() {
+                    ArrayList<Part> parts = new Learner().learnParts(getSelectedCategory());
+                    project.setParts(getSelectedCategory(), parts);
+                }
+            };
+
+            learningThread.start();
         }
     }
-
-    public ArrayList<Part> getParts() {
-        return parts;
-    }
-
 }

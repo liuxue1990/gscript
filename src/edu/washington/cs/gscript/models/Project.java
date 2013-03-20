@@ -2,6 +2,7 @@ package edu.washington.cs.gscript.models;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
+import edu.washington.cs.gscript.recognizers.Part;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -125,11 +126,19 @@ public class Project implements Serializable {
                 NotificationCenter.ITEMS_ADDED_NOTIFICATION, categoriesProperty, addedCategories);
     }
 
-    public void setScript(Category category, String text) {
+    private void checkCategory(Category category) {
         if (categories.indexOf(category) < 0) {
-            return;
+            throw new RuntimeException("Invalid category");
         }
+    }
 
+    public void setScript(Category category, String text) {
+        checkCategory(category);
         category.getScriptTextReadWriteProperty().setValue(text);
+    }
+
+    public void setParts(Category category, ArrayList<Part> parts) {
+        checkCategory(category);
+        category.setParts(parts);
     }
 }

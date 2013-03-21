@@ -363,7 +363,7 @@ public class MainWindowController {
 
 		scriptText = new ScriptText(rightPanel, SWT.MULTI, mainViewModel);
 
-		Composite outputComposite = new Composite(rightPanel, SWT.BACKGROUND);
+		CandidateScrolledList outputComposite = new CandidateScrolledList(rightPanel, SWT.BACKGROUND, mainViewModel);
 		outputComposite.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
 		rightPanel.setWeights(new int[]{50, 50});

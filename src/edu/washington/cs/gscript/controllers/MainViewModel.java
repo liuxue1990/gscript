@@ -6,12 +6,10 @@ import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.Project;
 import edu.washington.cs.gscript.models.Gesture;
 import edu.washington.cs.gscript.recognizers.Learner;
-import edu.washington.cs.gscript.recognizers.Part;
+import edu.washington.cs.gscript.models.Part;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 
 public class MainViewModel {
 
@@ -147,26 +145,17 @@ public class MainViewModel {
         }
     }
 
-    public void toggleUserLabelAtEndLocation(Category category, Gesture sample, double locationInRatio) {
-        project.toggleUserLabelAtEndLocation(category, sample, locationInRatio);
+    public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double locationInRatio) {
+        project.toggleUserLabelAtSampleEndLocation(category, sample, locationInRatio);
     }
 
     public void loadTestData() {
         project.importCategories(OneDollarDataImporter.importDiretory("/Users/hlv/repos/gscript/data/one_dollar/s02/medium"));
     }
 
-
     public void analyze() {
         if (getSelectedCategory() != null) {
-            Thread learningThread = new Thread() {
-                @Override
-                public void run() {
-                    ArrayList<Part> parts = new Learner().learnParts(getSelectedCategory());
-                    project.setParts(getSelectedCategory(), parts);
-                }
-            };
-
-            learningThread.start();
+            project.learnCategory(getSelectedCategory());
         }
     }
 }

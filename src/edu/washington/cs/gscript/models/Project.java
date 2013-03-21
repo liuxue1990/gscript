@@ -2,28 +2,91 @@ package edu.washington.cs.gscript.models;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
-import edu.washington.cs.gscript.recognizers.Part;
+import edu.washington.cs.gscript.framework.ReadWriteProperty;
+import edu.washington.cs.gscript.helpers.Parser;
+import edu.washington.cs.gscript.helpers.SampleGenerator;
+import edu.washington.cs.gscript.recognizers.Learner;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Project implements Serializable {
 
     private static final long serialVersionUID = 1446681795656083070L;
 
-    private Property<Integer> categoriesProperty;
+    private transient ReadWriteProperty<Boolean> dirtyProperty;
+
+    private transient Property<Integer> categoriesProperty;
 
     private ArrayList<Category> categories;
 
+    private Map<String, Part> partsTable;
+
 	public Project() {
-        categoriesProperty = new Property<Integer>(0);
 		categories = new ArrayList<Category>();
+        partsTable = new HashMap<String, Part>();
+
+        init();
+        setDirty(true);
 	}
 
-	public Property<Integer> getCategoriesProperty() {
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+
+        init();
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+        out.defaultWriteObject();
+
+        setDirty(false);
+    }
+
+    private void init() {
+        categoriesProperty = new Property<Integer>(0);
+        dirtyProperty = new ReadWriteProperty<Boolean>(false);
+
+        if (partsTable == null) {
+            partsTable = new HashMap<String, Part>();
+        }
+    }
+
+    private void checkCategory(Category category) {
+        if (categories.indexOf(category) < 0) {
+            throw new RuntimeException("Invalid category");
+        }
+    }
+
+    private void checkCategoryAndSample(Category category, Gesture sample) {
+        checkCategory(category);
+
+        if (category.indexOfSample(sample) < 0) {
+            throw new RuntimeException("Invalid sample");
+        }
+    }
+
+    public Property<Boolean> getDirtyProperty() {
+        return dirtyProperty;
+    }
+
+    public Property<Integer> getCategoriesProperty() {
 		return categoriesProperty;
 	}
+
+    public boolean isDirty() {
+        return dirtyProperty.getValue();
+    }
+
+    private void setDirty(boolean flag) {
+        if (flag != isDirty()) {
+            dirtyProperty.setValue(flag);
+        }
+    }
 
     public int getNumOfCategories() {
         return categories.size();
@@ -57,13 +120,15 @@ public class Project implements Serializable {
     }
 
 	public void addNewCategory() {
-		addCategory(generateUnusedCategoryName());
+		addCategoryIfNotExist(generateUnusedCategoryName());
+        setDirty(true);
 	}
 
-    public void addCategory(String name) {
+    public void addCategoryIfNotExist(String name) {
         if (findCategoryIndexByName(name) < 0) {
             Category category = new Category(name);
             categories.add(category);
+            setDirty(true);
 
             NotificationCenter.getDefaultCenter().postNotification(
                     NotificationCenter.ITEMS_ADDED_NOTIFICATION, categoriesProperty, Arrays.asList(category));
@@ -71,32 +136,30 @@ public class Project implements Serializable {
     }
 
     public void removeCategory(Category category) {
+        checkCategory(category);
         categories.remove(category);
+        setDirty(true);
 
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.ITEMS_REMOVED_NOTIFICATION, categoriesProperty, Arrays.asList(category));
     }
 
     public void renameCategory(Category category, String name) {
-        if (categories.indexOf(category) < 0) {
-            return;
-        }
-
+        checkCategory(category);
         category.getNameReadWriteProperty().setValue(name);
+        setDirty(true);
     }
 
-    public void addSample(Category category, Gesture gesture) {
-        if (categories.indexOf(category) < 0) {
-            return;
-        }
-        category.addSample(gesture);
+    public void addSample(Category category, Gesture sample) {
+        checkCategory(category);
+        category.addSample(sample);
+        setDirty(true);
     }
 
-    public void removeSample(Category category, Gesture gesture) {
-        if (categories.indexOf(category) < 0) {
-            return;
-        }
-        category.removeSample(gesture);
+    public void removeSample(Category category, Gesture sample) {
+        checkCategoryAndSample(category, sample);
+        category.removeSample(sample);
+        setDirty(true);
     }
 
     public void importCategories(Project project) {
@@ -120,34 +183,67 @@ public class Project implements Serializable {
             }
         }
 
+        setDirty(true);
+
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, categoriesProperty, modifiedCategories);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.ITEMS_ADDED_NOTIFICATION, categoriesProperty, addedCategories);
     }
 
-    private void checkCategory(Category category) {
-        if (categories.indexOf(category) < 0) {
-            throw new RuntimeException("Invalid category");
-        }
-    }
-
     public void setScript(Category category, String text) {
         checkCategory(category);
         category.getScriptTextReadWriteProperty().setValue(text);
+        setDirty(true);
+    }
+
+    public ArrayList<Part> parseScript(Category category) {
+        checkCategory(category);
+        ArrayList<Part> parts = Parser.parseScript(
+                category.getScriptTextProperty().getValue(), category.getNameProperty().getValue());
+
+        int numOfParts = parts.size();
+        for (int i = 0; i < numOfParts; ++i) {
+            Part part = partsTable.get(parts.get(i).getName());
+            if (part == null) {
+                partsTable.put(part.getName(), parts.get(i));
+                part = parts.get(i);
+            } else {
+                parts.set(i, part);
+            }
+        }
+        return parts;
     }
 
     public void setParts(Category category, ArrayList<Part> parts) {
         checkCategory(category);
         category.setParts(parts);
+        setDirty(true);
     }
 
-    public void toggleUserLabelAtEndLocation(Category category, Gesture sample, double t) {
-        checkCategory(category);
-        if (category.indexOfSample(sample) < 0) {
-            throw new RuntimeException("Invalid sample");
-        }
-
+    public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double t) {
+        checkCategoryAndSample(category, sample);
         sample.toggleUserLabelAtLocation(t);
+        setDirty(true);
+    }
+
+    public void learnCategory(final Category category) {
+        checkCategory(category);
+
+        // @TODO clean up partsTable
+
+        // @TODO parse this script
+        Thread learningThread = new Thread() {
+            @Override
+            public void run() {
+                ArrayList<Part> parts = new Learner().learnParts(category);
+                category.setGenerated(new SampleGenerator().generate(parts));
+                setParts(category, parts);
+
+                // TODO generate candidates
+            }
+        };
+
+        learningThread.start();
     }
 }

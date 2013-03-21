@@ -5,11 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.xml.parsers.SAXParserFactory;
 
-import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.Gesture;
 import edu.washington.cs.gscript.models.Project;
 import edu.washington.cs.gscript.models.XYT;
@@ -56,7 +54,7 @@ public class OneDollarDataImporter {
                         new File(dir.getPath() + File.separator + fileName), handler);
 
                 if (!handler.points.isEmpty()) {
-                    project.addCategory(name);
+                    project.addCategoryIfNotExist(name);
                     project.addSample(
                             project.getCategory(project.findCategoryIndexByName(name)),
                             new Gesture(handler.points));
@@ -92,7 +90,7 @@ public class OneDollarDataImporter {
                     points.add(XYT.xyt(Double.parseDouble(values[i]), Double.parseDouble(values[i+1]), -1));
                 }
 
-                project.addCategory(name);
+                project.addCategoryIfNotExist(name);
                 project.addSample(project.getCategory(project.findCategoryIndexByName(name)), new Gesture(points));
             }
         } catch (IOException e) {

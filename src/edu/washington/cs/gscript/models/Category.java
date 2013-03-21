@@ -9,7 +9,7 @@ import java.util.Arrays;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
-import edu.washington.cs.gscript.recognizers.Part;
+import edu.washington.cs.gscript.helpers.PartInstance;
 
 public class Category implements Serializable {
 
@@ -17,26 +17,37 @@ public class Category implements Serializable {
 
     private ReadWriteProperty<String> nameProperty;
 
-    private Property<Integer> samplesProperty;
+    private transient Property<Integer> samplesProperty;
 
 	private ArrayList<Gesture> samples;
 
     private ReadWriteProperty<String> scriptTextProperty;
 
-    private Property<Integer> partsProperty;
+    private transient Property<Integer> partsProperty;
 
-    private ArrayList<Part> parts;
+    private transient ArrayList<Part> parts;
+
+    private transient ArrayList<ArrayList<PartInstance>> generated;
 
     public Category(String name) {
 		nameProperty = new ReadWriteProperty<String>(name);
-        samplesProperty = new Property<Integer>(0);
 		samples = new ArrayList<Gesture>();
         scriptTextProperty = new ReadWriteProperty<String>("");
-        parts = new ArrayList<Part>();
+
+        init();
 	}
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
+
+        init();
+    }
+
+    private void init() {
+        samplesProperty = new Property<Integer>(0);
+        partsProperty = new Property<Integer>(0);
+
+        generated = new ArrayList<ArrayList<PartInstance>>();
 
         if (parts == null) {
             parts = new ArrayList<Part>();
@@ -103,5 +114,13 @@ public class Category implements Serializable {
         this.parts = new ArrayList<Part>(parts);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsProperty);
+    }
+
+    public void setGenerated(ArrayList<ArrayList<PartInstance>> gestures) {
+        this.generated = gestures;
+    }
+
+    public ArrayList<ArrayList<PartInstance>> getGenerated() {
+        return generated;
     }
 }

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.recognizers.Learner;
-import edu.washington.cs.gscript.recognizers.Part;
+import edu.washington.cs.gscript.models.Part;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -158,7 +158,7 @@ public class GestureCanvas extends Canvas {
 	}
 
     private void toggleUserLabelAtEndLocation(int hoverEndLocation) {
-        mainViewModel.toggleUserLabelAtEndLocation(
+        mainViewModel.toggleUserLabelAtSampleEndLocation(
                 mainViewModel.getSelectedCategory(), gesture, gesture.indexToRatio(endLocations[hoverEndLocation]));
     }
 

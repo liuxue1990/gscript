@@ -1,9 +1,12 @@
 package edu.washington.cs.gscript.recognizers;
 
 import edu.washington.cs.gscript.helpers.GSMath;
+import edu.washington.cs.gscript.helpers.Parser;
 import edu.washington.cs.gscript.helpers.Segmentation;
 import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.Gesture;
+import edu.washington.cs.gscript.models.Part;
+import edu.washington.cs.gscript.models.Project;
 
 import java.util.*;
 
@@ -61,7 +64,8 @@ public class Learner {
 
         ArrayList<int[]> candidates = new ArrayList<int[]>();
 
-        new Learner().search(0, featuresMap[simplestSampleIndex].length, 0, parseScript(scriptText).size(), new int[parseScript(scriptText).size() * 2], candidates);
+        ArrayList<Part> parts = Parser.parseScript(scriptText, category.getNameProperty().getValue());
+        new Learner().search(0, featuresMap[simplestSampleIndex].length, 0, parts.size(), new int[parts.size() * 2], candidates);
 
         System.out.println(candidates.size());
 
@@ -73,7 +77,6 @@ public class Learner {
                 break;
             }
 
-            ArrayList<Part> parts = parseScript(scriptText);
             for (int partIndex = 0; partIndex < parts.size(); ++partIndex) {
                 int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
                 PartFeatureVector template = new PartFeatureVector(
@@ -168,29 +171,6 @@ public class Learner {
         }
 
         return featureVectors;
-    }
-
-    public static ArrayList<Part> parseScript(String scriptText) {
-        ArrayList<Part> parts = new ArrayList<Part>();
-
-        for (String line : scriptText.split("\n")) {
-            if (line.trim().isEmpty()) {
-                continue;
-            }
-
-            Part part = new Part();
-            if (line.endsWith("*")) {
-                part.setRepeatable(true);
-            }
-
-            parts.add(part);
-        }
-
-        if (parts.size() == 0) {
-            parts.add(new Part());
-        }
-
-        return parts;
     }
 
     public static double findPartsInGesture(

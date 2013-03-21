@@ -54,6 +54,8 @@ public class ScrolledList extends ScrolledComposite {
 
     private boolean vertical;
 
+    private boolean multi;
+
     private Composite content;
 
     private Composite listContainer;
@@ -77,6 +79,8 @@ public class ScrolledList extends ScrolledComposite {
         setMinSize(0, 0);
 
         vertical = (style & SWT.H_SCROLL) == 0;
+        multi = (style & SWT.MULTI) != 0;
+
         setExpandHorizontal(vertical);
         setExpandVertical(!vertical);
 
@@ -95,7 +99,7 @@ public class ScrolledList extends ScrolledComposite {
                 vertical ? GridData.CENTER : GridData.BEGINNING,
                 vertical ? GridData.BEGINNING : GridData.CENTER, true, true));
 
-        RowLayout rowLayout = new RowLayout(vertical ? SWT.VERTICAL : SWT.HORIZONTAL);
+        RowLayout rowLayout = new RowLayout((vertical && !multi || !vertical && multi)  ? SWT.VERTICAL : SWT.HORIZONTAL);
         rowLayout.center = true;
         listContainer.setLayout(rowLayout);
 

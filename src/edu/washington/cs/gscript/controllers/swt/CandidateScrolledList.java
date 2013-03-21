@@ -31,7 +31,7 @@ public class CandidateScrolledList extends ScrolledList {
     };
 
     public CandidateScrolledList(Composite parent, int style, MainViewModel viewModel) {
-        super(parent, style | SWT.V_SCROLL);
+        super(parent, style | SWT.V_SCROLL | SWT.MULTI);
 
         this.mainViewModel = viewModel;
 

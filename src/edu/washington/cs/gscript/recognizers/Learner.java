@@ -40,9 +40,13 @@ public class Learner {
         final int numOfSamples = category.getNumOfSamples();
 
         PartFeatureVector[][][] featuresMap = new PartFeatureVector[numOfSamples][][];
+        boolean[][] userMarkedMap = new boolean[numOfSamples][];
 
         for (int k = 0; k < numOfSamples; ++k) {
-            featuresMap[k] = sampleFeatureVectors(category.getSample(k));
+            Gesture sample = category.getSample(k);
+            int[] endLocations = computeEndLocations(sample);
+            featuresMap[k] = sampleFeatureVectors(sample, endLocations);
+            userMarkedMap[k] = computeUserMarked(sample, endLocations);
         }
 
         double minLoss = Double.POSITIVE_INFINITY;
@@ -70,19 +74,27 @@ public class Learner {
         for (int[] candidate : candidates) {
             System.out.println(candidates.indexOf(candidate));
 
-            if (candidates.indexOf(candidate) > 10) {
+            if (candidates.indexOf(candidate) > 20) {
                 break;
             }
 
             for (int partIndex = 0; partIndex < parts.size(); ++partIndex) {
-                int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
-                PartFeatureVector template = new PartFeatureVector(
-                        GSMath.normalize(featuresMap[simplestSampleIndex][a][b].getFeatures(), null));
 
-                parts.get(partIndex).setTemplate(template);
+
+                if (category.getUserProvidedParts() != null && category.getUserProvidedParts()[partIndex] != null) {
+                    parts.get(partIndex).setTemplate(
+                            new PartFeatureVector(
+                                    GSMath.normalize(gestureFeatures(category.getUserProvidedParts()[partIndex], NUM_OF_RESAMPLING), null)));
+                } else {
+                    int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
+                    PartFeatureVector template = new PartFeatureVector(
+                            GSMath.normalize(featuresMap[simplestSampleIndex][a][b].getFeatures(), null));
+
+                    parts.get(partIndex).setTemplate(template);
+                }
             }
 
-            double loss = optimize(parts, featuresMap) / category.getNumOfSamples();
+            double loss = optimize(parts, featuresMap, userMarkedMap) / category.getNumOfSamples();
             if (GSMath.compareDouble(loss, minLoss) < 0) {
                 minLoss = loss;
                 bestParts = parts;
@@ -92,7 +104,7 @@ public class Learner {
         return bestParts;
     }
 
-    public static double optimize(ArrayList<Part> parts, PartFeatureVector[][][] featuresMap) {
+    public static double optimize(ArrayList<Part> parts, PartFeatureVector[][][] featuresMap, boolean[][] userMarkedMap) {
 
         final double minLossImprovement = 1e-10;
 
@@ -108,7 +120,7 @@ public class Learner {
             double loss = 0;
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
 
-                loss += findPartsInSample(featuresMap[sampleIndex], parts, breakLocationMap[sampleIndex], angleMap[sampleIndex]);
+                loss += findPartsInSample(featuresMap[sampleIndex], userMarkedMap[sampleIndex], parts, breakLocationMap[sampleIndex], angleMap[sampleIndex]);
 
                 if (Double.isInfinite(loss)) {
                     throw new RuntimeException("Cannot fragment the sample " + sampleIndex);
@@ -153,8 +165,7 @@ public class Learner {
         return minLoss;
     }
 
-    public static PartFeatureVector[][] sampleFeatureVectors(Gesture gesture) {
-        int[] endLocations = computeEndLocations(gesture);
+    public static PartFeatureVector[][] sampleFeatureVectors(Gesture gesture, int[] endLocations) {
 
         gesture = gesture.normalize();
 
@@ -173,8 +184,10 @@ public class Learner {
     public static double findPartsInGesture(
             Gesture gesture, ArrayList<Part> parts, int[][] breakLocations, double[] angles) {
 
-        PartFeatureVector[][] sampleFeaturesMap = sampleFeatureVectors(gesture);
-        return findPartsInSample(sampleFeaturesMap, parts, breakLocations, angles);
+        int[] endLocations = computeEndLocations(gesture);
+        PartFeatureVector[][] sampleFeaturesMap = sampleFeatureVectors(gesture, endLocations);
+        boolean[] userMarked = computeUserMarked(gesture, endLocations);
+        return findPartsInSample(sampleFeaturesMap, userMarked, parts, breakLocations, angles);
     }
 
     private static int[] toIntArray(ArrayList<Integer> integerList) {
@@ -186,7 +199,7 @@ public class Learner {
     }
 
     private static double findPartsInSample(
-            PartFeatureVector[][] sampleFeaturesMap, ArrayList<Part> parts, int[][] breakLocations, double[] angles) {
+            PartFeatureVector[][] sampleFeaturesMap, boolean[] userMarked, ArrayList<Part> parts, int[][] breakLocations, double[] angles) {
 
         final int numOfParts = parts.size();
         final int numOfEndLocations  = sampleFeaturesMap.length;
@@ -222,6 +235,14 @@ public class Learner {
                 loss[i][j] = Double.POSITIVE_INFINITY;
 
                 for (int k = j + 1; k <= lastEndLocationIndex; ++k) {
+
+                    if (!parts.get(i).isRepeatable() && k - 1 > j && userMarked[k - 1]) {
+                        break;
+                    }
+
+                    if (GSMath.compareDouble(loss[i + 1][k], Double.POSITIVE_INFINITY) == 0) {
+                        continue;
+                    }
                     if (GSMath.compareDouble(loss[i + 1][k], loss[i][j]) >= 0) {
                         continue;
                     }
@@ -238,7 +259,7 @@ public class Learner {
 
                     if (parts.get(i).isRepeatable()) {
 
-                        d = findRepetitionInFragment(u, sampleFeaturesMap, j, k, brList, angle) * length + loss[i + 1][k];
+                        d = findRepetitionInFragment(u, sampleFeaturesMap, userMarked, j, k, brList, angle) * length + loss[i + 1][k];
 
                     } else {
                         d = distanceToTemplateAligned(u.getFeatures(), vf) * length + loss[i + 1][k];
@@ -268,7 +289,7 @@ public class Learner {
 
     public static double findRepetitionInFragment(
             PartFeatureVector partFeatureVector,
-            PartFeatureVector[][] sampleFeaturesMap, int beginIndex, int endIndex, ArrayList<Integer> breakLocations, double[] bestAngle) {
+            PartFeatureVector[][] sampleFeaturesMap, boolean[] userMarked, int beginIndex, int endIndex, ArrayList<Integer> breakLocations, double[] bestAngle) {
 
         double minLoss = Double.POSITIVE_INFINITY;
         ArrayList<Integer> bestBreakLocations = null;
@@ -278,7 +299,7 @@ public class Learner {
 
             ArrayList<Integer> brList = new ArrayList<Integer>();
             double loss = findRepetitionInFragmentAtAngle(
-                    partFeatureVector.getFeatures(), sampleFeaturesMap, beginIndex, endIndex, angle, brList);
+                    partFeatureVector.getFeatures(), sampleFeaturesMap, userMarked, beginIndex, endIndex, angle, brList);
 
             if (GSMath.compareDouble(loss, minLoss) < 0) {
                 minLoss = loss;
@@ -294,7 +315,7 @@ public class Learner {
 
     public static double findRepetitionInFragmentAtAngle(
             double[] template,
-            PartFeatureVector[][] sampleFeaturesMap, int beginIndex, int endIndex, double angle,
+            PartFeatureVector[][] sampleFeaturesMap, boolean[] userMarked, int beginIndex, int endIndex, double angle,
             ArrayList<Integer> breakLocations) {
 
         int t = endIndex - beginIndex;
@@ -315,7 +336,21 @@ public class Learner {
                 loss[i][k] = Double.POSITIVE_INFINITY;
                 next[i][k] = -1;
 
+                int c = 0;
+                for (int j = i + 1; j < t; ++j) {
+                    if (userMarked[beginIndex + j]) {
+                        c++;
+                    }
+                }
+
+                if (c + 1 > k) {
+                    continue;
+                }
+
                 for (int j = i + 1; j <= t; ++j) {
+                    if (j - 1 > i && userMarked[beginIndex + j - 1]) {
+                        break;
+                    }
                     if (GSMath.compareDouble(loss[j][k - 1], Double.POSITIVE_INFINITY) >= 0) {
                         continue;
                     }
@@ -521,5 +556,15 @@ public class Learner {
 
     public static int[] computeEndLocations(Gesture gesture) {
         return Segmentation.segment(gesture, Learner.SEGMENTATION_ERROR);
+    }
+
+    public static boolean[] computeUserMarked(Gesture gesture, int[] endLocations) {
+        boolean[] userMarked = new boolean[endLocations.length];
+
+        for (int i = 0; i < endLocations.length; ++i) {
+            userMarked[i] = gesture.isUserLabeledBreakIndex(endLocations[i]);
+        }
+
+        return userMarked;
     }
 }

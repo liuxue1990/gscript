@@ -109,28 +109,32 @@ public class Gesture implements Serializable, Iterable<XYT> {
         return d / length;
     }
 
-    public int ratioToIndex(double t) {
+//    public int ratioToIndex(double t) {
+//
+//        double dt = t * length;
+//        double d = 0;
+//
+//        for (int i = 1; i < points.length; ++i) {
+//
+//            double x0 = points[i - 1].getX();
+//            double y0 = points[i - 1].getY();
+//            double x1 = points[i].getX();
+//            double y1 = points[i].getY();
+//
+//            double di = GSMath.distance(x0, y0, x1, y1);
+//
+//            d += di;
+//
+//            if (GSMath.compareDouble(d, dt) > 0) {
+//                return i - 1;
+//            }
+//        }
+//
+//        return points.length - 1;
+//    }
 
-        double dt = t * length;
-        double d = 0;
-
-        for (int i = 1; i < points.length; ++i) {
-
-            double x0 = points[i - 1].getX();
-            double y0 = points[i - 1].getY();
-            double x1 = points[i].getX();
-            double y1 = points[i].getY();
-
-            double di = GSMath.distance(x0, y0, x1, y1);
-
-            d += di;
-
-            if (GSMath.compareDouble(d, dt) >= 0) {
-                return i - 1;
-            }
-        }
-
-        return points.length - 1;
+    public boolean isUserLabeledBreakIndex(int index) {
+        return isUserLabeledBreak(indexToRatio(index));
     }
 
     public boolean isUserLabeledBreak(double t) {
@@ -140,7 +144,7 @@ public class Gesture implements Serializable, Iterable<XYT> {
     private int indexOfUserLabeledBreak(double t) {
         int numOfUserLabeledBreaks = userLabeledBreaks.size();
         for (int i = 0; i < numOfUserLabeledBreaks; ++i) {
-            if  (GSMath.compareDouble(Math.abs(t - userLabeledBreaks.get(i)), 0.01) < 0) {
+            if  (GSMath.compareDouble(Math.abs(t - userLabeledBreaks.get(i)), 0.001) < 0) {
                 return i;
             }
         }

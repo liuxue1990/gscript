@@ -72,6 +72,10 @@ public class SampleGenerator {
                     sub(parts, depth + 1, instanceList, collection);
                     instanceList.remove(instanceList.size() - 1);
                 }
+
+                if (collection.size() > 10000) {
+                    return;
+                }
             }
         }
     }

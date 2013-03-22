@@ -1,11 +1,12 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
-import edu.washington.cs.gscript.models.Category;
+import edu.washington.cs.gscript.helpers.GSMath;
+import edu.washington.cs.gscript.models.*;
 import edu.washington.cs.gscript.recognizers.Learner;
-import edu.washington.cs.gscript.models.Part;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -20,8 +21,6 @@ import org.eclipse.swt.widgets.Composite;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
-import edu.washington.cs.gscript.models.Gesture;
-import edu.washington.cs.gscript.models.XYT;
 
 public class GestureCanvas extends Canvas {
 
@@ -181,7 +180,20 @@ public class GestureCanvas extends Canvas {
 
 	private void gesturePerformed() {
 		if (points.size() > 5) {
-			mainViewModel.recordSample(mainViewModel.getSelectedCategory(), new Gesture(points));
+
+            boolean isForPart = false;
+            if (mainViewModel.getSelectedCategory() != null && mainViewModel.getSelectedCategory().getNumOfParts() > 0) {
+                for (int i = 0, n = mainViewModel.getSelectedCategory().getNumOfParts(); i < n; ++i) {
+                    if (getPartBounds(i).contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
+                        isForPart = true;
+                        mainViewModel.getSelectedCategory().setUserProvidedPart(i, new Gesture(points));
+                        break;
+                    }
+                }
+            }
+			if (!isForPart) {
+                mainViewModel.recordSample(mainViewModel.getSelectedCategory(), new Gesture(points));
+            }
 		}
 
 		points = null;
@@ -198,7 +210,7 @@ public class GestureCanvas extends Canvas {
 
         for (int i = 0; i < endLocations.length; ++i) {
             double t = gesture.indexToRatio(endLocations[i]);
-            isUserLabeledBreaks[i] = gesture.isUserLabeledBreak(t);
+            isUserLabeledBreaks[i] = gesture.isUserLabeledBreakIndex(endLocations[i]);
 
             XYT point = gesture.get(endLocations[i]);
             endLocationBoundingBoxes[i] = new Rectangle(
@@ -234,9 +246,14 @@ public class GestureCanvas extends Canvas {
 			}
 
             if (mainViewModel.getSelectedCategory() != null) {
-                renderParts(gc, mainViewModel.getSelectedCategory());
+//                renderParts(gc, mainViewModel.getSelectedCategory());
+                renderRecognition(gc);
             }
 		}
+
+        if (mainViewModel.getSelectedCategory() != null) {
+            renderParts(gc, mainViewModel.getSelectedCategory());
+        }
 
         // draw bottom border
         Rectangle rect = getClientArea();
@@ -263,6 +280,16 @@ public class GestureCanvas extends Canvas {
 		gc.setForeground(fg);
 	}
 
+    private Rectangle getPartBounds(int index) {
+
+        int sx = 10;
+        int sy = 10;
+        int width = 100;
+        int spacing = 10;
+
+        return new Rectangle(sx + (width + spacing) * index, sy, width, width);
+    }
+
     private static void renderParts(GC gc, Category category) {
         int sx = 10;
         int sy = 10;
@@ -279,6 +306,11 @@ public class GestureCanvas extends Canvas {
 
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_RED));
             renderFeatures(gc, part.getTemplate().getFeatures(), sx, sy, width);
+
+            if (category.getUserProvidedParts()[partIndex] != null) {
+                gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_BLUE));
+                renderFeatures(gc, Learner.gestureFeatures(category.getUserProvidedParts()[partIndex], Learner.NUM_OF_RESAMPLING), sx, sy, width);
+            }
 
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
 
@@ -318,58 +350,6 @@ public class GestureCanvas extends Canvas {
             gc.setBackground(bgColor);
         }
 
-//        if (mainViewModel.getParts() != null) {
-//
-//            int[][] breakLocations = new int[mainViewModel.getParts().size()][];
-//            double[] angles = new double[mainViewModel.getParts().size()];
-//
-//            double loss = Learner.findPartsInGesture(gesture, mainViewModel.getParts(), breakLocations, angles);
-//            System.out.println("loss = " + loss);
-//
-//            PartFeatureVector[][] sampleFeaturesMap = Learner.sampleFeatureVectors(gesture);
-//
-////            System.out.println("\n\n\n");
-////            Learner.findRepetitionInFragment(
-////                    mainViewModel.getParts().get(1).getTemplate(), sampleFeaturesMap, breakLocations[1][0], breakLocations[1][breakLocations[1].length - 1], new ArrayList<Integer>(), new double[1]);
-//
-//            System.out.println(Arrays.deepToString(breakLocations));
-//
-//            for (int pi = 0; pi < mainViewModel.getParts().size(); ++pi) {
-//
-//                for (int i = 0; i < endLocations.length; ++i) {
-//                    for (int j = i + 1; j < endLocations.length; ++j) {
-//
-//                        double[] f = sampleFeaturesMap[i][j].getFeatures();
-//                        double mag = GSMath.magnitude(f);
-//                        double len = Learner.length(f);
-//                        double d = Learner.distanceToTemplateAligned(mainViewModel.getParts().get(pi).getTemplate().getFeatures(), f);
-////                        System.out.println(" partIndex : " + pi + " at " + "[" + i + ", " + j + "]" + ", score : " + d + ", mag : " + mag + ", length : " + len);
-////                        System.out.println(Arrays.toString(f));
-////                        System.out.println("......");
-////                        System.out.println(Arrays.toString(mainViewModel.getParts().get(pi).getTemplate().getFeatures()));
-//                    }
-//                }
-//            }
-//
-//            for (int i = 0; i < angles.length; ++i) {
-//                angles[i] *= 180 / Math.PI;
-//            }
-//            System.out.println(Arrays.toString(angles));
-//
-//            for (int[] subBreakLocations : breakLocations) {
-//                for (int i = 0, n = subBreakLocations.length; i < n; ++i) {
-//                    int breakLocation = subBreakLocations[i];
-//                    XYT pt = gesture.get(endLocations[breakLocation]);
-//
-//                    if (i == 0 || i == n - 1) {
-//                        gc.fillArc((int) pt.getX() - 4, (int) pt.getY() - 4, 8, 8, 0, 360);
-//                    } else {
-//                        gc.fillRectangle((int)pt.getX() - 3, (int)pt.getY() - 3, 6, 6);
-//                    }
-//                }
-//            }
-//
-//        }
     }
 
     private static void renderFeatures(GC gc, double[] fs, int sx, int sy, int width) {
@@ -390,5 +370,66 @@ public class GestureCanvas extends Canvas {
             gc.drawLine(sx + width / 2 + (int)x0, sy + width / 2 + (int)y0, sx + width / 2 + (int)x1, sy + width / 2 + (int)y1);
         }
 
+    }
+
+    private void renderRecognition(GC gc) {
+        if (mainViewModel.getSelectedCategory() == null) {
+            return;
+        }
+
+        Category category = mainViewModel.getSelectedCategory();
+
+        if (category.getNumOfParts() > 0) {
+            int[][] breakLocations = new int[category.getNumOfParts()][];
+            double[] angles = new double[category.getNumOfParts()];
+
+            ArrayList<Part> parts = category.getParts();
+            double loss = Learner.findPartsInGesture(gesture, parts, breakLocations, angles);
+            System.out.println("loss = " + loss);
+
+            int[] endLocations = Learner.computeEndLocations(gesture);
+            PartFeatureVector[][] sampleFeaturesMap = Learner.sampleFeatureVectors(gesture, endLocations);
+
+//            System.out.println("\n\n\n");
+//            Learner.findRepetitionInFragment(
+//                    mainViewModel.getParts().get(1).getTemplate(), sampleFeaturesMap, breakLocations[1][0], breakLocations[1][breakLocations[1].length - 1], new ArrayList<Integer>(), new double[1]);
+
+            for (int pi = 0; pi < category.getNumOfParts(); ++pi) {
+
+                for (int i = 0; i < endLocations.length; ++i) {
+                    for (int j = i + 1; j < endLocations.length; ++j) {
+
+                        double[] f = sampleFeaturesMap[i][j].getFeatures();
+                        double mag = GSMath.magnitude(f);
+                        double len = Learner.length(f);
+                        double d = Learner.distanceToTemplateAligned(parts.get(pi).getTemplate().getFeatures(), f);
+//                        System.out.println(" partIndex : " + pi + " at " + "[" + i + ", " + j + "]" + ", score : " + d + ", mag : " + mag + ", length : " + len);
+//                        System.out.println(Arrays.toString(f));
+//                        System.out.println("......");
+//                        System.out.println(Arrays.toString(mainViewModel.getParts().get(pi).getTemplate().getFeatures()));
+                    }
+                }
+            }
+
+            for (int i = 0; i < angles.length; ++i) {
+                angles[i] *= 180 / Math.PI;
+            }
+            System.out.println(Arrays.toString(angles));
+
+            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+            for (int[] subBreakLocations : breakLocations) {
+                for (int i = 0, n = subBreakLocations.length; i < n; ++i) {
+                    int breakLocation = subBreakLocations[i];
+                    XYT pt = gesture.get(endLocations[breakLocation]);
+
+                    if (i == 0 || i == n - 1) {
+                        gc.drawArc((int) pt.getX() - 5, (int) pt.getY() - 5, 10, 10, 0, 360);
+                    } else {
+                        gc.drawRectangle((int)pt.getX() - 5, (int)pt.getY() - 5, 10, 10);
+                    }
+                }
+            }
+
+        }
     }
 }

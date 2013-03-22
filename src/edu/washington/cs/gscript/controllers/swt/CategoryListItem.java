@@ -69,7 +69,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
             }
 
             @Override
-            protected void buttonClicked() {
+            protected void buttonClicked(int index) {
                 mainViewModel.removeCategory(category);
             }
         };
@@ -171,7 +171,9 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		if (category.getNumOfSamples() > 0) {
 			MainWindowController.drawSample(
                     category.getSample(0),
-                    gc, padding, padding, width - padding * 2, height - padding * 2);
+                    gc, padding, padding, width - padding * 2, height - padding * 2,
+                    getDisplay().getSystemColor(SWT.COLOR_BLUE),
+                    getDisplay().getSystemColor(SWT.COLOR_WHITE));
 		}
 
 		gc.dispose();

@@ -46,7 +46,7 @@ public class SampleListItem extends ScrolledList.ListItem {
             }
 
             @Override
-            protected void buttonClicked() {
+            protected void buttonClicked(int index) {
                 mainViewModel.removeSample(parentList.getDataSource(), gesture);
             }
         };
@@ -76,7 +76,10 @@ public class SampleListItem extends ScrolledList.ListItem {
 
 		Image thumbnail = new Image(getDisplay(), width, height);
 		GC gc = new GC(thumbnail);
-		MainWindowController.drawSample(gesture, gc, padding, padding, width - padding * 2, height - padding * 2);
+		MainWindowController.drawSample(
+                gesture, gc, padding, padding, width - padding * 2, height - padding * 2,
+                getDisplay().getSystemColor(SWT.COLOR_BLUE),
+                getDisplay().getSystemColor(SWT.COLOR_WHITE));
 		gc.dispose();
 
 		icon.setThumbnail(thumbnail);

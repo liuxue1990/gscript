@@ -21,6 +21,7 @@ public class SimpleButton extends Composite {
             @Override
             public void paintControl(PaintEvent e) {
                 e.gc.setAntialias(SWT.ON);
+                e.gc.setTextAntialias(SWT.ON);
                 paint(e.gc);
             }
         });
@@ -91,5 +92,10 @@ public class SimpleButton extends Composite {
     }
 
     protected void buttonClicked() {
+    }
+
+    @Override
+    public Point computeSize(int wHint, int hHint, boolean changed) {
+        return getSize();
     }
 }

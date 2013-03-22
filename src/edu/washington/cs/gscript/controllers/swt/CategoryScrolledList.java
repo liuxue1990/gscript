@@ -87,4 +87,7 @@ public class CategoryScrolledList extends ScrolledList {
 		new CategoryListItem(this, mainViewModel).setDataSource(category);
 	}
 
+    protected int computeTopBarHeight() {
+        return 20;
+    }
 }

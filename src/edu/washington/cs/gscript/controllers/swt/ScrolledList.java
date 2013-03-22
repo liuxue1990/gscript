@@ -8,10 +8,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowData;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.Composite;
 
 import java.util.ArrayList;
@@ -89,7 +86,9 @@ public class ScrolledList extends ScrolledComposite {
         setContent(content);
 
         GridLayout gridLayout = new GridLayout(1, false);
-        gridLayout.marginWidth = gridLayout.marginHeight = 0;
+        gridLayout.marginWidth = 0;
+        gridLayout.marginHeight = 0;
+        gridLayout.marginTop = computeTopBarHeight();
         content.setLayout(gridLayout);
 
         listContainer = new Composite(content, SWT.BACKGROUND);
@@ -177,5 +176,9 @@ public class ScrolledList extends ScrolledComposite {
         }
 
         this.setOrigin(x, y);
+    }
+
+    protected int computeTopBarHeight() {
+        return 0;
     }
 }

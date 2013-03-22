@@ -11,12 +11,13 @@ public class IconWithButtonOverlay extends Canvas {
     public static class IconWithRemoveButtonOverlay extends IconWithButtonOverlay {
 
         public IconWithRemoveButtonOverlay(Composite parent, int style) {
-            super(parent, style);
+            super(parent, style, 1);
         }
 
         @Override
         protected void drawButton(GC gc) {
-            Rectangle bounds = getButtonBounds();
+            int index = 0;
+            Rectangle bounds = getButtonBounds(index);
 
             Transform transform = new Transform(getDisplay());
             transform.translate(bounds.x, bounds.y);
@@ -25,9 +26,9 @@ public class IconWithButtonOverlay extends Canvas {
             Color bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
             Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
 
-            if (isButtonHover() && !isButtonPressed()) {
+            if (isButtonHover(index) && !isButtonPressed(index)) {
                 bg = getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
-            } else if (isButtonHover() && isButtonPressed()) {
+            } else if (isButtonHover(index) && isButtonPressed(index)) {
                 bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
             }
 
@@ -44,20 +45,123 @@ public class IconWithButtonOverlay extends Canvas {
         }
     }
 
-    private Image thumbnail;
+    public static class IconWithYesNoCancelButtonOverlay extends IconWithButtonOverlay {
 
-    private Rectangle buttonBounds;
+        public IconWithYesNoCancelButtonOverlay(Composite parent, int style) {
+            super(parent, style, 3);
+        }
+
+        @Override
+        protected void drawButton(GC gc) {
+            drawButtonYes(gc, 0);
+            drawButtonNo(gc, 1);
+            drawButtonCancel(gc, 2);
+        }
+
+        private void drawButtonYes(GC gc, int index) {
+            Rectangle bounds = getButtonBounds(index);
+
+            Transform transform = new Transform(getDisplay());
+            transform.translate(bounds.x, bounds.y);
+            gc.setTransform(transform);
+
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_DARK_GREEN);
+            Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
+
+            if (isButtonHover(index) && !isButtonPressed(index)) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_GREEN);
+            } else if (isButtonHover(index) && isButtonPressed(index)) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+            }
+
+            gc.setBackground(bg);
+            gc.setForeground(fg);
+
+            gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
+
+            gc.setLineWidth(2);
+            gc.drawPolyline(new int[] {bounds.width / 4, bounds.height / 2, bounds.width / 2, bounds.height / 4 * 3, bounds.width / 4 * 3, bounds.height / 4});
+
+            transform.dispose();
+        }
+
+        private void drawButtonNo(GC gc, int index) {
+            Rectangle bounds = getButtonBounds(index);
+
+            Transform transform = new Transform(getDisplay());
+            transform.translate(bounds.x, bounds.y);
+            gc.setTransform(transform);
+
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_DARK_RED);
+            Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
+
+            if (isButtonHover(index) && !isButtonPressed(index)) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_RED);
+            } else if (isButtonHover(index) && isButtonPressed(index)) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+            }
+
+            gc.setBackground(bg);
+            gc.setForeground(fg);
+
+            gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
+
+            gc.setLineWidth(2);
+            gc.drawLine(bounds.width / 4, bounds.height / 4, bounds.width / 4 * 3, bounds.height / 4 * 3);
+            gc.drawLine(bounds.width / 4 * 3, bounds.height / 4, bounds.width / 4, bounds.height / 4 * 3);
+
+            transform.dispose();
+        }
+
+        private void drawButtonCancel(GC gc, int index) {
+            Rectangle bounds = getButtonBounds(index);
+
+            Transform transform = new Transform(getDisplay());
+            transform.translate(bounds.x, bounds.y);
+            gc.setTransform(transform);
+
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
+            Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
+
+            if (isButtonHover(index) && !isButtonPressed(index)) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_GRAY);
+            } else if (isButtonHover(index) && isButtonPressed(index)) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+            }
+
+            gc.setBackground(bg);
+            gc.setForeground(fg);
+
+            gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
+
+            gc.setLineWidth(2);
+            gc.drawLine(bounds.width / 4, bounds.height / 2, bounds.width / 4 * 3, bounds.height / 2);
+
+            transform.dispose();
+        }
+    }
+
+    private Image thumbnail;
 
     private boolean buttonEnabled;
 
-    private boolean buttonPressed;
+    private int numOfButtons;
 
-    private boolean buttonHover;
+    private Rectangle[] buttonBounds;
 
-    public IconWithButtonOverlay(Composite parent, int style) {
+    private int buttonPressed = -1;
+
+    private int buttonHover = -1;
+
+    public IconWithButtonOverlay(Composite parent, int style, int numOfButtons) {
         super(parent, style);
 
-        buttonBounds = new Rectangle(0, 0, 12, 12);
+        this.numOfButtons = numOfButtons;
+
+        buttonBounds = new Rectangle[numOfButtons];
+        for (int i = 0; i < buttonBounds.length; ++i) {
+            buttonBounds[i] = new Rectangle(0, 0, 12, 12);
+        }
 
         buttonEnabled = false;
 
@@ -76,7 +180,7 @@ public class IconWithButtonOverlay extends Canvas {
 
                 Point point = toControl(getDisplay().getCursorLocation());
                 buttonEnabled = getClientArea().contains(point.x, point.y);
-                buttonHover = buttonBounds.contains(point.x, point.y);
+                buttonHover = hitTest(point.x, point.y);
                 redraw();
 
                 if (!isDisposed()) {
@@ -90,7 +194,7 @@ public class IconWithButtonOverlay extends Canvas {
         addMouseTrackListener(new MouseTrackAdapter() {
             @Override
             public void mouseEnter(MouseEvent e) {
-                buttonHover = buttonBounds.contains(e.x, e.y);
+                buttonHover = hitTest(e.x, e.y);
                 buttonEnabled = true;
                 if (!isDisposed()) {
                     redraw();
@@ -109,7 +213,7 @@ public class IconWithButtonOverlay extends Canvas {
         addMouseMoveListener(new MouseMoveListener() {
             @Override
             public void mouseMove(MouseEvent e) {
-                buttonHover = buttonBounds.contains(e.x, e.y);
+                buttonHover = hitTest(e.x, e.y);
                 if (!isDisposed()) {
                     redraw();
                 }
@@ -119,12 +223,12 @@ public class IconWithButtonOverlay extends Canvas {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseDown(MouseEvent e) {
-                buttonHover = buttonBounds.contains(e.x, e.y);
+                buttonHover = hitTest(e.x, e.y);
 
-                if (!buttonHover) {
+                if (buttonHover == -1) {
                     mouseDownOnIcon();
                 } else {
-                    buttonPressed = true;
+                    buttonPressed = buttonHover;
                 }
 
                 if (!isDisposed()) {
@@ -134,12 +238,12 @@ public class IconWithButtonOverlay extends Canvas {
 
             @Override
             public void mouseUp(MouseEvent e) {
-                buttonHover = buttonBounds.contains(e.x, e.y);
+                buttonHover = hitTest(e.x, e.y);
 
-                if (buttonPressed && buttonHover) {
-                    buttonClicked();
+                if (buttonPressed != -1 && buttonPressed == buttonHover) {
+                    buttonClicked(buttonPressed);
                 }
-                buttonPressed = false;
+                buttonPressed = -1;
                 if (!isDisposed()) {
                     redraw();
                 }
@@ -148,13 +252,24 @@ public class IconWithButtonOverlay extends Canvas {
 
     }
 
-    protected Rectangle getButtonBounds() {
-        return buttonBounds;
+    protected Rectangle getButtonBounds(int index) {
+        return buttonBounds[index];
+    }
+
+    protected int hitTest(int x, int y) {
+        for (int i = 0; i < numOfButtons; ++i) {
+            if (buttonBounds[i].contains(x, y)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private void layoutButton() {
-        buttonBounds.x = getSize().x - buttonBounds.width - 4;
-        buttonBounds.y = 4;
+        for (int i = 0; i < numOfButtons; ++i) {
+            buttonBounds[i].x = getSize().x - (buttonBounds[i].width + 2) * (numOfButtons - i) - 4;
+            buttonBounds[i].y = 4;
+        }
     }
 
     public void setThumbnail(Image thumbnail) {
@@ -166,12 +281,12 @@ public class IconWithButtonOverlay extends Canvas {
         return buttonEnabled;
     }
 
-    protected boolean isButtonHover() {
-        return buttonHover;
+    protected boolean isButtonHover(int index) {
+        return buttonHover == index;
     }
 
-    protected boolean isButtonPressed() {
-        return buttonPressed;
+    protected boolean isButtonPressed(int index) {
+        return buttonPressed == index;
     }
 
     private void paint(GC gc) {
@@ -190,6 +305,6 @@ public class IconWithButtonOverlay extends Canvas {
     protected void mouseDownOnIcon() {
     }
 
-    protected void buttonClicked() {
+    protected void buttonClicked(int index) {
     }
 }

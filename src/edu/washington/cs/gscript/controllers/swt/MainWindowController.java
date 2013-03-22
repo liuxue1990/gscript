@@ -3,10 +3,7 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
@@ -21,6 +18,7 @@ import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.models.Rect;
 import edu.washington.cs.gscript.models.Gesture;
 import edu.washington.cs.gscript.models.XYT;
+import sun.text.resources.CollationData_ro;
 
 import java.io.IOException;
 
@@ -64,17 +62,85 @@ public class MainWindowController {
             gc.setLineWidth(4);
 
             gc.setLineCap(SWT.CAP_ROUND);
-            gc.drawArc(10, 10, bounds.width - 20, bounds.height - 20, 45, 270);
+            gc.drawArc(8, 8, bounds.width - 16, bounds.height - 16, 45, 270);
 
             bg = gc.getBackground();
             gc.setBackground(gc.getForeground());
-            int r = (bounds.width - 20) / 2;
+            int r = (bounds.width - 16) / 2;
             int xc = bounds.width / 2 + (int)(r / 1.414 + 4.5);
             int yc = bounds.height / 2 - (int)(r / 1.414 - 4.5);
-            gc.fillPolygon(new int[] {xc, yc, xc - 10, yc, xc, yc - 10});
+            gc.fillPolygon(new int[] {xc, yc, xc - 9, yc, xc, yc - 9});
             gc.setBackground(bg);
 
             transform.dispose();
+        }
+    }
+
+    public static class SimpleTextButton extends SimpleButton {
+
+        private String text;
+
+        private Font font;
+
+        private int paddingHeight = 2;
+
+        private int paddingWidth = 4;
+
+        public SimpleTextButton(Composite parent, int style) {
+            super(parent, style);
+
+            text = "";
+            font = new Font(getDisplay(),"Arial", 10, SWT.BOLD );
+            this.addDisposeListener(new DisposeListener() {
+                @Override
+                public void widgetDisposed(DisposeEvent e) {
+                    font.dispose();
+                }
+            });
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
+
+        @Override
+        void paint(GC gc) {
+            Rectangle bounds = getClientArea();
+
+            gc.setFont(font);
+
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
+            Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
+
+            if (isHover() && !isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
+            } else if (isHover() && isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+            }
+
+            gc.setBackground(bg);
+            gc.setForeground(fg);
+
+            Point ext = gc.stringExtent(text);
+
+            gc.fillRoundRectangle(
+                    bounds.x + bounds.width / 2 - ext.x / 2 - paddingWidth,
+                    bounds.y + bounds.height / 2 - ext.y / 2 - paddingHeight,
+                    ext.x + paddingWidth * 2,
+                    ext.y + paddingHeight * 2,
+                    5, 5);
+
+            gc.drawString(text, bounds.x + bounds.width / 2 - ext.x / 2, bounds.y + bounds.height / 2 - ext.y / 2, true);
+        }
+
+        @Override
+        public Point computeSize(int wHint, int hHint, boolean changed) {
+            GC gc = new GC(this);
+            gc.setFont(font);
+            Point stringExtent = gc.stringExtent(text);
+            gc.dispose();
+
+            return new Point(stringExtent.x + paddingWidth * 2, stringExtent.y + paddingHeight * 2);
         }
     }
 
@@ -260,7 +326,7 @@ public class MainWindowController {
             }
         };
         btnAnalyze.setBackground(clientContainer.getDisplay().getSystemColor(SWT.COLOR_WHITE));
-        btnAnalyze.setSize(48, 48);
+        btnAnalyze.setSize(40, 40);
 
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);
@@ -297,34 +363,29 @@ public class MainWindowController {
         formLayout.marginWidth = formLayout.marginHeight = 0;
         leftPanel.setLayout(formLayout);
 
-        ToolBar toolbar = new ToolBar(leftPanel, SWT.HORIZONTAL | SWT.FILL | SWT.FLAT | SWT.BORDER | SWT.BACKGROUND);
-        toolbar.setBackground(leftPanel.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
-
-        ToolItem itemAdd = new ToolItem(toolbar, SWT.PUSH);
-        itemAdd.setText("+ Add category");
-        itemAdd.setToolTipText("Add a new gesture category");
-        itemAdd.addSelectionListener(new SelectionAdapter() {
+        SimpleTextButton itemAdd = new SimpleTextButton(leftPanel, SWT.BACKGROUND) {
             @Override
-            public void widgetSelected(SelectionEvent e) {
+            protected void buttonClicked() {
                 mainViewModel.addNewCategory();
             }
-        });
+        };
+        itemAdd.setBackground(leftPanel.getBackground());
+        itemAdd.setText("+ Add Category");
 
         categoryScrolledList = new CategoryScrolledList(leftPanel, SWT.NONE, mainViewModel);
 
         FormData fd = new FormData();
-        fd.left = new FormAttachment(0);
-        fd.right = new FormAttachment(100);
-        fd.top = new FormAttachment(0);
-        fd.bottom = new FormAttachment(categoryScrolledList);
-        toolbar.setLayoutData(fd);
+        fd.right = new FormAttachment(100, -20);
+        fd.top = new FormAttachment(0, 2);
+        itemAdd.setLayoutData(fd);
 
         fd = new FormData();
         fd.left = new FormAttachment(0);
         fd.right = new FormAttachment(100);
-        fd.top = new FormAttachment(toolbar);
+        fd.top = new FormAttachment(0);
         fd.bottom = new FormAttachment(100);
         categoryScrolledList.setLayoutData(fd);
+        itemAdd.moveAbove(categoryScrolledList);
 
         return leftPanel;
     }
@@ -371,13 +432,13 @@ public class MainWindowController {
 		return rightPanel;
 	}
 
-	public static void drawSample(Gesture gesture, GC gc, int x, int y, int width, int height) {
+	public static void drawSample(Gesture gesture, GC gc, int x, int y, int width, int height, Color fg, Color bg) {
 		gc.setAntialias(SWT.ON);
 
 		Rect bounds = gesture.getBounds();
 
-		gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
-		gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLUE));
+		gc.setBackground(bg);
+		gc.setForeground(fg);
 		gc.fillRectangle(x, y, width, height);
 
 		double scale;

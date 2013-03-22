@@ -186,7 +186,9 @@ public class GestureCanvas extends Canvas {
                 for (int i = 0, n = mainViewModel.getSelectedCategory().getNumOfParts(); i < n; ++i) {
                     if (getPartBounds(i).contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
                         isForPart = true;
-                        mainViewModel.getSelectedCategory().setUserProvidedPart(i, new Gesture(points));
+                        mainViewModel.getSelectedCategory().setUserProvidedPart(
+                                i, new PartFeatureVector(
+                                GSMath.normalize(Learner.gestureFeatures(new Gesture(points), Learner.NUM_OF_RESAMPLING), null)));
                         break;
                     }
                 }
@@ -304,17 +306,19 @@ public class GestureCanvas extends Canvas {
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
             gc.drawRectangle(sx, sy, width, width);
 
-            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_RED));
-            renderFeatures(gc, part.getTemplate().getFeatures(), sx, sy, width);
+            if (part.getTemplate() != null) {
+                gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_RED));
+                renderFeatures(gc, part.getTemplate().getFeatures(), sx, sy, width);
+            }
 
-            if (category.getUserProvidedParts()[partIndex] != null) {
+            if (category.getUserProvidedParts(partIndex) != null) {
                 gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_BLUE));
-                renderFeatures(gc, Learner.gestureFeatures(category.getUserProvidedParts()[partIndex], Learner.NUM_OF_RESAMPLING), sx, sy, width);
+                renderFeatures(gc, category.getUserProvidedParts(partIndex).getFeatures(), sx, sy, width);
             }
 
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
 
-            double[] u = part.getTemplate().getFeatures();
+//            double[] u = part.getTemplate().getFeatures();
 //            double[] v = sampleFeaturesMap[breakLocations[partIndex][0]][breakLocations[partIndex][breakLocations[partIndex].length - 1]].getFeatures();
 //
 //            double angle = Learner.bestAlignedAngle(GSMath.normalize(u, null), GSMath.normalize(v, null));
@@ -379,6 +383,12 @@ public class GestureCanvas extends Canvas {
 
         Category category = mainViewModel.getSelectedCategory();
 
+        for (Part part : category.getParts()) {
+            if (part.getTemplate() == null) {
+                return;
+            }
+        }
+
         if (category.getNumOfParts() > 0) {
             int[][] breakLocations = new int[category.getNumOfParts()][];
             double[] angles = new double[category.getNumOfParts()];
@@ -425,7 +435,7 @@ public class GestureCanvas extends Canvas {
                     if (i == 0 || i == n - 1) {
                         gc.drawArc((int) pt.getX() - 5, (int) pt.getY() - 5, 10, 10, 0, 360);
                     } else {
-                        gc.drawRectangle((int)pt.getX() - 5, (int)pt.getY() - 5, 10, 10);
+                        gc.drawRectangle((int) pt.getX() - 5, (int) pt.getY() - 5, 10, 10);
                     }
                 }
             }

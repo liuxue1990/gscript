@@ -104,12 +104,12 @@ public class Category implements Serializable {
         return new ArrayList<Part>(parts);
     }
 
-    public Gesture[] getUserProvidedParts() {
-        return userProvidedParts;
+    public PartFeatureVector getUserProvidedParts(int index) {
+        return parts.get(index).getUserTemplate();
     }
 
-    public void setUserProvidedPart(int index, Gesture gesture) {
-        userProvidedParts[index] = gesture;
+    public void setUserProvidedPart(int index, PartFeatureVector fv) {
+        parts.get(index).setUserTemplate(fv);
     }
 
 	void addSample(Gesture gesture) {
@@ -127,6 +127,15 @@ public class Category implements Serializable {
     void setParts(ArrayList<Part> parts) {
         this.parts = new ArrayList<Part>(parts);
         userProvidedParts = new Gesture[parts.size()];
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsProperty);
+    }
+
+    void updatePartTemplates(ArrayList<Part> newParts) {
+        int numOfParts = getNumOfParts();
+        for (int i = 0; i < numOfParts; ++i) {
+            parts.get(i).setTemplate(newParts.get(i).getTemplate());
+        }
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsProperty);
     }

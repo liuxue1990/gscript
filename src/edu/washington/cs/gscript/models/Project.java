@@ -197,7 +197,7 @@ public class Project implements Serializable {
         setDirty(true);
     }
 
-    public ArrayList<Part> parseScript(Category category) {
+    public void parseScript(Category category) {
         checkCategory(category);
         ArrayList<Part> parts = Parser.parseScript(
                 category.getScriptTextProperty().getValue(), category.getNameProperty().getValue());
@@ -206,13 +206,12 @@ public class Project implements Serializable {
         for (int i = 0; i < numOfParts; ++i) {
             Part part = partsTable.get(parts.get(i).getName());
             if (part == null) {
-                partsTable.put(part.getName(), parts.get(i));
+                partsTable.put(parts.get(i).getName(), parts.get(i));
                 part = parts.get(i);
-            } else {
-                parts.set(i, part);
             }
+            parts.set(i, part);
         }
-        return parts;
+        setParts(category, parts);
     }
 
     public void setParts(Category category, ArrayList<Part> parts) {
@@ -236,11 +235,10 @@ public class Project implements Serializable {
         Thread learningThread = new Thread() {
             @Override
             public void run() {
+                parseScript(category);
                 ArrayList<Part> parts = new Learner().learnParts(category);
                 category.setGenerated(new SampleGenerator().generate(parts));
-                setParts(category, parts);
-
-                // TODO generate candidates
+                category.updatePartTemplates(parts);
             }
         };
 

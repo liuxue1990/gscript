@@ -12,6 +12,8 @@ public class Part implements Serializable {
 
     private PartFeatureVector template;
 
+    private PartFeatureVector userTemplate;
+
     public Part(String name, boolean repeatable) {
         this.name = name;
         this.repeatable = repeatable;
@@ -33,5 +35,13 @@ public class Part implements Serializable {
 
     public void setTemplate(PartFeatureVector template) {
         this.template = template;
+    }
+
+    public void setUserTemplate(PartFeatureVector template) {
+        this.userTemplate = template;
+    }
+
+    public PartFeatureVector getUserTemplate() {
+        return userTemplate;
     }
 }

@@ -81,10 +81,9 @@ public class Learner {
             for (int partIndex = 0; partIndex < parts.size(); ++partIndex) {
 
 
-                if (category.getUserProvidedParts() != null && category.getUserProvidedParts()[partIndex] != null) {
+                if (category.getUserProvidedParts(partIndex) != null) {
                     parts.get(partIndex).setTemplate(
-                            new PartFeatureVector(
-                                    GSMath.normalize(gestureFeatures(category.getUserProvidedParts()[partIndex], NUM_OF_RESAMPLING), null)));
+                            new PartFeatureVector(category.getUserProvidedParts(partIndex).getFeatures()));
                 } else {
                     int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
                     PartFeatureVector template = new PartFeatureVector(
@@ -550,8 +549,8 @@ public class Learner {
             dot += features1[i] * xt + features1[i + 1] * yt;
         }
 
-        return Math.acos(dot / l1 / l2);
-//        return (1 - dot / l1 / l2);
+//        return Math.acos(dot / l1 / l2);
+        return (1 - dot / l1 / l2);
     }
 
     public static int[] computeEndLocations(Gesture gesture) {

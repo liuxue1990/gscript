@@ -1,7 +1,5 @@
 package edu.washington.cs.gscript.models;
 
-import edu.washington.cs.gscript.recognizers.PartFeatureVector;
-
 import java.io.Serializable;
 
 public class Part implements Serializable {

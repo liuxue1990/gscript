@@ -3,10 +3,7 @@ package edu.washington.cs.gscript.recognizers;
 import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.Parser;
 import edu.washington.cs.gscript.helpers.Segmentation;
-import edu.washington.cs.gscript.models.Category;
-import edu.washington.cs.gscript.models.Gesture;
-import edu.washington.cs.gscript.models.Part;
-import edu.washington.cs.gscript.models.Project;
+import edu.washington.cs.gscript.models.*;
 
 import java.util.*;
 

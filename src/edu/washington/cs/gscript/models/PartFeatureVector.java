@@ -1,4 +1,4 @@
-package edu.washington.cs.gscript.recognizers;
+package edu.washington.cs.gscript.models;
 
 public class PartFeatureVector {
     private double[] features;

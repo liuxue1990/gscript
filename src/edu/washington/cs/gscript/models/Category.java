@@ -26,7 +26,13 @@ public class Category implements Serializable {
 
     private transient ArrayList<Part> parts;
 
-    private transient ArrayList<ArrayList<PartInstance>> generated;
+    private transient Property<Integer> generatedSamplesProperty;
+
+    private transient ArrayList<SynthesizedGestureSample> synthesizedSamples;
+
+    private ArrayList<SynthesizedGestureSample> positiveSamples;
+
+    private ArrayList<SynthesizedGestureSample> negativeSamples;
 
     public Category(String name) {
 		nameProperty = new ReadWriteProperty<String>(name);
@@ -45,11 +51,20 @@ public class Category implements Serializable {
     private void init() {
         samplesProperty = new Property<Integer>(0);
         partsProperty = new Property<Integer>(0);
+        generatedSamplesProperty = new Property<Integer>(0);
 
-        generated = new ArrayList<ArrayList<PartInstance>>();
+        synthesizedSamples = new ArrayList<SynthesizedGestureSample>();
 
         if (parts == null) {
             parts = new ArrayList<Part>();
+        }
+
+        if (positiveSamples == null) {
+            positiveSamples = new ArrayList<SynthesizedGestureSample>();
+        }
+
+        if (negativeSamples == null) {
+            negativeSamples = new ArrayList<SynthesizedGestureSample>();
         }
     }
 
@@ -101,14 +116,6 @@ public class Category implements Serializable {
         return new ArrayList<Part>(parts);
     }
 
-    public PartFeatureVector getUserProvidedParts(int index) {
-        return parts.get(index).getUserTemplate();
-    }
-
-    public void setUserProvidedPart(int index, PartFeatureVector fv) {
-        parts.get(index).setUserTemplate(fv);
-    }
-
 	void addSample(Gesture gesture) {
 		samples.add(gesture);
 		NotificationCenter.getDefaultCenter().postNotification(
@@ -136,11 +143,32 @@ public class Category implements Serializable {
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsProperty);
     }
 
-    public void setGenerated(ArrayList<ArrayList<PartInstance>> gestures) {
-        this.generated = gestures;
+    public ArrayList<SynthesizedGestureSample> getSynthesizedSamples() {
+        return synthesizedSamples;
     }
 
-    public ArrayList<ArrayList<PartInstance>> getGenerated() {
-        return generated;
+    ArrayList<SynthesizedGestureSample> getPositiveSamples() {
+        return positiveSamples;
+    }
+
+    ArrayList<SynthesizedGestureSample> getNegativeSamples() {
+        return negativeSamples;
+    }
+
+    void setSynthesizedSamples(ArrayList<SynthesizedGestureSample> gestures) {
+        this.synthesizedSamples = gestures;
+    }
+
+    void setLabelOfSynthesizedSample(SynthesizedGestureSample sample, int label) {
+        positiveSamples.remove(sample);
+        negativeSamples.remove(sample);
+
+        sample.setUserLabel(label);
+
+        if (label == 1) {
+            positiveSamples.add(sample);
+        } else {
+            negativeSamples.add(sample);
+        }
     }
 }

@@ -81,9 +81,9 @@ public class Learner {
             for (int partIndex = 0; partIndex < parts.size(); ++partIndex) {
 
 
-                if (category.getUserProvidedParts(partIndex) != null) {
+                if (category.getPart(partIndex).getUserTemplate() != null) {
                     parts.get(partIndex).setTemplate(
-                            new PartFeatureVector(category.getUserProvidedParts(partIndex).getFeatures()));
+                            new PartFeatureVector(category.getPart(partIndex).getUserTemplate().getFeatures()));
                 } else {
                     int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
                     PartFeatureVector template = new PartFeatureVector(

@@ -1,8 +1,15 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.framework.NotificationCenter;
+import edu.washington.cs.gscript.framework.NotificationObserver;
+import edu.washington.cs.gscript.helpers.SampleGenerator;
+import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.Gesture;
+import edu.washington.cs.gscript.models.SynthesizedGestureSample;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
@@ -17,13 +24,33 @@ public class CandidateListItem extends ScrolledList.ListItem {
 
     private Composite iconContainer;
 
-    private Gesture gesture;
+    private MainViewModel mainViewModel;
+
+    private SynthesizedGestureSample sample;
+
+    private Gesture stitched;
 
     private int label;
 
-    public CandidateListItem(CandidateScrolledList parent) {
+    private NotificationObserver labelObserver = new NotificationObserver() {
+        @Override
+        public void onNotified(Object arg) {
+            updateLabel();
+        }
+    };
+
+    public CandidateListItem(CandidateScrolledList parent, MainViewModel viewModel) {
         super(parent, SWT.BACKGROUND);
         setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+
+        addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e) {
+                NotificationCenter.getDefaultCenter().removeObserver(labelObserver);
+            }
+        });
+
+        mainViewModel = viewModel;
 
         parentList = parent;
 
@@ -32,26 +59,25 @@ public class CandidateListItem extends ScrolledList.ListItem {
         setLayout(rowLayout);
 
         iconContainer = new Composite(this, SWT.BACKGROUND);
-        setLabel(0);
 
         icon = new IconWithButtonOverlay.IconWithYesNoCancelButtonOverlay(iconContainer, SWT.BACKGROUND) {
             @Override
             protected void buttonClicked(int index) {
                 if (index == 0) {
-                    setLabel(1);
+                    mainViewModel.setLabelOfSynthesizedSample(sample, 1);
                 } else if (index == 1) {
-                    setLabel(-1);
+                    mainViewModel.setLabelOfSynthesizedSample(sample, -1);
                 } else {
-                    setLabel(0);
+                    mainViewModel.setLabelOfSynthesizedSample(sample, 0);
                 }
             }
 
             @Override
             protected void mouseDownOnIcon() {
                 if (label != 0) {
-                    setLabel(0);
+                    mainViewModel.setLabelOfSynthesizedSample(sample, 0);
                 } else {
-                    setLabel(-1);
+                    mainViewModel.setLabelOfSynthesizedSample(sample, -1);
                 }
             }
         };
@@ -70,8 +96,11 @@ public class CandidateListItem extends ScrolledList.ListItem {
         onSelectionChanged();
     }
 
-    public void setDataSource(Gesture gesture) {
-        this.gesture = gesture;
+    public void setDataSource(SynthesizedGestureSample sample) {
+        NotificationCenter.getDefaultCenter().removeObserver(labelObserver);
+
+        this.sample = sample;
+        this.stitched = SampleGenerator.stitch(sample);
 
         int width = 56;
         int height = 56;
@@ -80,26 +109,21 @@ public class CandidateListItem extends ScrolledList.ListItem {
         Image thumbnail = new Image(getDisplay(), width, height);
         GC gc = new GC(thumbnail);
         MainWindowController.drawSample(
-                gesture, gc, padding, padding, width - padding * 2, height - padding * 2,
+                stitched, gc, padding, padding, width - padding * 2, height - padding * 2,
                 getDisplay().getSystemColor(SWT.COLOR_BLACK),
                 getDisplay().getSystemColor(SWT.COLOR_WHITE));
         gc.dispose();
 
         icon.setThumbnail(thumbnail);
+
+        updateLabel();
+
+        NotificationCenter.getDefaultCenter().addObserver(
+                labelObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, sample.getUserLabelProperty());
     }
 
-    public Gesture getDataSource() {
-        return gesture;
-    }
-
-    @Override
-    protected void onSelectionChanged() {
-        iconContainer.setBackground(
-                getDisplay().getSystemColor(isSelected() ? SWT.COLOR_LIST_SELECTION : SWT.COLOR_WHITE));
-    }
-
-    private void setLabel(int label) {
-        this.label = label;
+    private void updateLabel() {
+        this.label = sample.getUserLabelProperty().getValue();
 
         if (label < 0) {
             iconContainer.setBackground(getDisplay().getSystemColor(SWT.COLOR_DARK_RED));

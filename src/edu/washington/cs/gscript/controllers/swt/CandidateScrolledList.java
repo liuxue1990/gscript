@@ -3,14 +3,10 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
-import edu.washington.cs.gscript.models.PartInstance;
-import edu.washington.cs.gscript.helpers.SampleGenerator;
 import edu.washington.cs.gscript.models.Category;
-import edu.washington.cs.gscript.models.Gesture;
+import edu.washington.cs.gscript.models.SynthesizedGestureSample;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-
-import java.util.ArrayList;
 
 public class CandidateScrolledList extends ScrolledList {
 
@@ -64,15 +60,15 @@ public class CandidateScrolledList extends ScrolledList {
         }
 
         if (category != null) {
-            for (ArrayList<PartInstance> instanceList : category.getGenerated()) {
-                addSample(SampleGenerator.stitch(instanceList));
+            for (SynthesizedGestureSample sample : category.getSynthesizedSamples()) {
+                addSample(sample);
             }
         }
 
         updateContentLayout();
     }
 
-    private void addSample(Gesture gesture) {
-        new CandidateListItem(this).setDataSource(gesture);
+    private void addSample(SynthesizedGestureSample sample) {
+        new CandidateListItem(this, mainViewModel).setDataSource(sample);
     }
 }

@@ -1,12 +1,10 @@
 package edu.washington.cs.gscript.controllers;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
+import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.OneDollarDataImporter;
-import edu.washington.cs.gscript.models.Category;
-import edu.washington.cs.gscript.models.Project;
-import edu.washington.cs.gscript.models.Gesture;
+import edu.washington.cs.gscript.models.*;
 import edu.washington.cs.gscript.recognizers.Learner;
-import edu.washington.cs.gscript.models.Part;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -164,5 +162,18 @@ public class MainViewModel {
         if (getSelectedCategory() != null) {
             project.learnCategory(getSelectedCategory());
         }
+    }
+
+    public void setUserProvidedPart(Part part, Gesture gesture) {
+        project.setUserProvidedPart(
+                part,
+                new PartFeatureVector(
+                        GSMath.normalize(
+                                Learner.gestureFeatures(gesture, Learner.NUM_OF_RESAMPLING),
+                                null)));
+    }
+
+    public void setLabelOfSynthesizedSample(SynthesizedGestureSample sample, int label) {
+        project.setLabelOfSynthesizedSample(getSelectedCategory(), sample, label);
     }
 }

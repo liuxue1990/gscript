@@ -186,9 +186,7 @@ public class GestureCanvas extends Canvas {
                 for (int i = 0, n = mainViewModel.getSelectedCategory().getNumOfParts(); i < n; ++i) {
                     if (getPartBounds(i).contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
                         isForPart = true;
-                        mainViewModel.getSelectedCategory().setUserProvidedPart(
-                                i, new PartFeatureVector(
-                                GSMath.normalize(Learner.gestureFeatures(new Gesture(points), Learner.NUM_OF_RESAMPLING), null)));
+                        mainViewModel.setUserProvidedPart(mainViewModel.getSelectedCategory().getPart(i), new Gesture(points));
                         break;
                     }
                 }
@@ -311,9 +309,9 @@ public class GestureCanvas extends Canvas {
                 renderFeatures(gc, part.getTemplate().getFeatures(), sx, sy, width);
             }
 
-            if (category.getUserProvidedParts(partIndex) != null) {
+            if (category.getPart(partIndex).getUserTemplate() != null) {
                 gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_BLUE));
-                renderFeatures(gc, category.getUserProvidedParts(partIndex).getFeatures(), sx, sy, width);
+                renderFeatures(gc, category.getPart(partIndex).getUserTemplate().getFeatures(), sx, sy, width);
             }
 
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));

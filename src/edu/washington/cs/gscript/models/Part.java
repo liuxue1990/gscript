@@ -33,15 +33,16 @@ public class Part implements Serializable {
         return template;
     }
 
+    public PartFeatureVector getUserTemplate() {
+        return userTemplate;
+    }
+
+    // @TODO make it package private
     public void setTemplate(PartFeatureVector template) {
         this.template = template;
     }
 
-    public void setUserTemplate(PartFeatureVector template) {
+    void setUserTemplate(PartFeatureVector template) {
         this.userTemplate = template;
-    }
-
-    public PartFeatureVector getUserTemplate() {
-        return userTemplate;
     }
 }

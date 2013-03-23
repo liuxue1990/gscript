@@ -1,20 +1,21 @@
 package edu.washington.cs.gscript.helpers;
 
-import edu.washington.cs.gscript.models.Gesture;
-import edu.washington.cs.gscript.models.Part;
-import edu.washington.cs.gscript.models.PartInstance;
-import edu.washington.cs.gscript.models.XYT;
+import edu.washington.cs.gscript.models.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public class SampleGenerator {
 
     private double[] angles;
     private double[] scales;
 
-    public SampleGenerator() {
+    private int numOfSamples;
+
+    public SampleGenerator(int n) {
+        numOfSamples = n;
         angles = new double[8];
         scales = new double[4];
         for (int i = 0; i < angles.length; ++i) {
@@ -26,8 +27,8 @@ public class SampleGenerator {
         }
     }
 
-    public ArrayList<ArrayList<PartInstance>> generate(ArrayList<Part> parts) {
-        ArrayList<ArrayList<PartInstance>> collection = new ArrayList<ArrayList<PartInstance>>();
+    public ArrayList<SynthesizedGestureSample> generate(ArrayList<Part> parts) {
+        ArrayList<SynthesizedGestureSample> collection = new ArrayList<SynthesizedGestureSample>();
 
         sub(parts, 0, new ArrayList<PartInstance>(), collection);
 
@@ -35,28 +36,36 @@ public class SampleGenerator {
 
         Collections.shuffle(collection);
 
-        return new ArrayList<ArrayList<PartInstance>>(collection.subList(0, 20));
+//        return new ArrayList<ArrayList<PartInstance>>(collection.subList(0, 20));
+        return collection;
     }
 
-    private void sub(ArrayList<Part> parts, int depth, ArrayList<PartInstance> instanceList, ArrayList<ArrayList<PartInstance>> collection) {
+    private void sub(ArrayList<Part> parts, int depth, ArrayList<PartInstance> instanceList, ArrayList<SynthesizedGestureSample> collection) {
         if (depth == parts.size()) {
-            collection.add(new ArrayList<PartInstance>(instanceList));
+            collection.add(new SynthesizedGestureSample(new ArrayList<PartInstance>(instanceList)));
             return;
         }
 
         Part part = parts.get(depth);
-
+        Random r = new Random();
         for (double angle : angles) {
+            angle = angles[r.nextInt(angles.length)];
             for (double scale : scales) {
+                scale = scales[r.nextInt(scales.length)];
 
                 if (part.isRepeatable()) {
                     PartInstance instance0 = new PartInstance(part, angle, scale);
                     instanceList.add(instance0);
                     for (double a : angles) {
+                        a = angles[r.nextInt(angles.length)];
                         for (double s1 : scales) {
+                            s1 = scales[r.nextInt(scales.length)];
+
                             PartInstance instance1 = new PartInstance(part, a, s1);
                             instanceList.add(instance1);
                             for (double s2  : scales) {
+                                s2 = scales[r.nextInt(scales.length)];
+
                                 PartInstance instance2 = new PartInstance(part, a, s2);
 
                                 instanceList.add(instance2);
@@ -74,14 +83,14 @@ public class SampleGenerator {
                     instanceList.remove(instanceList.size() - 1);
                 }
 
-                if (collection.size() > 10000) {
+                if (collection.size() > numOfSamples) {
                     return;
                 }
             }
         }
     }
 
-    public static Gesture stitch(ArrayList<PartInstance> instanceList) {
+    public static Gesture stitch(SynthesizedGestureSample sample) {
 
         List<XYT> points = new ArrayList<XYT>();
 
@@ -91,7 +100,7 @@ public class SampleGenerator {
         double th;
         double scale;
 
-        for (PartInstance instance : instanceList) {
+        for (PartInstance instance : sample.getInstanceSequence()) {
             double[] features = instance.getPart().getTemplate().getFeatures();
             th = instance.getAngle();
             scale = instance.getScale();

@@ -8,9 +8,9 @@ public class PartInstance implements Serializable {
 
     private static final long serialVersionUID = -5497923104813967930L;
 
-    private Part part;
-    private double angle;
-    private double scale;
+    private final Part part;
+    private final double angle;
+    private final double scale;
 
     public PartInstance(Part part, double angle, double scale) {
         this.part = part;

@@ -76,6 +76,12 @@ public class Project implements Serializable {
         }
     }
 
+    private void checkPart(Part part) {
+        if (partsTable.get(part.getName()) != part) {
+            throw new RuntimeException("Invalid part");
+        }
+    }
+
     public Property<String> getFileNameProperty() {
         return fileNameProperty;
     }
@@ -238,6 +244,8 @@ public class Project implements Serializable {
             parts.set(i, part);
         }
         category.setParts(parts);
+
+        setSynthesizedSamples(category, new ArrayList<SynthesizedGestureSample>());
     }
 
     public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double t) {
@@ -256,11 +264,38 @@ public class Project implements Serializable {
             @Override
             public void run() {
                 ArrayList<Part> parts = new Learner().learnParts(category);
-                category.setGenerated(new SampleGenerator().generate(parts));
+                setSynthesizedSamples(category, new SampleGenerator(40).generate(parts));
                 category.updatePartTemplates(parts);
             }
         };
 
         learningThread.start();
+    }
+
+    public void setUserProvidedPart(Part part, PartFeatureVector fv) {
+        checkPart(part);
+        part.setUserTemplate(fv);
+        setDirty(true);
+    }
+
+    public void setSynthesizedSamples(Category category, ArrayList<SynthesizedGestureSample> samples) {
+        checkCategory(category);
+        ArrayList<SynthesizedGestureSample> synthesized = new ArrayList<SynthesizedGestureSample>();
+        synthesized.addAll(samples);
+        synthesized.addAll(category.getPositiveSamples());
+        synthesized.addAll(category.getNegativeSamples());
+        category.setSynthesizedSamples(synthesized);
+    }
+
+    public void setLabelOfSynthesizedSample(Category category, SynthesizedGestureSample sample, int label) {
+        checkCategory(category);
+
+        if (category.getSynthesizedSamples().indexOf(sample) < 0) {
+            throw new RuntimeException("Invalid synthesized sample");
+        }
+
+        category.setLabelOfSynthesizedSample(sample, label);
+
+        setDirty(true);
     }
 }

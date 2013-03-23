@@ -29,8 +29,6 @@ public class Category implements Serializable {
 
     private transient ArrayList<ArrayList<PartInstance>> generated;
 
-    private transient Gesture[] userProvidedParts;
-
     public Category(String name) {
 		nameProperty = new ReadWriteProperty<String>(name);
 		samples = new ArrayList<Gesture>();
@@ -126,7 +124,6 @@ public class Category implements Serializable {
 
     void setParts(ArrayList<Part> parts) {
         this.parts = new ArrayList<Part>(parts);
-        userProvidedParts = new Gesture[parts.size()];
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsProperty);
     }

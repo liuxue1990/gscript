@@ -28,6 +28,13 @@ public class ScriptText extends Composite {
 
     private boolean valid;
 
+    private ModifyListener textModifyListener = new ModifyListener() {
+        @Override
+        public void modifyText(ModifyEvent e) {
+            onChanged();
+        }
+    };
+
     public ScriptText(Composite parent, int style, MainViewModel viewModel) {
         super(parent, style);
         FormLayout formLayout = new FormLayout();
@@ -69,12 +76,7 @@ public class ScriptText extends Composite {
             }
         });
 
-        text.addModifyListener(new ModifyListener() {
-            @Override
-            public void modifyText(ModifyEvent e) {
-                onChanged();
-            }
-        });
+        text.addModifyListener(textModifyListener);
 
         NotificationCenter.getDefaultCenter().addObserver(
                 new NotificationObserver() {
@@ -99,7 +101,9 @@ public class ScriptText extends Composite {
         category = mainViewModel.getSelectedCategory();
 
         if (category != null) {
+            text.removeModifyListener(textModifyListener);
             text.setText(category.getScriptTextProperty().getValue());
+            text.addModifyListener(textModifyListener);
         }
 
         updateValidity();

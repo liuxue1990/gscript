@@ -56,6 +56,10 @@ public class Project implements Serializable {
         if (partsTable == null) {
             partsTable = new HashMap<String, Part>();
         }
+
+        for (Category category : categories) {
+            initParts(category);
+        }
     }
 
     private void checkCategory(Category category) {
@@ -138,6 +142,8 @@ public class Project implements Serializable {
         if (findCategoryIndexByName(name) < 0) {
             Category category = new Category(name);
             categories.add(category);
+            initParts(category);
+
             setDirty(true);
 
             NotificationCenter.getDefaultCenter().postNotification(
@@ -204,13 +210,23 @@ public class Project implements Serializable {
     public void setScript(Category category, String text) {
         checkCategory(category);
         category.getScriptTextReadWriteProperty().setValue(text);
+        initParts(category);
         setDirty(true);
     }
 
-    public void parseScript(Category category) {
+    private String getCategoryDefaultScript(String categoryName) {
+        return String.format("%s", categoryName);
+    }
+
+    void initParts(Category category) {
         checkCategory(category);
+        String scriptText = category.getScriptTextProperty().getValue();
+        if (scriptText == null) {
+            scriptText = getCategoryDefaultScript(category.getNameProperty().getValue());
+        }
+
         ArrayList<Part> parts = Parser.parseScript(
-                category.getScriptTextProperty().getValue(), category.getNameProperty().getValue());
+                scriptText, category.getNameProperty().getValue());
 
         int numOfParts = parts.size();
         for (int i = 0; i < numOfParts; ++i) {
@@ -221,13 +237,7 @@ public class Project implements Serializable {
             }
             parts.set(i, part);
         }
-        setParts(category, parts);
-    }
-
-    public void setParts(Category category, ArrayList<Part> parts) {
-        checkCategory(category);
         category.setParts(parts);
-        setDirty(true);
     }
 
     public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double t) {
@@ -245,7 +255,6 @@ public class Project implements Serializable {
         Thread learningThread = new Thread() {
             @Override
             public void run() {
-                parseScript(category);
                 ArrayList<Part> parts = new Learner().learnParts(category);
                 category.setGenerated(new SampleGenerator().generate(parts));
                 category.updatePartTemplates(parts);

@@ -233,27 +233,32 @@ public class MainWindowController {
 	}
 
     private void updateShellText() {
-        Project project = mainViewModel.getProject();
+        shell.getDisplay().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                Project project = mainViewModel.getProject();
 
-        String title = "";
+                String title = "";
 
-        if (project != null) {
-            String fileName = project.getFileNameProperty().getValue();
-            if (fileName == null) {
-                fileName = "New Project";
-            } else {
-                fileName = String.format("[%s]", fileName);
+                if (project != null) {
+                    String fileName = project.getFileNameProperty().getValue();
+                    if (fileName == null) {
+                        fileName = "New Project";
+                    } else {
+                        fileName = String.format("[%s]", fileName);
+                    }
+
+                    String status = "";
+                    if (project.getDirtyProperty().getValue()) {
+                        status = " - Modified";
+                    }
+
+                    title = fileName + status;
+                }
+
+                shell.setText(title);
             }
-
-            String status = "";
-            if (project.getDirtyProperty().getValue()) {
-                status = " - Modified";
-            }
-
-            title = fileName + status;
-        }
-
-        shell.setText(title);
+        });
     }
 
 	private void createMenu() {

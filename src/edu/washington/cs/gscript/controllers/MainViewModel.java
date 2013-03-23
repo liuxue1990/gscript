@@ -9,7 +9,9 @@ import edu.washington.cs.gscript.recognizers.Learner;
 import edu.washington.cs.gscript.models.Part;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainViewModel {
 
@@ -27,7 +29,6 @@ public class MainViewModel {
 	private Gesture selectedSample;
 
 	public MainViewModel() {
-
 	}
 
 	public Project getProject() {
@@ -54,7 +55,7 @@ public class MainViewModel {
         Project newProject = ((Project)in.readObject());
         in.close();
 
-        System.out.println(newProject.getNumOfCategories());
+        newProject.setFileName(fileName);
 
         project = newProject;
         NotificationCenter.getDefaultCenter().postNotification(PROJECT_CHANGED_NOTIFICATION, this);
@@ -66,6 +67,12 @@ public class MainViewModel {
         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(fileName));
         out.writeObject(project);
         out.close();
+        project.setFileName(fileName);
+    }
+
+    public void backupProject() throws IOException {
+        new File("backup").mkdir();
+        saveProject("backup/" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".gscript");
     }
 
 	public void selectCategory(Category category) {

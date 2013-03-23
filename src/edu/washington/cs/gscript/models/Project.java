@@ -19,6 +19,8 @@ public class Project implements Serializable {
 
     private static final long serialVersionUID = 1446681795656083070L;
 
+    private transient ReadWriteProperty<String> fileNameProperty;
+
     private transient ReadWriteProperty<Boolean> dirtyProperty;
 
     private transient Property<Integer> categoriesProperty;
@@ -32,7 +34,7 @@ public class Project implements Serializable {
         partsTable = new HashMap<String, Part>();
 
         init();
-        setDirty(true);
+        setDirty(false);
 	}
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -43,11 +45,11 @@ public class Project implements Serializable {
 
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
         out.defaultWriteObject();
-
         setDirty(false);
     }
 
     private void init() {
+        fileNameProperty = new ReadWriteProperty<String>(null);
         categoriesProperty = new Property<Integer>(0);
         dirtyProperty = new ReadWriteProperty<Boolean>(false);
 
@@ -68,6 +70,14 @@ public class Project implements Serializable {
         if (category.indexOfSample(sample) < 0) {
             throw new RuntimeException("Invalid sample");
         }
+    }
+
+    public Property<String> getFileNameProperty() {
+        return fileNameProperty;
+    }
+
+    public void setFileName(String fileName) {
+        fileNameProperty.setValue(fileName);
     }
 
     public Property<Boolean> getDirtyProperty() {

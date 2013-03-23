@@ -1,6 +1,7 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.models.Project;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.*;
@@ -18,7 +19,6 @@ import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.models.Rect;
 import edu.washington.cs.gscript.models.Gesture;
 import edu.washington.cs.gscript.models.XYT;
-import sun.text.resources.CollationData_ro;
 
 import java.io.IOException;
 
@@ -144,6 +144,13 @@ public class MainWindowController {
         }
     }
 
+    private NotificationObserver projectFileStatusObserver = new NotificationObserver() {
+        @Override
+        public void onNotified(Object arg) {
+            updateShellText();
+        }
+    };
+
 	private MainViewModel mainViewModel;
 
     private Shell shell;
@@ -170,10 +177,84 @@ public class MainWindowController {
 				},
 				MainViewModel.PROJECT_CHANGED_NOTIFICATION,
 				mainViewModel);
+
+        shell.addShellListener(new ShellAdapter() {
+            @Override
+            public void shellClosed(ShellEvent e) {
+                Project project = MainWindowController.this.mainViewModel.getProject();
+
+                if (project != null && project.isDirty()) {
+                    MessageBox messageBox = new MessageBox(
+                            MainWindowController.this.shell,
+                            SWT.APPLICATION_MODAL | SWT.ICON_ERROR | SWT.YES | SWT.NO);
+                    messageBox.setText("Unsaved Change");
+                    messageBox.setMessage(
+                            "The project has been modified. Are you sure you want to discard the change and quit?");
+                    e.doit = messageBox.open() == SWT.YES;
+                }
+
+                if (e.doit) {
+                    MainWindowController.this.mainViewModel.newProject();
+                }
+            }
+        });
+
+        shell.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent event) {
+                Project project = MainWindowController.this.mainViewModel.getProject();
+                if (project != null && project.isDirty()) {
+                    try {
+                        MainWindowController.this.mainViewModel.backupProject();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
 	}
 
 	private void reloadProject() {
+        NotificationCenter.getDefaultCenter().removeObserver(projectFileStatusObserver);
+        Project project = mainViewModel.getProject();
+        if (project != null) {
+            NotificationCenter.getDefaultCenter().addObserver(
+                    projectFileStatusObserver,
+                    NotificationCenter.VALUE_CHANGED_NOTIFICATION,
+                    project.getFileNameProperty());
+
+            NotificationCenter.getDefaultCenter().addObserver(
+                    projectFileStatusObserver,
+                    NotificationCenter.VALUE_CHANGED_NOTIFICATION,
+                    project.getDirtyProperty());
+        }
+
+        updateShellText();
 	}
+
+    private void updateShellText() {
+        Project project = mainViewModel.getProject();
+
+        String title = "";
+
+        if (project != null) {
+            String fileName = project.getFileNameProperty().getValue();
+            if (fileName == null) {
+                fileName = "New Project";
+            } else {
+                fileName = String.format("[%s]", fileName);
+            }
+
+            String status = "";
+            if (project.getDirtyProperty().getValue()) {
+                status = " - Modified";
+            }
+
+            title = fileName + status;
+        }
+
+        shell.setText(title);
+    }
 
 	private void createMenu() {
 		Menu mainMenu = new Menu(shell, SWT.BAR);

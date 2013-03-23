@@ -251,6 +251,7 @@ public class Learner {
 
                     double mag = GSMath.magnitude(vf);
                     double length = length(vf) / totalLength;
+                    length = 1.0 / numOfParts;
 
                     double d;
                     ArrayList<Integer> brList = new ArrayList<Integer>();

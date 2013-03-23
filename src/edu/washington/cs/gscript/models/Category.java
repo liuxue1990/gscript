@@ -9,7 +9,6 @@ import java.util.Arrays;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
-import edu.washington.cs.gscript.helpers.PartInstance;
 
 public class Category implements Serializable {
 

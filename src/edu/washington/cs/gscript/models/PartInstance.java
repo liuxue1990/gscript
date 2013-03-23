@@ -1,8 +1,13 @@
-package edu.washington.cs.gscript.helpers;
+package edu.washington.cs.gscript.models;
 
 import edu.washington.cs.gscript.models.Part;
 
-public class PartInstance {
+import java.io.Serializable;
+
+public class PartInstance implements Serializable {
+
+    private static final long serialVersionUID = -5497923104813967930L;
+
     private Part part;
     private double angle;
     private double scale;

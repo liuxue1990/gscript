@@ -3,7 +3,7 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
-import edu.washington.cs.gscript.helpers.PartInstance;
+import edu.washington.cs.gscript.models.PartInstance;
 import edu.washington.cs.gscript.helpers.SampleGenerator;
 import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.Gesture;

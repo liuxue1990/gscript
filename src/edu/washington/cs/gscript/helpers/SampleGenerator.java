@@ -2,6 +2,7 @@ package edu.washington.cs.gscript.helpers;
 
 import edu.washington.cs.gscript.models.Gesture;
 import edu.washington.cs.gscript.models.Part;
+import edu.washington.cs.gscript.models.PartInstance;
 import edu.washington.cs.gscript.models.XYT;
 
 import java.util.ArrayList;

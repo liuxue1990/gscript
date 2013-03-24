@@ -224,6 +224,15 @@ public class Project implements Serializable {
         return String.format("%s", categoryName);
     }
 
+    private Part getPart(String partName) {
+        Part part = partsTable.get(partName);
+        if (part == null) {
+            part = new Part(partName);
+            partsTable.put(partName, part);
+        }
+        return part;
+    }
+
     void initParts(Category category) {
         checkCategory(category);
         String scriptText = category.getScriptTextProperty().getValue();
@@ -231,19 +240,24 @@ public class Project implements Serializable {
             scriptText = getCategoryDefaultScript(category.getNameProperty().getValue());
         }
 
-        ArrayList<Part> parts = Parser.parseScript(
+        ArrayList<ShapeSpec> shapes = Parser.parseScript(
                 scriptText, category.getNameProperty().getValue());
 
-        int numOfParts = parts.size();
-        for (int i = 0; i < numOfParts; ++i) {
-            Part part = partsTable.get(parts.get(i).getName());
-            if (part == null) {
-                partsTable.put(parts.get(i).getName(), parts.get(i));
-                part = parts.get(i);
-            }
-            parts.set(i, part);
+        if (shapes == null) {
+            shapes = new ArrayList<ShapeSpec>();
         }
-        category.setParts(parts);
+
+        if (shapes.size() == 0) {
+            ShapeSpec shape = new ShapeSpec();
+            shape.setPartName(category.getNameProperty().getValue());
+            shapes.add(shape);
+        }
+
+        int numOfParts = shapes.size();
+        for (int i = 0; i < numOfParts; ++i) {
+            shapes.get(i).setPart(getPart(shapes.get(i).getPartName()));
+        }
+        category.setShapes(shapes);
 
         setSynthesizedSamples(category, new ArrayList<SynthesizedGestureSample>());
     }
@@ -263,9 +277,9 @@ public class Project implements Serializable {
         Thread learningThread = new Thread() {
             @Override
             public void run() {
-                ArrayList<Part> parts = new Learner().learnParts(category);
-                setSynthesizedSamples(category, new SampleGenerator(40).generate(parts));
-                category.updatePartTemplates(parts);
+                ArrayList<ShapeSpec> shapes = new Learner().learnParts(category);
+                setSynthesizedSamples(category, new SampleGenerator(40).generate(shapes));
+                category.updatePartTemplates(shapes);
             }
         };
 

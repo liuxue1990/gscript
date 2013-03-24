@@ -27,7 +27,7 @@ public class SampleGenerator {
         }
     }
 
-    public ArrayList<SynthesizedGestureSample> generate(ArrayList<Part> parts) {
+    public ArrayList<SynthesizedGestureSample> generate(ArrayList<ShapeSpec> parts) {
         ArrayList<SynthesizedGestureSample> collection = new ArrayList<SynthesizedGestureSample>();
 
         sub(parts, 0, new ArrayList<PartInstance>(), collection);
@@ -40,13 +40,13 @@ public class SampleGenerator {
         return collection;
     }
 
-    private void sub(ArrayList<Part> parts, int depth, ArrayList<PartInstance> instanceList, ArrayList<SynthesizedGestureSample> collection) {
+    private void sub(ArrayList<ShapeSpec> parts, int depth, ArrayList<PartInstance> instanceList, ArrayList<SynthesizedGestureSample> collection) {
         if (depth == parts.size()) {
             collection.add(new SynthesizedGestureSample(new ArrayList<PartInstance>(instanceList)));
             return;
         }
 
-        Part part = parts.get(depth);
+        ShapeSpec part = parts.get(depth);
         Random r = new Random();
         for (double angle : angles) {
             angle = angles[r.nextInt(angles.length)];
@@ -54,19 +54,19 @@ public class SampleGenerator {
                 scale = scales[r.nextInt(scales.length)];
 
                 if (part.isRepeatable()) {
-                    PartInstance instance0 = new PartInstance(part, angle, scale);
+                    PartInstance instance0 = new PartInstance(part.getPart(), angle, scale);
                     instanceList.add(instance0);
                     for (double a : angles) {
                         a = angles[r.nextInt(angles.length)];
                         for (double s1 : scales) {
                             s1 = scales[r.nextInt(scales.length)];
 
-                            PartInstance instance1 = new PartInstance(part, a, s1);
+                            PartInstance instance1 = new PartInstance(part.getPart(), a, s1);
                             instanceList.add(instance1);
                             for (double s2  : scales) {
                                 s2 = scales[r.nextInt(scales.length)];
 
-                                PartInstance instance2 = new PartInstance(part, a, s2);
+                                PartInstance instance2 = new PartInstance(part.getPart(), a, s2);
 
                                 instanceList.add(instance2);
                                 sub(parts, depth + 1, instanceList, collection);
@@ -77,7 +77,7 @@ public class SampleGenerator {
                     }
                     instanceList.remove(instanceList.size() - 1);
                 } else {
-                    PartInstance instance = new PartInstance(part, angle, scale);
+                    PartInstance instance = new PartInstance(part.getPart(), angle, scale);
                     instanceList.add(instance);
                     sub(parts, depth + 1, instanceList, collection);
                     instanceList.remove(instanceList.size() - 1);

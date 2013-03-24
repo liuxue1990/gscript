@@ -8,25 +8,18 @@ public class Part implements Serializable {
 
     private String name;
 
-    private boolean repeatable;
-
     private PartFeatureVector template;
 
     private PartFeatureVector userTemplate;
 
-    public Part(String name, boolean repeatable) {
+    public Part(String name) {
         this.name = name;
-        this.repeatable = repeatable;
 
         template = null;
     }
 
     public String getName() {
         return name;
-    }
-
-    public boolean isRepeatable() {
-        return repeatable;
     }
 
     public PartFeatureVector getTemplate() {

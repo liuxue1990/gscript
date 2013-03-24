@@ -22,9 +22,9 @@ public class Category implements Serializable {
 
     private ReadWriteProperty<String> scriptTextProperty;
 
-    private transient Property<Integer> partsProperty;
+    private transient Property<Integer> shapesProperty;
 
-    private transient ArrayList<Part> parts;
+    private transient ArrayList<ShapeSpec> shapes;
 
     private transient Property<Integer> generatedSamplesProperty;
 
@@ -50,13 +50,13 @@ public class Category implements Serializable {
 
     private void init() {
         samplesProperty = new Property<Integer>(0);
-        partsProperty = new Property<Integer>(0);
+        shapesProperty = new Property<Integer>(0);
         generatedSamplesProperty = new Property<Integer>(0);
 
         synthesizedSamples = new ArrayList<SynthesizedGestureSample>();
 
-        if (parts == null) {
-            parts = new ArrayList<Part>();
+        if (shapes == null) {
+            shapes = new ArrayList<ShapeSpec>();
         }
 
         if (positiveSamples == null) {
@@ -80,8 +80,8 @@ public class Category implements Serializable {
         return scriptTextProperty;
     }
 
-    public Property<Integer> getPartsProperty() {
-        return partsProperty;
+    public Property<Integer> getShapesProperty() {
+        return shapesProperty;
     }
 
     ReadWriteProperty<String> getNameReadWriteProperty() {
@@ -105,15 +105,15 @@ public class Category implements Serializable {
     }
 
     public int getNumOfParts() {
-        return parts.size();
+        return shapes.size();
     }
 
-    public Part getPart(int index) {
-        return parts.get(index);
+    public ShapeSpec getShape(int index) {
+        return shapes.get(index);
     }
 
-    public ArrayList<Part> getParts() {
-        return new ArrayList<Part>(parts);
+    public ArrayList<ShapeSpec> getShapes() {
+        return new ArrayList<ShapeSpec>(shapes);
     }
 
 	void addSample(Gesture gesture) {
@@ -128,19 +128,19 @@ public class Category implements Serializable {
 				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
 	}
 
-    void setParts(ArrayList<Part> parts) {
-        this.parts = new ArrayList<Part>(parts);
+    void setShapes(ArrayList<ShapeSpec> shapes) {
+        this.shapes = new ArrayList<ShapeSpec>(shapes);
         NotificationCenter.getDefaultCenter().postNotification(
-                NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsProperty);
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, shapesProperty);
     }
 
-    void updatePartTemplates(ArrayList<Part> newParts) {
+    void updatePartTemplates(ArrayList<ShapeSpec> newShapes) {
         int numOfParts = getNumOfParts();
         for (int i = 0; i < numOfParts; ++i) {
-            parts.get(i).setTemplate(newParts.get(i).getTemplate());
+            shapes.get(i).getPart().setTemplate(newShapes.get(i).getPart().getTemplate());
         }
         NotificationCenter.getDefaultCenter().postNotification(
-                NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsProperty);
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, shapesProperty);
     }
 
     public ArrayList<SynthesizedGestureSample> getSynthesizedSamples() {

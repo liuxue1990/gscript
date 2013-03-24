@@ -35,7 +35,7 @@ public class Learner {
         }
     }
 
-    public static ArrayList<Part> learnParts(Category category) {
+    public static ArrayList<ShapeSpec> learnParts(Category category) {
 
         final int numOfSamples = category.getNumOfSamples();
 
@@ -50,7 +50,7 @@ public class Learner {
         }
 
         double minLoss = Double.POSITIVE_INFINITY;
-        ArrayList<Part> bestParts = null;
+        ArrayList<ShapeSpec> bestShapes = null;
 
         String scriptText = category.getScriptTextProperty().getValue();
 
@@ -65,8 +65,9 @@ public class Learner {
 
         ArrayList<int[]> candidates = new ArrayList<int[]>();
 
-        ArrayList<Part> parts = Parser.parseScript(scriptText, category.getNameProperty().getValue());
-        new Learner().search(0, featuresMap[simplestSampleIndex].length, 0, parts.size(), new int[parts.size() * 2], candidates);
+        ArrayList<ShapeSpec> shapes = Parser.parseScript(scriptText, category.getNameProperty().getValue());
+
+        new Learner().search(0, featuresMap[simplestSampleIndex].length, 0, shapes.size(), new int[shapes.size() * 2], candidates);
 
         System.out.println(candidates.size());
 
@@ -78,37 +79,37 @@ public class Learner {
                 break;
             }
 
-            for (int partIndex = 0; partIndex < parts.size(); ++partIndex) {
+            for (int partIndex = 0; partIndex < shapes.size(); ++partIndex) {
 
 
-                if (category.getPart(partIndex).getUserTemplate() != null) {
-                    parts.get(partIndex).setTemplate(
-                            new PartFeatureVector(category.getPart(partIndex).getUserTemplate().getFeatures()));
+                if (category.getShape(partIndex).getPart().getUserTemplate() != null) {
+                    shapes.get(partIndex).getPart().setTemplate(
+                            new PartFeatureVector(category.getShape(partIndex).getPart().getUserTemplate().getFeatures()));
                 } else {
                     int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
                     PartFeatureVector template = new PartFeatureVector(
                             GSMath.normalize(featuresMap[simplestSampleIndex][a][b].getFeatures(), null));
 
-                    parts.get(partIndex).setTemplate(template);
+                    shapes.get(partIndex).getPart().setTemplate(template);
                 }
             }
 
-            double loss = optimize(parts, featuresMap, userMarkedMap) / category.getNumOfSamples();
+            double loss = optimize(shapes, featuresMap, userMarkedMap) / category.getNumOfSamples();
             if (GSMath.compareDouble(loss, minLoss) < 0) {
                 minLoss = loss;
-                bestParts = parts;
+                bestShapes = shapes;
             }
         }
 
-        return bestParts;
+        return bestShapes;
     }
 
-    public static double optimize(ArrayList<Part> parts, PartFeatureVector[][][] featuresMap, boolean[][] userMarkedMap) {
+    public static double optimize(ArrayList<ShapeSpec> shapes, PartFeatureVector[][][] featuresMap, boolean[][] userMarkedMap) {
 
         final double minLossImprovement = 1e-10;
 
         final int numOfSamples = featuresMap.length;
-        final int numOfParts = parts.size();
+        final int numOfParts = shapes.size();
 
         int[][][] breakLocationMap = new int[numOfSamples][numOfParts][];
         double[][] angleMap = new double[numOfSamples][numOfParts];
@@ -119,7 +120,7 @@ public class Learner {
             double loss = 0;
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
 
-                loss += findPartsInSample(featuresMap[sampleIndex], userMarkedMap[sampleIndex], parts, breakLocationMap[sampleIndex], angleMap[sampleIndex]);
+                loss += findPartsInSample(featuresMap[sampleIndex], userMarkedMap[sampleIndex], shapes, breakLocationMap[sampleIndex], angleMap[sampleIndex]);
 
                 if (Double.isInfinite(loss)) {
                     throw new RuntimeException("Cannot fragment the sample " + sampleIndex);
@@ -136,7 +137,7 @@ public class Learner {
 
             for (int partIndex = 0; partIndex < numOfParts; ++partIndex) {
 
-                double[] features = parts.get(partIndex).getTemplate().getFeatures();
+                double[] features = shapes.get(partIndex).getPart().getTemplate().getFeatures();
 
                 ArrayList<PartFeatureVector> vectors = new ArrayList<PartFeatureVector>();
 
@@ -156,7 +157,7 @@ public class Learner {
                     }
                 }
 
-                parts.get(partIndex).setTemplate(average(vectors));
+                shapes.get(partIndex).getPart().setTemplate(average(vectors));
             }
 
         }
@@ -181,7 +182,7 @@ public class Learner {
     }
 
     public static double findPartsInGesture(
-            Gesture gesture, ArrayList<Part> parts, int[][] breakLocations, double[] angles) {
+            Gesture gesture, ArrayList<ShapeSpec> parts, int[][] breakLocations, double[] angles) {
 
         int[] endLocations = computeEndLocations(gesture);
         PartFeatureVector[][] sampleFeaturesMap = sampleFeatureVectors(gesture, endLocations);
@@ -198,7 +199,7 @@ public class Learner {
     }
 
     private static double findPartsInSample(
-            PartFeatureVector[][] sampleFeaturesMap, boolean[] userMarked, ArrayList<Part> parts, int[][] breakLocations, double[] angles) {
+            PartFeatureVector[][] sampleFeaturesMap, boolean[] userMarked, ArrayList<ShapeSpec> parts, int[][] breakLocations, double[] angles) {
 
         final int numOfParts = parts.size();
         final int numOfEndLocations  = sampleFeaturesMap.length;
@@ -230,7 +231,7 @@ public class Learner {
 
         for (int j = lastEndLocationIndex - 1; j >= 0; --j) {
             for (int i = numOfParts - 1; i >= 0; --i) {
-                PartFeatureVector u = parts.get(i).getTemplate();
+                PartFeatureVector u = parts.get(i).getPart().getTemplate();
                 loss[i][j] = Double.POSITIVE_INFINITY;
 
                 for (int k = j + 1; k <= lastEndLocationIndex; ++k) {

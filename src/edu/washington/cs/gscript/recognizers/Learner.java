@@ -1,7 +1,6 @@
 package edu.washington.cs.gscript.recognizers;
 
 import edu.washington.cs.gscript.helpers.GSMath;
-import edu.washington.cs.gscript.helpers.Parser;
 import edu.washington.cs.gscript.helpers.Segmentation;
 import edu.washington.cs.gscript.models.*;
 
@@ -13,7 +12,7 @@ public class Learner {
 
     public static int SEGMENTATION_ERROR = 1;
 
-    private void search(int m, int n, int k, int total, int[] seq, ArrayList<int[]> list) {
+    private static void search(int m, int n, int k, int total, int[] seq, ArrayList<int[]> list) {
         if (m == n - 1 && k == total) {
             System.out.println(Arrays.toString(seq));
             list.add(Arrays.copyOf(seq, seq.length));
@@ -35,99 +34,233 @@ public class Learner {
         }
     }
 
-    public static ArrayList<ShapeSpec> learnParts(Category category) {
 
-        final int numOfSamples = category.getNumOfSamples();
+    public Learner() {
 
-        PartFeatureVector[][][] featuresMap = new PartFeatureVector[numOfSamples][][];
-        boolean[][] userMarkedMap = new boolean[numOfSamples][];
+    }
 
-        for (int k = 0; k < numOfSamples; ++k) {
-            Gesture sample = category.getSample(k);
-            int[] endLocations = computeEndLocations(sample);
-            featuresMap[k] = sampleFeatureVectors(sample, endLocations);
-            userMarkedMap[k] = computeUserMarked(sample, endLocations);
+    public Map<String, Part> learnAllPartsInProject(Project project) {
+        ArrayList<Category> categories = new ArrayList<Category>();
+
+        int numOfCategories = project.getNumOfCategories();
+        for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
+            categories.add(project.getCategory(categoryIndex));
+        }
+
+        return learnPartsInCategories(categories);
+    }
+
+    public Map<String, Part> learnPartsInRelatedCategories(Project project, Category category) {
+        return learnPartsInCategories(findRelatedCategories(project, category));
+    }
+
+    public ArrayList<Category> findRelatedCategories(Project project, Category category) {
+        Set<String> usedPartNames = new HashSet<String>();
+
+        ArrayList<Category> categories = new ArrayList<Category>();
+        categories.add(category);
+
+        for (int i = 0; i < categories.size(); ++i) {
+            Category cat = categories.get(i);
+            int numOfShapes = categories.get(i).getNumOfShapes();
+            for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                usedPartNames.add(cat.getShape(shapeIndex).getPart().getName());
+            }
+
+            int numOfCategories = project.getNumOfCategories();
+            for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
+                cat = project.getCategory(catIndex);
+                if (categories.indexOf(cat) >= 0) {
+                    continue;
+                }
+
+                boolean related = false;
+
+                numOfShapes = cat.getNumOfShapes();
+                for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                    if (usedPartNames.contains(cat.getShape(shapeIndex).getPartName())) {
+                        related = true;
+                        break;
+                    }
+                }
+
+                if (related) {
+                    categories.add(cat);
+                }
+            }
+        }
+
+        return categories;
+    }
+
+    public Map<String, Part> createInitialPartsTable(ArrayList<Category> categories) {
+        Map<String, Part> table = new HashMap<String, Part>();
+
+        for (Category category : categories) {
+            int numOfShapes = category.getNumOfShapes();
+            for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                ShapeSpec shape = category.getShape(shapeIndex);
+
+                if (table.containsKey(shape.getPartName())) {
+                    continue;
+                }
+
+                Part part = new Part(shape.getPartName());
+                part.setUserTemplate(shape.getPart().getUserTemplate());
+                part.setTemplate(shape.getPart().getUserTemplate());
+
+                table.put(part.getName(), part);
+            }
+        }
+
+        return table;
+    }
+
+    public Map<String, Part> learnPartsInCategories(ArrayList<Category> categories) {
+        Map<String, Part> bestPartsTable = null;
+
+        int numOfCategories = categories.size();
+
+        PartFeatureVector[][][][] featuresMap = new PartFeatureVector[categories.size()][][][];
+        boolean[][][] userMarkedMap = new boolean[categories.size()][][];
+
+        int[] simplestSampleIndex = new int[categories.size()];
+
+        int totalNumOfSamples = 0;
+
+        for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
+            Category category = categories.get(categoryIndex);
+            int numOfSamples = category.getNumOfSamples();
+            totalNumOfSamples += numOfSamples;
+            featuresMap[categoryIndex] = new PartFeatureVector[numOfSamples][][];
+            userMarkedMap[categoryIndex] = new boolean[numOfSamples][];
+
+            for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
+                Gesture sample = category.getSample(sampleIndex);
+                int[] endLocations = computeEndLocations(sample);
+                featuresMap[categoryIndex][sampleIndex] = sampleFeatureVectors(sample, endLocations);
+                userMarkedMap[categoryIndex][sampleIndex] = computeUserMarked(sample, endLocations);
+            }
+        }
+
+        for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
+            Category category = categories.get(categoryIndex);
+            int numOfSamples = category.getNumOfSamples();
+            simplestSampleIndex[categoryIndex] = 0;
+            for (int sampleIndex = 1; sampleIndex < numOfSamples; ++sampleIndex) {
+                if (featuresMap[categoryIndex][sampleIndex].length < featuresMap[categoryIndex][simplestSampleIndex[categoryIndex]].length) {
+                    simplestSampleIndex[categoryIndex] = sampleIndex;
+                }
+            }
         }
 
         double minLoss = Double.POSITIVE_INFINITY;
-        ArrayList<ShapeSpec> bestShapes = null;
 
-        String scriptText = category.getScriptTextProperty().getValue();
+        Random random = new Random();
+        for (int trial = 0; trial < 20; ++trial) {
+            Map<String, Part> partsTable = createInitialPartsTable(categories);
 
-        int simplestSampleIndex = 0;
-        for (int k = 1; k < numOfSamples; ++k) {
-            System.out.println(featuresMap[k].length);
-            if (featuresMap[k].length < featuresMap[simplestSampleIndex].length) {
-                simplestSampleIndex = k;
-            }
-        }
-        System.out.println("Simplest " + featuresMap[simplestSampleIndex].length);
+            for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
+                Category category = categories.get(categoryIndex);
+                int numOfShapes = category.getNumOfShapes();
+                int sampleIndex = simplestSampleIndex[categoryIndex];
 
-        ArrayList<int[]> candidates = new ArrayList<int[]>();
+                int numOfEndLocations = featuresMap[categoryIndex][sampleIndex].length;
+                for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                    ShapeSpec shape = category.getShape(shapeIndex);
+                    Part part = partsTable.get(shape.getPartName());
+                    if (part.getTemplate() != null) {
+                        continue;
+                    }
 
-        ArrayList<ShapeSpec> shapes = Parser.parseScript(scriptText, category.getNameProperty().getValue());
+                    int a = random.nextInt(numOfEndLocations - 1);
+                    int b = a + 1 + random.nextInt(numOfEndLocations - a - 1);
 
-        new Learner().search(0, featuresMap[simplestSampleIndex].length, 0, shapes.size(), new int[shapes.size() * 2], candidates);
-
-        System.out.println(candidates.size());
-
-        Collections.shuffle(candidates);
-        for (int[] candidate : candidates) {
-            System.out.println(candidates.indexOf(candidate));
-
-            if (candidates.indexOf(candidate) > 20) {
-                break;
-            }
-
-            for (int partIndex = 0; partIndex < shapes.size(); ++partIndex) {
-
-
-                if (category.getShape(partIndex).getPart().getUserTemplate() != null) {
-                    shapes.get(partIndex).getPart().setTemplate(
-                            new PartFeatureVector(category.getShape(partIndex).getPart().getUserTemplate().getFeatures()));
-                } else {
-                    int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
-                    PartFeatureVector template = new PartFeatureVector(
-                            GSMath.normalize(featuresMap[simplestSampleIndex][a][b].getFeatures(), null));
-
-                    shapes.get(partIndex).getPart().setTemplate(template);
+                    part.setTemplate(new PartFeatureVector(
+                            GSMath.normalize(featuresMap[categoryIndex][sampleIndex][a][b].getFeatures(), null)));
                 }
             }
 
-            double loss = optimize(shapes, featuresMap, userMarkedMap) / category.getNumOfSamples();
+            double loss = optimize(partsTable, categories, featuresMap, userMarkedMap) / totalNumOfSamples;
+
             if (GSMath.compareDouble(loss, minLoss) < 0) {
                 minLoss = loss;
-                bestShapes = shapes;
+                bestPartsTable = partsTable;
             }
         }
 
-        return bestShapes;
+        return bestPartsTable;
     }
 
-    public static double optimize(ArrayList<ShapeSpec> shapes, PartFeatureVector[][][] featuresMap, boolean[][] userMarkedMap) {
+    public static double optimize(
+            Map<String, Part> partsTable,
+            ArrayList<Category> categories,
+            PartFeatureVector[][][][] featuresMap,
+            boolean[][][] userMarkedMap) {
 
         final double minLossImprovement = 1e-10;
-
-        final int numOfSamples = featuresMap.length;
-        final int numOfParts = shapes.size();
-
-        int[][][] breakLocationMap = new int[numOfSamples][numOfParts][];
-        double[][] angleMap = new double[numOfSamples][numOfParts];
-
         double minLoss = Double.POSITIVE_INFINITY;
 
         while (true) {
-            double loss = 0;
-            for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
 
-                loss += findPartsInSample(featuresMap[sampleIndex], userMarkedMap[sampleIndex], shapes, breakLocationMap[sampleIndex], angleMap[sampleIndex]);
+            Map<String, ArrayList<PartFeatureVector>> partAverageTable = new HashMap<String, ArrayList<PartFeatureVector>>();
 
-                if (Double.isInfinite(loss)) {
-                    throw new RuntimeException("Cannot fragment the sample " + sampleIndex);
-                }
+            for (String partName : partsTable.keySet()) {
+                partAverageTable.put(partName, new ArrayList<PartFeatureVector>());
             }
 
-            System.out.println(loss);
+            double loss = 0;
+
+            int numOfCategories = categories.size();
+            for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
+                Category category = categories.get(categoryIndex);
+                int numOfShapes = category.getNumOfShapes();
+                ShapeSpec[] shapes = new ShapeSpec[numOfShapes];
+                Part[] parts = new Part[numOfShapes];
+
+                for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                    shapes[shapeIndex] = category.getShape(shapeIndex);
+                    parts[shapeIndex] = partsTable.get(shapes[shapeIndex].getPartName());
+                }
+
+                int numOfSamples = category.getNumOfSamples();
+                for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
+
+                    int[][] breaks = new int[numOfShapes][];
+                    double[] angles = new double[numOfShapes];
+
+                    double sampleLoss = findPartsInSample(
+                            featuresMap[categoryIndex][sampleIndex],
+                            userMarkedMap[categoryIndex][sampleIndex],
+                            shapes, parts, breaks, angles);
+
+                    if (Double.isInfinite(sampleLoss)) {
+                        throw new RuntimeException("Cannot fragment the sample " + sampleIndex);
+                    }
+
+                    loss += sampleLoss;
+
+                    for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+
+                        double angle = angles[shapeIndex];
+
+                        for (int i = 1; i < breaks[shapeIndex].length; ++i) {
+                            int a = breaks[shapeIndex][i - 1];
+                            int b = breaks[shapeIndex][i];
+
+                            double[] v = GSMath.rotate(featuresMap[categoryIndex][sampleIndex][a][b].getFeatures(), angle, null);
+                            GSMath.normalize(v, v);
+//                        GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v);
+//                        GSMath.rotate(features, Math.PI - Math.atan2(features[1], features[0]), features);
+                            partAverageTable.get(parts[shapeIndex].getName()).add(new PartFeatureVector(v));
+                        }
+                    }
+                }
+
+                for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                    parts[shapeIndex] = partsTable.get(shapes[shapeIndex].getPartName());
+                }
+            }
 
             if (GSMath.compareDouble(minLoss - loss, minLossImprovement) < 0) {
                 break;
@@ -135,35 +268,143 @@ public class Learner {
 
             minLoss = loss;
 
-            for (int partIndex = 0; partIndex < numOfParts; ++partIndex) {
-
-                double[] features = shapes.get(partIndex).getPart().getTemplate().getFeatures();
-
-                ArrayList<PartFeatureVector> vectors = new ArrayList<PartFeatureVector>();
-
-                for (int k = 0; k < numOfSamples; ++k) {
-
-                    double angle = angleMap[k][partIndex];
-
-                    for (int i = 1; i < breakLocationMap[k][partIndex].length; ++i) {
-                        int a = breakLocationMap[k][partIndex][i - 1];
-                        int b = breakLocationMap[k][partIndex][i];
-
-                        double[] v = new double[features.length];
-                        GSMath.normalize(GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v), v);
-//                        GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v);
-//                        GSMath.rotate(features, Math.PI - Math.atan2(features[1], features[0]), features);
-                        vectors.add(new PartFeatureVector(v));
-                    }
-                }
-
-                shapes.get(partIndex).getPart().setTemplate(average(vectors));
+            for (Map.Entry<String, ArrayList<PartFeatureVector>> entry : partAverageTable.entrySet()) {
+                partsTable.get(entry.getKey()).setTemplate(average(entry.getValue()));
             }
-
         }
 
         return minLoss;
     }
+
+//    public ArrayList<ShapeSpec> learnParts(Category category) {
+//
+////        final int numOfSamples = category.getNumOfSamples();
+////
+////        PartFeatureVector[][][] featuresMap = new PartFeatureVector[numOfSamples][][];
+////        boolean[][] userMarkedMap = new boolean[numOfSamples][];
+////
+////        for (int k = 0; k < numOfSamples; ++k) {
+////            Gesture sample = category.getSample(k);
+////            int[] endLocations = computeEndLocations(sample);
+////            featuresMap[k] = sampleFeatureVectors(sample, endLocations);
+////            userMarkedMap[k] = computeUserMarked(sample, endLocations);
+////        }
+//
+//        double minLoss = Double.POSITIVE_INFINITY;
+//        ArrayList<ShapeSpec> bestShapes = null;
+//
+//        String scriptText = category.getScriptTextProperty().getValue();
+//
+//        int simplestSampleIndex = 0;
+//        for (int k = 1; k < numOfSamples; ++k) {
+//            System.out.println(featuresMap[k].length);
+//            if (featuresMap[k].length < featuresMap[simplestSampleIndex].length) {
+//                simplestSampleIndex = k;
+//            }
+//        }
+//        System.out.println("Simplest " + featuresMap[simplestSampleIndex].length);
+//
+//        ArrayList<int[]> candidates = new ArrayList<int[]>();
+//
+//        ArrayList<ShapeSpec> shapes = Parser.parseScript(scriptText, category.getNameProperty().getValue());
+//
+//        new Learner().search(0, featuresMap[simplestSampleIndex].length, 0, shapes.size(), new int[shapes.size() * 2], candidates);
+//
+//        System.out.println(candidates.size());
+//
+//        Collections.shuffle(candidates);
+//        for (int[] candidate : candidates) {
+//            System.out.println(candidates.indexOf(candidate));
+//
+//            if (candidates.indexOf(candidate) > 20) {
+//                break;
+//            }
+//
+//            for (int partIndex = 0; partIndex < shapes.size(); ++partIndex) {
+//
+//
+//                if (category.getShape(partIndex).getPart().getUserTemplate() != null) {
+//                    shapes.get(partIndex).getPart().setTemplate(
+//                            new PartFeatureVector(category.getShape(partIndex).getPart().getUserTemplate().getFeatures()));
+//                } else {
+//                    int a = candidate[partIndex * 2], b = candidate[partIndex * 2 + 1];
+//                    PartFeatureVector template = new PartFeatureVector(
+//                            GSMath.normalize(featuresMap[simplestSampleIndex][a][b].getFeatures(), null));
+//
+//                    shapes.get(partIndex).getPart().setTemplate(template);
+//                }
+//            }
+//
+//            double loss = optimize(shapes, featuresMap, userMarkedMap) / category.getNumOfSamples();
+//            if (GSMath.compareDouble(loss, minLoss) < 0) {
+//                minLoss = loss;
+//                bestShapes = shapes;
+//            }
+//        }
+//
+//        return bestShapes;
+//    }
+
+//    public static double optimize(ArrayList<ShapeSpec> shapes, PartFeatureVector[][][] featuresMap, boolean[][] userMarkedMap) {
+//
+//        final double minLossImprovement = 1e-10;
+//
+//        final int numOfSamples = featuresMap.length;
+//        final int numOfParts = shapes.size();
+//
+//        int[][][] breakLocationMap = new int[numOfSamples][numOfParts][];
+//        double[][] angleMap = new double[numOfSamples][numOfParts];
+//
+//        double minLoss = Double.POSITIVE_INFINITY;
+//
+//        while (true) {
+//            double loss = 0;
+//            for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
+//
+//                loss += findPartsInSample(featuresMap[sampleIndex], userMarkedMap[sampleIndex], shapes, breakLocationMap[sampleIndex], angleMap[sampleIndex]);
+//
+//                if (Double.isInfinite(loss)) {
+//                    throw new RuntimeException("Cannot fragment the sample " + sampleIndex);
+//                }
+//            }
+//
+//            System.out.println(loss);
+//
+//            if (GSMath.compareDouble(minLoss - loss, minLossImprovement) < 0) {
+//                break;
+//            }
+//
+//            minLoss = loss;
+//
+//            for (int partIndex = 0; partIndex < numOfParts; ++partIndex) {
+//
+//                double[] features = shapes.get(partIndex).getPart().getTemplate().getFeatures();
+//
+//                ArrayList<PartFeatureVector> vectors = new ArrayList<PartFeatureVector>();
+//
+//                for (int k = 0; k < numOfSamples; ++k) {
+//
+//                    double angle = angleMap[k][partIndex];
+//
+//                    for (int i = 1; i < breakLocationMap[k][partIndex].length; ++i) {
+//                        int a = breakLocationMap[k][partIndex][i - 1];
+//                        int b = breakLocationMap[k][partIndex][i];
+//
+//                        double[] v = new double[features.length];
+//                        GSMath.normalize(GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v), v);
+////                        GSMath.rotate(featuresMap[k][a][b].getFeatures(), angle, v);
+////                        GSMath.rotate(features, Math.PI - Math.atan2(features[1], features[0]), features);
+//                        vectors.add(new PartFeatureVector(v));
+//                    }
+//                }
+//
+//                shapes.get(partIndex).getPart().setTemplate(average(vectors));
+//            }
+//
+//        }
+//
+//        return minLoss;
+//    }
 
     public static PartFeatureVector[][] sampleFeatureVectors(Gesture gesture, int[] endLocations) {
 
@@ -182,12 +423,19 @@ public class Learner {
     }
 
     public static double findPartsInGesture(
-            Gesture gesture, ArrayList<ShapeSpec> parts, int[][] breakLocations, double[] angles) {
+            Gesture gesture, ArrayList<ShapeSpec> shapeList, int[][] breakLocations, double[] angles) {
 
         int[] endLocations = computeEndLocations(gesture);
         PartFeatureVector[][] sampleFeaturesMap = sampleFeatureVectors(gesture, endLocations);
         boolean[] userMarked = computeUserMarked(gesture, endLocations);
-        return findPartsInSample(sampleFeaturesMap, userMarked, parts, breakLocations, angles);
+
+        ShapeSpec[] shapes = shapeList.toArray(new ShapeSpec[shapeList.size()]);
+        Part[] parts = new Part[shapes.length];
+        for (int shapeIndex = 0; shapeIndex < shapes.length; ++shapeIndex) {
+            parts[shapeIndex] = shapes[shapeIndex].getPart();
+        }
+
+        return findPartsInSample(sampleFeaturesMap, userMarked, shapes, parts, breakLocations, angles);
     }
 
     private static int[] toIntArray(ArrayList<Integer> integerList) {
@@ -199,9 +447,9 @@ public class Learner {
     }
 
     private static double findPartsInSample(
-            PartFeatureVector[][] sampleFeaturesMap, boolean[] userMarked, ArrayList<ShapeSpec> parts, int[][] breakLocations, double[] angles) {
+            PartFeatureVector[][] sampleFeaturesMap, boolean[] userMarked, ShapeSpec[] shapes, Part[] parts, int[][] breakLocations, double[] angles) {
 
-        final int numOfParts = parts.size();
+        final int numOfParts = parts.length;
         final int numOfEndLocations  = sampleFeaturesMap.length;
         final int lastEndLocationIndex = numOfEndLocations - 1;
 
@@ -231,12 +479,12 @@ public class Learner {
 
         for (int j = lastEndLocationIndex - 1; j >= 0; --j) {
             for (int i = numOfParts - 1; i >= 0; --i) {
-                PartFeatureVector u = parts.get(i).getPart().getTemplate();
+                PartFeatureVector u = parts[i].getTemplate();
                 loss[i][j] = Double.POSITIVE_INFINITY;
 
                 for (int k = j + 1; k <= lastEndLocationIndex; ++k) {
 
-                    if (!parts.get(i).isRepeatable() && k - 1 > j && userMarked[k - 1]) {
+                    if (!shapes[i].isRepeatable() && k - 1 > j && userMarked[k - 1]) {
                         break;
                     }
 
@@ -258,7 +506,7 @@ public class Learner {
                     ArrayList<Integer> brList = new ArrayList<Integer>();
                     double[] angle = new double[1];
 
-                    if (parts.get(i).isRepeatable()) {
+                    if (shapes[i].isRepeatable()) {
 
                         d = findRepetitionInFragment(u, sampleFeaturesMap, userMarked, j, k, brList, angle) * length + loss[i + 1][k];
 

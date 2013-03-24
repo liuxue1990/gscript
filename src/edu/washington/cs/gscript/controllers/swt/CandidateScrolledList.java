@@ -52,7 +52,7 @@ public class CandidateScrolledList extends ScrolledList {
 
         if (category != null) {
             NotificationCenter.getDefaultCenter().addObserver(
-                    listObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, category.getShapesProperty());
+                    listObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, category.getSynthesizedSamplesProperty());
         }
 
         for (ListItem item : getListItems()) {

@@ -65,13 +65,4 @@ public class Parser {
         return null;
     }
 
-    public static ArrayList<ShapeSpec> parseScript(String scriptText, String defaultName) {
-        ArrayList<ShapeSpec> shapes = parseScript(scriptText);
-
-        if (shapes == null || shapes.size() == 0) {
-        }
-
-        return shapes;
-    }
-
 }

@@ -30,4 +30,9 @@ public class SynthesizedGestureSample implements Serializable {
     void setUserLabel(int userLabel) {
         userLabelProperty.setValue(userLabel);
     }
+
+    public boolean matchShapeSpecs(ArrayList<ShapeSpec> shapes) {
+        // @TODO complete this
+        return false;
+    }
 }

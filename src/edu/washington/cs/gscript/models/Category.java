@@ -26,7 +26,7 @@ public class Category implements Serializable {
 
     private transient ArrayList<ShapeSpec> shapes;
 
-    private transient Property<Integer> generatedSamplesProperty;
+    private transient Property<Integer> synthesizedSamplesProperty;
 
     private transient ArrayList<SynthesizedGestureSample> synthesizedSamples;
 
@@ -51,7 +51,7 @@ public class Category implements Serializable {
     private void init() {
         samplesProperty = new Property<Integer>(0);
         shapesProperty = new Property<Integer>(0);
-        generatedSamplesProperty = new Property<Integer>(0);
+        synthesizedSamplesProperty = new Property<Integer>(0);
 
         synthesizedSamples = new ArrayList<SynthesizedGestureSample>();
 
@@ -84,6 +84,10 @@ public class Category implements Serializable {
         return shapesProperty;
     }
 
+    public Property<Integer> getSynthesizedSamplesProperty() {
+        return synthesizedSamplesProperty;
+    }
+
     ReadWriteProperty<String> getNameReadWriteProperty() {
         return nameProperty;
     }
@@ -104,7 +108,7 @@ public class Category implements Serializable {
         return samples.indexOf(sample);
     }
 
-    public int getNumOfParts() {
+    public int getNumOfShapes() {
         return shapes.size();
     }
 
@@ -134,15 +138,6 @@ public class Category implements Serializable {
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, shapesProperty);
     }
 
-    void updatePartTemplates(ArrayList<ShapeSpec> newShapes) {
-        int numOfParts = getNumOfParts();
-        for (int i = 0; i < numOfParts; ++i) {
-            shapes.get(i).getPart().setTemplate(newShapes.get(i).getPart().getTemplate());
-        }
-        NotificationCenter.getDefaultCenter().postNotification(
-                NotificationCenter.VALUE_CHANGED_NOTIFICATION, shapesProperty);
-    }
-
     public ArrayList<SynthesizedGestureSample> getSynthesizedSamples() {
         return synthesizedSamples;
     }
@@ -157,6 +152,8 @@ public class Category implements Serializable {
 
     void setSynthesizedSamples(ArrayList<SynthesizedGestureSample> gestures) {
         this.synthesizedSamples = gestures;
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, synthesizedSamplesProperty);
     }
 
     void setLabelOfSynthesizedSample(SynthesizedGestureSample sample, int label) {

@@ -25,6 +25,8 @@ public class Project implements Serializable {
 
     private transient Property<Integer> categoriesProperty;
 
+    private transient Property<Integer> partsTableProperty;
+
     private ArrayList<Category> categories;
 
     private Map<String, Part> partsTable;
@@ -84,6 +86,10 @@ public class Project implements Serializable {
 
     public Property<String> getFileNameProperty() {
         return fileNameProperty;
+    }
+
+    public Property<Integer> getPartsTableProperty() {
+        return partsTableProperty;
     }
 
     public void setFileName(String fileName) {
@@ -240,8 +246,7 @@ public class Project implements Serializable {
             scriptText = getCategoryDefaultScript(category.getNameProperty().getValue());
         }
 
-        ArrayList<ShapeSpec> shapes = Parser.parseScript(
-                scriptText, category.getNameProperty().getValue());
+        ArrayList<ShapeSpec> shapes = Parser.parseScript(scriptText);
 
         if (shapes == null) {
             shapes = new ArrayList<ShapeSpec>();
@@ -277,9 +282,14 @@ public class Project implements Serializable {
         Thread learningThread = new Thread() {
             @Override
             public void run() {
-                ArrayList<ShapeSpec> shapes = new Learner().learnParts(category);
-                setSynthesizedSamples(category, new SampleGenerator(40).generate(shapes));
-                category.updatePartTemplates(shapes);
+                Map<String, Part> table = new Learner().learnPartsInRelatedCategories(Project.this, category);
+                setSynthesizedSamples(category, new SampleGenerator(40).generate(category.getShapes()));
+                for (Map.Entry<String, Part> entry : table.entrySet()) {
+                    partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
+                }
+                setDirty(true);
+                NotificationCenter.getDefaultCenter().postNotification(
+                        NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
             }
         };
 
@@ -290,6 +300,8 @@ public class Project implements Serializable {
         checkPart(part);
         part.setUserTemplate(fv);
         setDirty(true);
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
     }
 
     public void setSynthesizedSamples(Category category, ArrayList<SynthesizedGestureSample> samples) {

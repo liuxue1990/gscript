@@ -35,7 +35,7 @@ public class Part implements Serializable {
         this.template = template;
     }
 
-    void setUserTemplate(PartFeatureVector template) {
+    public void setUserTemplate(PartFeatureVector template) {
         this.userTemplate = template;
     }
 }

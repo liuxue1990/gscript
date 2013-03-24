@@ -149,6 +149,10 @@ public class GestureCanvas extends Canvas {
                                     partsListener,
                                     NotificationCenter.VALUE_CHANGED_NOTIFICATION,
                                     mainViewModel.getSelectedCategory().getShapesProperty());
+                            NotificationCenter.getDefaultCenter().addObserver(
+                                    partsListener,
+                                    NotificationCenter.VALUE_CHANGED_NOTIFICATION,
+                                    mainViewModel.getProject().getPartsTableProperty());
                         }
                         redraw();
                     }
@@ -182,8 +186,8 @@ public class GestureCanvas extends Canvas {
 		if (points.size() > 5) {
 
             boolean isForPart = false;
-            if (mainViewModel.getSelectedCategory() != null && mainViewModel.getSelectedCategory().getNumOfParts() > 0) {
-                for (int i = 0, n = mainViewModel.getSelectedCategory().getNumOfParts(); i < n; ++i) {
+            if (mainViewModel.getSelectedCategory() != null && mainViewModel.getSelectedCategory().getNumOfShapes() > 0) {
+                for (int i = 0, n = mainViewModel.getSelectedCategory().getNumOfShapes(); i < n; ++i) {
                     if (getPartBounds(i).contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
                         isForPart = true;
                         mainViewModel.setUserProvidedPart(mainViewModel.getSelectedCategory().getShape(i).getPart(), new Gesture(points));
@@ -296,7 +300,7 @@ public class GestureCanvas extends Canvas {
         int width = 100;
         int spacing = 10;
 
-        int numOfParts = category.getNumOfParts();
+        int numOfParts = category.getNumOfShapes();
 
         for (int partIndex = 0; partIndex < numOfParts; ++partIndex) {
             Part part = category.getShape(partIndex).getPart();
@@ -387,9 +391,9 @@ public class GestureCanvas extends Canvas {
             }
         }
 
-        if (category.getNumOfParts() > 0) {
-            int[][] breakLocations = new int[category.getNumOfParts()][];
-            double[] angles = new double[category.getNumOfParts()];
+        if (category.getNumOfShapes() > 0) {
+            int[][] breakLocations = new int[category.getNumOfShapes()][];
+            double[] angles = new double[category.getNumOfShapes()];
 
             ArrayList<ShapeSpec> parts = category.getShapes();
             double loss = Learner.findPartsInGesture(gesture, parts, breakLocations, angles);
@@ -402,7 +406,7 @@ public class GestureCanvas extends Canvas {
 //            Learner.findRepetitionInFragment(
 //                    mainViewModel.getShapes().get(1).getTemplate(), sampleFeaturesMap, breakLocations[1][0], breakLocations[1][breakLocations[1].length - 1], new ArrayList<Integer>(), new double[1]);
 
-            for (int pi = 0; pi < category.getNumOfParts(); ++pi) {
+            for (int pi = 0; pi < category.getNumOfShapes(); ++pi) {
 
                 for (int i = 0; i < endLocations.length; ++i) {
                     for (int j = i + 1; j < endLocations.length; ++j) {

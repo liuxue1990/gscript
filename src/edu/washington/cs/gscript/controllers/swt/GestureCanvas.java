@@ -229,7 +229,7 @@ public class GestureCanvas extends Canvas {
 
             boolean isForPart = false;
             if (mainViewModel.getSelectedCategory() != null && mainViewModel.getSelectedCategory().getNumOfShapes() > 0) {
-                for (int i = 0, n = mainViewModel.getSelectedCategory().getNumOfShapes(); i < n; ++i) {
+                for (int i = 0, n = partBounds.length; i < n; ++i) {
                     if (partBounds[i].contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
                         isForPart = true;
                         mainViewModel.setUserProvidedPart(mainViewModel.getSelectedCategory().getShape(i).getPart(), new Gesture(points));

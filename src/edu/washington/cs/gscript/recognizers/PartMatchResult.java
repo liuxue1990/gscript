@@ -18,7 +18,9 @@ public class PartMatchResult {
 
     private double alignedAngle;
 
-    public PartMatchResult(Part part, Gesture gesture, int from, int to, PartFeatureVector vector, double angle) {
+    private double score;
+
+    public PartMatchResult(Part part, Gesture gesture, int from, int to, PartFeatureVector vector, double angle, double score) {
 
         this.part = part;
         this.gesture = gesture;
@@ -26,6 +28,7 @@ public class PartMatchResult {
         this.to = to;
         this.matchedFeatureVector = vector;
         this.alignedAngle = angle;
+        this.score = score;
     }
 
     public Part getPart() {
@@ -66,5 +69,13 @@ public class PartMatchResult {
 
     public void setTo(int to) {
         this.to = to;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
     }
 }

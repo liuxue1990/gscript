@@ -117,6 +117,7 @@ public class Learner {
     }
 
     public Map<String, Part> learnPartsInCategories(ArrayList<Category> categories) {
+        System.out.println("learning " + categories.size() + " categories");
         Map<String, Part> bestPartsTable = null;
 
         int numOfCategories = categories.size();
@@ -403,8 +404,10 @@ public class Learner {
                         }
 
                     } else {
-                        d = distanceToTemplateAligned(u.getFeatures(), vf) * length + loss[i + 1][k];
-                        mm.add(new PartMatchResult(parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalize(v.getFeatures(), null))));
+                        double score = distanceToTemplateAligned(u.getFeatures(), vf);
+                        d = score * length + loss[i + 1][k];
+                        mm.add(new PartMatchResult(
+                                parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalize(v.getFeatures(), null)), score));
                     }
 
                     if (GSMath.compareDouble(d, loss[i][j]) < 0) {
@@ -535,7 +538,8 @@ public class Learner {
             int from = beginIndex;
             for (int i = 0, k = bestK; k > 0; i = next[i][k], --k) {
                 int to = beginIndex + next[i][k];
-                matches.add(new PartMatchResult(null, null, from, to, sampleFeaturesMap[from][to], angle));
+                matches.add(new PartMatchResult(
+                        null, null, from, to, sampleFeaturesMap[from][to], angle, loss[0][bestK]));
                 from = to;
             }
         }

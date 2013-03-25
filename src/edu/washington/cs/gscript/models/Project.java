@@ -10,10 +10,7 @@ import edu.washington.cs.gscript.recognizers.Learner;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Project implements Serializable {
 
@@ -230,6 +227,10 @@ public class Project implements Serializable {
         return String.format("%s", categoryName);
     }
 
+    public Collection<Part> getParts() {
+        return partsTable.values();
+    }
+
     private Part getPart(String partName) {
         Part part = partsTable.get(partName);
         if (part == null) {
@@ -294,6 +295,16 @@ public class Project implements Serializable {
         };
 
         learningThread.start();
+    }
+
+    public void learnProject() {
+        Map<String, Part> table = new Learner().learnAllPartsInProject(this);
+        for (Map.Entry<String, Part> entry : table.entrySet()) {
+            partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
+        }
+        setDirty(true);
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
     }
 
     public void setUserProvidedPart(Part part, PartFeatureVector fv) {

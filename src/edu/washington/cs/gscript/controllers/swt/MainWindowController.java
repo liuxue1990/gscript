@@ -269,10 +269,10 @@ public class MainWindowController {
         fileMenuHeader.setText("&File");
         fileMenuHeader.setMenu(fileMenu);
 
-        Menu editMenu = new Menu(shell, SWT.DROP_DOWN);
+        Menu toolMenu = new Menu(shell, SWT.DROP_DOWN);
         MenuItem editMenuHeader = new MenuItem(mainMenu, SWT.CASCADE);
-        editMenuHeader.setText("&Edit");
-        editMenuHeader.setMenu(editMenu);
+        editMenuHeader.setText("&Tool");
+        editMenuHeader.setMenu(toolMenu);
 
 
 		MenuItem fileNewItem = new MenuItem(fileMenu, SWT.PUSH);
@@ -295,6 +295,9 @@ public class MainWindowController {
         MenuItem fileImportOneDollarData = new MenuItem(fileMenu, SWT.PUSH);
         fileImportOneDollarData.setText("Import $1 data...");
 
+        MenuItem toolTestRecognizer = new MenuItem(toolMenu, SWT.PUSH);
+        toolTestRecognizer.setText("Test recognizer...");
+        toolTestRecognizer.setAccelerator(SWT.MOD1 + 'T');
 
         fileOpenItem.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -324,6 +327,17 @@ public class MainWindowController {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 mainViewModel.loadTestData();
+            }
+        });
+
+        toolTestRecognizer.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                Shell testShell = new Shell(shell, SWT.APPLICATION_MODAL | SWT.CLOSE);
+                testShell.setSize(400, 400);
+
+                new TestWindowController(testShell, mainViewModel);
+                testShell.open();
             }
         });
 

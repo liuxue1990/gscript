@@ -723,8 +723,8 @@ public class Learner {
             dot += features1[i] * xt + features1[i + 1] * yt;
         }
 
-//        return Math.acos(dot / l1 / l2);
-        return (1 - dot / l1 / l2);
+        return Math.acos(Math.max(-1, Math.min(1, dot / l1 / l2)));
+//        return (1 - dot / l1 / l2);
     }
 
     public static int[] computeEndLocations(Gesture gesture) {

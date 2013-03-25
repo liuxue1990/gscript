@@ -167,9 +167,9 @@ public class Recognizer {
         int numOfSamples = category.getNumOfSamples();
         for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
             Gesture sample = category.getSample(sampleIndex);
-            if (sample == gesture) {
-                continue;
-            }
+//            if (sample == gesture) {
+//                continue;
+//            }
 
             double[] fv = Learner.gestureFeatures(sample, Learner.NUM_OF_RESAMPLING);
             double d = Learner.distanceToTemplateAligned(fu, fv);

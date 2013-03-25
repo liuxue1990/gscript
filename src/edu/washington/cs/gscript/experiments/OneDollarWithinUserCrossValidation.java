@@ -5,6 +5,9 @@ import edu.washington.cs.gscript.models.Gesture;
 import edu.washington.cs.gscript.models.Project;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -14,7 +17,8 @@ public class OneDollarWithinUserCrossValidation {
 
 //        new OneDollarWithinUserCrossValidation().crossValidation1();
 //        new OneDollarWithinUserCrossValidation().crossValidation2();
-        new OneDollarWithinUserCrossValidation().crossValidation3();
+//        new OneDollarWithinUserCrossValidation().crossValidation3();
+        new OneDollarWithinUserCrossValidation().crossValidation4("/Users/hlv/Desktop/testtest3");
     }
 
     private Random rand = new Random(9637);
@@ -167,14 +171,11 @@ public class OneDollarWithinUserCrossValidation {
 
     public void crossValidation3() {
 
-        int maxCaseNum = 2;
+        int maxCaseNum = 11;
 
-        int numOfTestGestures = 0;
-        int numOfErrors = 0;
-
-//        String[] speeds = new String[] {"fast", "medium", "slow"};
+        String[] speeds = new String[] {"fast", "medium", "slow"};
 //        String[] speeds = new String[] {"fast"};
-        String[] speeds = new String[] {"medium"};
+//        String[] speeds = new String[] {"medium"};
 //        String[] speeds = new String[] {"slow"};
 
         ArrayList<Gesture> gestures = new ArrayList<Gesture>();
@@ -193,6 +194,13 @@ public class OneDollarWithinUserCrossValidation {
             }
         }
 
+        test3(gestures, names, 5);
+    }
+
+    public void test3(ArrayList<Gesture> gestures, ArrayList<String> names, int nFolds) {
+        int numOfTestGestures = 0;
+        int numOfErrors = 0;
+
         ArrayList<Integer> ids = new ArrayList<Integer>();
         for (int i = 0; i < gestures.size(); ++i) {
             ids.add(i);
@@ -204,7 +212,7 @@ public class OneDollarWithinUserCrossValidation {
 
             Collections.shuffle(ids);
 
-            int m = gestures.size() * 9 / 10;
+            int m = gestures.size() * (nFolds - 1) / nFolds;
 
             for (int i = 0; i < m; ++i) {
                 recognizer.addGestureAsTemplate(names.get(ids.get(i)), gestures.get(ids.get(i)));
@@ -222,6 +230,32 @@ public class OneDollarWithinUserCrossValidation {
         }
 
         System.out.println(String.format("accuracy = %f, tested getures = %d", (numOfTestGestures - numOfErrors) / (double)numOfTestGestures, numOfTestGestures));
+    }
+
+    public void crossValidation4(String fileName) {
+        try {
+            ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName));
+            Project project = ((Project)in.readObject());
+            in.close();
+
+            ArrayList<Gesture> gestures = new ArrayList<Gesture>();
+            ArrayList<String> names = new ArrayList<String>();
+
+            int numOfCategories = project.getNumOfCategories();
+            for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
+                int numOfSamples = project.getCategory(categoryIndex).getNumOfSamples();
+                for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
+                    names.add(project.getCategory(categoryIndex).getNameProperty().getValue());
+                    gestures.add(project.getCategory(categoryIndex).getSample(sampleIndex));
+                }
+            }
+
+            test3(gestures, names, 5);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
 }

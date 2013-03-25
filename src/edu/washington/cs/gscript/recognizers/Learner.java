@@ -11,6 +11,7 @@ public class Learner {
     public static int NUM_OF_RESAMPLING = 32;
 
     public static int SEGMENTATION_ERROR = 1;
+    private static final double MAX_LOSS = 4;
 
     private static void search(int m, int n, int k, int total, int[] seq, ArrayList<int[]> list) {
         if (m == n - 1 && k == total) {
@@ -421,6 +422,10 @@ public class Learner {
             }
         }
 
+        if (GSMath.compareDouble(loss[0][0], Double.POSITIVE_INFINITY) >= 0) {
+            return MAX_LOSS;
+        }
+
         for (int i = 0, j = 0; i < numOfParts; ++i) {
             if (matches != null) {
 
@@ -534,14 +539,16 @@ public class Learner {
             }
         }
 
-        if (matches != null) {
-            int from = beginIndex;
-            for (int i = 0, k = bestK; k > 0; i = next[i][k], --k) {
-                int to = beginIndex + next[i][k];
-                matches.add(new PartMatchResult(
-                        null, null, from, to, sampleFeaturesMap[from][to], angle, loss[0][bestK]));
-                from = to;
-            }
+        if (GSMath.compareDouble(loss[0][bestK], Double.POSITIVE_INFINITY) >= 0) {
+            return MAX_LOSS;
+        }
+
+        int from = beginIndex;
+        for (int i = 0, k = bestK; k > 0; i = next[i][k], --k) {
+            int to = beginIndex + next[i][k];
+            matches.add(new PartMatchResult(
+                    null, null, from, to, sampleFeaturesMap[from][to], angle, loss[0][bestK]));
+            from = to;
         }
 
         return loss[0][bestK];

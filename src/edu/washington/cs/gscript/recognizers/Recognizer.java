@@ -130,18 +130,25 @@ public class Recognizer {
 
             featureList.add(minDistance(gesture, category) / 4);
 
-            ArrayList<ArrayList<PartMatchResult>> matches = new ArrayList<ArrayList<PartMatchResult>>();
-            Learner.findPartsInGesture(gesture, category.getShapes(), matches);
             int numOfShapes = category.getNumOfShapes();
-
             if (numOfShapes <= 1) {
                 continue;
             }
 
-            for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
-                ShapeSpec shape = category.getShape(shapeIndex);
-                PartMatchResult match = matches.get(shapeIndex).get(0);
-                featureList.add(match.getScore() / 4.0);
+            ArrayList<ArrayList<PartMatchResult>> matches = new ArrayList<ArrayList<PartMatchResult>>();
+            Learner.findPartsInGesture(gesture, category.getShapes(), matches);
+            if (matches.size() == 0) {
+
+                for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                    featureList.add(1.0);
+                }
+
+            } else {
+                for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                    ShapeSpec shape = category.getShape(shapeIndex);
+                    PartMatchResult match = matches.get(shapeIndex).get(0);
+                    featureList.add(match.getScore() / 4.0);
+                }
             }
         }
 

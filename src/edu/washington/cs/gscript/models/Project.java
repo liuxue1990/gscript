@@ -196,6 +196,7 @@ public class Project implements Serializable {
             if (index < 0) {
 
                 categories.add(newCategory);
+                initParts(newCategory);
                 addedCategories.add(newCategory);
 
             } else if (newCategory.getNumOfSamples() > 0) {

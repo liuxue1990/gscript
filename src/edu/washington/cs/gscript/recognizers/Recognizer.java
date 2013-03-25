@@ -55,6 +55,8 @@ public class Recognizer {
         ArrayList<svm_node[]> xList = new ArrayList<svm_node[]>();
         ArrayList<Double> yList = new ArrayList<Double>();
 
+        int maxIndex = 0;
+
         int numOfCategories = project.getNumOfCategories();
         for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
             Category category = project.getCategory(catIndex);
@@ -70,6 +72,7 @@ public class Recognizer {
                     x[i].value = features[i];
                 }
 
+                maxIndex = x.length;
                 xList.add(x);
                 yList.add((double)catIndex);
 
@@ -93,7 +96,7 @@ public class Recognizer {
 
         svm_parameter param = new svm_parameter();
         // default values
-        param.svm_type = svm_parameter.C_SVC;
+        param.svm_type = svm_parameter.NU_SVC;
         param.kernel_type = svm_parameter.RBF;
         param.degree = 3;
         param.gamma = 0;	// 1/num_features
@@ -109,7 +112,10 @@ public class Recognizer {
         param.weight_label = new int[0];
         param.weight = new double[0];
 
-        crossValidation(problem, param, 3);
+        param.gamma = 1.0 / maxIndex;
+
+        crossValidation(problem, param, 5);
+
 
         return null;
     }

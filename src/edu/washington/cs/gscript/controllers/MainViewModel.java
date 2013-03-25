@@ -5,6 +5,7 @@ import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.OneDollarDataImporter;
 import edu.washington.cs.gscript.models.*;
 import edu.washington.cs.gscript.recognizers.Learner;
+import edu.washington.cs.gscript.recognizers.PartMatchResult;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -19,12 +20,15 @@ public class MainViewModel {
 
 	public static final int SAMPLE_SELECTED_NOTIFICATION = 2;
 
+    public static final int SAMPLE_RECOGNITION_CHANGED_NOTIFICATION = 3;
 
 	private Project project;
 
 	private Category selectedCategory;
 
 	private Gesture selectedSample;
+
+    private ArrayList<ArrayList<PartMatchResult>> matchesForSelectedSample;
 
 	public MainViewModel() {
 	}
@@ -90,8 +94,27 @@ public class MainViewModel {
 
 	public void selectSample(Gesture gesture) {
 		selectedSample = gesture;
+        matchesForSelectedSample = null;
 		NotificationCenter.getDefaultCenter().postNotification(SAMPLE_SELECTED_NOTIFICATION, this);
+        recognizeSelectedSample();
 	}
+
+    public void recognizeSelectedSample() {
+        if (selectedSample == null) {
+            matchesForSelectedSample = null;
+            return;
+        }
+
+        for (ShapeSpec shape : selectedCategory.getShapes()) {
+            if (shape.getPart().getTemplate() == null) {
+                return;
+            }
+        }
+
+        matchesForSelectedSample = new ArrayList<ArrayList<PartMatchResult>>();
+        Learner.findPartsInGesture(selectedSample, selectedCategory.getShapes(), matchesForSelectedSample);
+        NotificationCenter.getDefaultCenter().postNotification(SAMPLE_RECOGNITION_CHANGED_NOTIFICATION, this);
+    }
 
 	public void addNewCategory() {
 		project.addNewCategory();
@@ -140,6 +163,10 @@ public class MainViewModel {
         }
     }
 
+    public ArrayList<ArrayList<PartMatchResult>> getMatchesForSelectedSample() {
+        return matchesForSelectedSample;
+    }
+
     public void importOneDollarGestures(String dirName) {
         project.importCategories(OneDollarDataImporter.importDiretory(dirName));
     }
@@ -150,8 +177,13 @@ public class MainViewModel {
         }
     }
 
-    public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double locationInRatio) {
-        project.toggleUserLabelAtSampleEndLocation(category, sample, locationInRatio);
+    public void toggleUserLabelAtSampleEndLocation(double locationInRatio) {
+        project.toggleUserLabelAtSampleEndLocation(selectedCategory, selectedSample, locationInRatio);
+
+        matchesForSelectedSample = new ArrayList<ArrayList<PartMatchResult>>();
+        Learner.findPartsInGesture(selectedSample, selectedCategory.getShapes(), matchesForSelectedSample);
+
+        recognizeSelectedSample();
     }
 
     public void loadTestData() {

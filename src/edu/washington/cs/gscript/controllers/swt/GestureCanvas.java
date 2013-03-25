@@ -16,6 +16,7 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -117,6 +118,7 @@ public class GestureCanvas extends Canvas {
                             if (i != hoverEndLocation) {
                                 hoverEndLocation = i;
                                 redraw();
+                                return;
                             }
                         }
                     }
@@ -305,8 +307,32 @@ public class GestureCanvas extends Canvas {
         for (int partIndex = 0; partIndex < numOfParts; ++partIndex) {
             Part part = category.getShape(partIndex).getPart();
 
+            int j = 0;
+            for (; j < partIndex; ++j) {
+                if (category.getShape(j).getPart() == part) {
+                    break;
+                }
+            }
+            if (j < partIndex) {
+                continue;
+            }
+
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
             gc.drawRectangle(sx, sy, width, width);
+
+            String partName = part.getName();
+            Point sz = gc.stringExtent(partName);
+            if (sz.x > width) {
+                for (int m = partName.length(); m >= 0; --m) {
+                    String name = String.format("%s...", partName.substring(0, m));
+                    sz = gc.stringExtent(name);
+                    if (sz.x < width) {
+                        partName = name;
+                        break;
+                    }
+                }
+            }
+            gc.drawString(partName, sx + width / 2 - sz.x / 2, sy + width + 1);
 
             if (part.getTemplate() != null) {
                 gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_RED));
@@ -318,8 +344,7 @@ public class GestureCanvas extends Canvas {
                 renderFeatures(gc, category.getShape(partIndex).getPart().getUserTemplate().getFeatures(), sx, sy, width);
             }
 
-            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
-
+//            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
 //            double[] u = part.getTemplate().getFeatures();
 //            double[] v = sampleFeaturesMap[breakLocations[partIndex][0]][breakLocations[partIndex][breakLocations[partIndex].length - 1]].getFeatures();
 //

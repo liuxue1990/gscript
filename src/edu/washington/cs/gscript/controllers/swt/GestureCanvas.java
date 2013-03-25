@@ -1,10 +1,8 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
-import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.models.*;
 import edu.washington.cs.gscript.recognizers.Learner;
 import edu.washington.cs.gscript.recognizers.PartMatchResult;
@@ -44,9 +42,18 @@ public class GestureCanvas extends Canvas {
 
     private int hoverEndLocation = -1;
 
+    private int hoverPartIndex = -1;
+
+    private ArrayList<Part> relatedParts;
+
+    private String[] partNames;
+
+    private Rectangle[] partBounds;
+
     private NotificationObserver partsListener = new NotificationObserver() {
         @Override
         public void onNotified(Object arg) {
+            updateParts();
             GestureCanvas.this.getDisplay().syncExec(new Runnable() {
                 @Override
                 public void run() {
@@ -121,6 +128,23 @@ public class GestureCanvas extends Canvas {
                                 return;
                             }
                         }
+
+                        if (partBounds != null) {
+                            int j = -1;
+
+                            for (int i = 0; i < partBounds.length; ++i) {
+                                if (partBounds[i].contains(e.x, e.y)) {
+                                    j = i;
+                                    break;
+                                }
+                            }
+
+                            if (j != hoverPartIndex) {
+                                hoverPartIndex = j;
+                                redraw();
+                                return;
+                            }
+                        }
                     }
 
                 } else {
@@ -141,12 +165,28 @@ public class GestureCanvas extends Canvas {
 				},
 				MainViewModel.SAMPLE_SELECTED_NOTIFICATION, mainViewModel);
 
+        NotificationCenter.getDefaultCenter().addObserver(
+                new NotificationObserver() {
+                    @Override
+                    public void onNotified(Object arg) {
+                        getDisplay().syncExec(new Runnable() {
+                            @Override
+                            public void run() {
+                                redraw();
+                            }
+                        });
+                    }
+                },
+                MainViewModel.SAMPLE_RECOGNITION_CHANGED_NOTIFICATION, mainViewModel);
 
         NotificationCenter.getDefaultCenter().addObserver(
                 new NotificationObserver() {
                     @Override
                     public void onNotified(Object arg) {
                         NotificationCenter.getDefaultCenter().removeObserver(partsListener);
+
+                        updateParts();
+
                         if (mainViewModel.getSelectedCategory() != null) {
                             NotificationCenter.getDefaultCenter().addObserver(
                                     partsListener,
@@ -190,7 +230,7 @@ public class GestureCanvas extends Canvas {
             boolean isForPart = false;
             if (mainViewModel.getSelectedCategory() != null && mainViewModel.getSelectedCategory().getNumOfShapes() > 0) {
                 for (int i = 0, n = mainViewModel.getSelectedCategory().getNumOfShapes(); i < n; ++i) {
-                    if (getPartBounds(i).contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
+                    if (partBounds[i].contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
                         isForPart = true;
                         mainViewModel.setUserProvidedPart(mainViewModel.getSelectedCategory().getShape(i).getPart(), new Gesture(points));
                         break;
@@ -205,6 +245,24 @@ public class GestureCanvas extends Canvas {
 		points = null;
 		redraw();
 	}
+
+    private void updateParts() {
+        Category category = mainViewModel.getSelectedCategory();
+
+        if (category != null) {
+            int numOfShapes = category.getNumOfShapes();
+            relatedParts = new ArrayList<Part>();
+
+            for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+                Part part = category.getShape(shapeIndex).getPart();
+                if (relatedParts.indexOf(part) < 0) {
+                    relatedParts.add(part);
+                }
+            }
+        }
+
+        layoutParts();
+    }
 
     private void updateEndLocations() {
         final int boundingBoxSize = 6;
@@ -286,52 +344,59 @@ public class GestureCanvas extends Canvas {
 		gc.setForeground(fg);
 	}
 
-    private Rectangle getPartBounds(int index) {
-
-        int sx = 10;
-        int sy = 10;
-        int width = 100;
-        int spacing = 10;
-
-        return new Rectangle(sx + (width + spacing) * index, sy, width, width);
+    private static void renderGesture(GC gc, Gesture gesture, int from, int to) {
+        for (int i = from + 1; i <= to; ++i) {
+            XYT pt1 = gesture.get(i - 1);
+            XYT pt2 = gesture.get(i);
+            gc.drawLine((int)pt1.getX(), (int)pt1.getY(), (int)pt2.getX(), (int)pt2.getY());
+        }
     }
 
-    private static void renderParts(GC gc, Category category) {
+    private void layoutParts() {
         int sx = 10;
         int sy = 10;
         int width = 100;
         int spacing = 10;
 
-        int numOfParts = category.getNumOfShapes();
+        partBounds = new Rectangle[relatedParts.size()];
+        for (int i = 0; i < partBounds.length; ++i) {
+            partBounds[i] = new Rectangle(sx + (width + spacing) * i, sy, width, width);
+        }
 
-        for (int partIndex = 0; partIndex < numOfParts; ++partIndex) {
-            Part part = category.getShape(partIndex).getPart();
+        partNames = new String[relatedParts.size()];
 
-            int j = 0;
-            for (; j < partIndex; ++j) {
-                if (category.getShape(j).getPart() == part) {
-                    break;
-                }
+        for (int i = 0; i < partBounds.length; ++i) {
+            String partName = relatedParts.get(i).getName();
+            if (partName.length() > 15) {
+                partName = String.format("%s...", partName.substring(0, 15));
             }
-            if (j < partIndex) {
-                continue;
-            }
+            partNames[i] = partName;
+        }
+    }
+
+    private void renderParts(GC gc, Category category) {
+        if (relatedParts == null) {
+            return;
+        }
+
+        int sx = 10;
+        int sy = 10;
+        int width = 100;
+        int spacing = 10;
+
+        for (int partIndex = 0; partIndex < relatedParts.size(); ++partIndex) {
+            Part part = relatedParts.get(partIndex);
 
             gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
+
+            if (partIndex == hoverPartIndex) {
+                gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW));
+            }
+
             gc.drawRectangle(sx, sy, width, width);
 
-            String partName = part.getName();
+            String partName = partNames[partIndex];
             Point sz = gc.stringExtent(partName);
-            if (sz.x > width) {
-                for (int m = partName.length(); m >= 0; --m) {
-                    String name = String.format("%s...", partName.substring(0, m));
-                    sz = gc.stringExtent(name);
-                    if (sz.x < width) {
-                        partName = name;
-                        break;
-                    }
-                }
-            }
             gc.drawString(partName, sx + width / 2 - sz.x / 2, sy + width + 1);
 
             if (part.getTemplate() != null) {
@@ -438,6 +503,21 @@ public class GestureCanvas extends Canvas {
                             gc.drawArc((int) pt.getX() - 5, (int) pt.getY() - 5, 10, 10, 0, 360);
                         }
                     }
+                }
+
+                if (hoverPartIndex != -1) {
+                    gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_RED));
+                    int lw = gc.getLineWidth();
+                    gc.setLineWidth(3);
+                    Part highlightPart = relatedParts.get(hoverPartIndex);
+                    for (ArrayList<PartMatchResult> subMatches: matches) {
+                        for (PartMatchResult match : subMatches) {
+                            if (match.getPart() == highlightPart) {
+                                renderGesture(gc, gesture, match.getFrom(), match.getTo());
+                            }
+                        }
+                    }
+                    gc.setLineWidth(lw);
                 }
             }
 

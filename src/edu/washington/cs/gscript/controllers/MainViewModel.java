@@ -1,6 +1,7 @@
 package edu.washington.cs.gscript.controllers;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
+import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.OneDollarDataImporter;
 import edu.washington.cs.gscript.models.*;
@@ -30,6 +31,13 @@ public class MainViewModel {
 
     private ArrayList<ArrayList<PartMatchResult>> matchesForSelectedSample;
 
+    private NotificationObserver partsObserver = new NotificationObserver() {
+        @Override
+        public void onNotified(Object arg) {
+            recognizeSelectedSample();
+        }
+    };
+
 	public MainViewModel() {
 	}
 
@@ -49,7 +57,10 @@ public class MainViewModel {
 		project = new Project();
 		NotificationCenter.getDefaultCenter().postNotification(PROJECT_CHANGED_NOTIFICATION, this);
 
-		selectCategory(null);
+        NotificationCenter.getDefaultCenter().addObserver(
+                partsObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, project.getPartsTableProperty());
+
+        selectCategory(null);
 	}
 
     public void openProject(String fileName) throws IOException, ClassNotFoundException {
@@ -61,6 +72,9 @@ public class MainViewModel {
 
         project = newProject;
         NotificationCenter.getDefaultCenter().postNotification(PROJECT_CHANGED_NOTIFICATION, this);
+
+        NotificationCenter.getDefaultCenter().addObserver(
+                partsObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, project.getPartsTableProperty());
 
         selectCategory(null);
     }
@@ -174,15 +188,12 @@ public class MainViewModel {
     public void setScript(Category category, String text) {
         if (category != null) {
             project.setScript(category, text);
+            recognizeSelectedSample();
         }
     }
 
     public void toggleUserLabelAtSampleEndLocation(double locationInRatio) {
         project.toggleUserLabelAtSampleEndLocation(selectedCategory, selectedSample, locationInRatio);
-
-        matchesForSelectedSample = new ArrayList<ArrayList<PartMatchResult>>();
-        Learner.findPartsInGesture(selectedSample, selectedCategory.getShapes(), matchesForSelectedSample);
-
         recognizeSelectedSample();
     }
 

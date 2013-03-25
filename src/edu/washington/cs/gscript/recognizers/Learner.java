@@ -398,11 +398,13 @@ public class Learner {
                         d = findRepetitionInFragment(
                                 u, sampleFeaturesMap, userMarked, j, k, mm) * length + loss[i + 1][k];
 
+                        for (PartMatchResult match : mm) {
+                            match.setPart(parts[i]);
+                        }
+
                     } else {
                         d = distanceToTemplateAligned(u.getFeatures(), vf) * length + loss[i + 1][k];
-                        if (mm != null) {
-                            mm.add(new PartMatchResult(null, null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalize(v.getFeatures(), null))));
-                        }
+                        mm.add(new PartMatchResult(parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalize(v.getFeatures(), null))));
                     }
 
                     if (GSMath.compareDouble(d, loss[i][j]) < 0) {

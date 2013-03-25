@@ -120,7 +120,7 @@ public class Category implements Serializable {
         return new ArrayList<ShapeSpec>(shapes);
     }
 
-	void addSample(Gesture gesture) {
+    void addSample(Gesture gesture) {
 		samples.add(gesture);
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_ADDED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
@@ -134,6 +134,7 @@ public class Category implements Serializable {
 
     void setShapes(ArrayList<ShapeSpec> shapes) {
         this.shapes = new ArrayList<ShapeSpec>(shapes);
+
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, shapesProperty);
     }

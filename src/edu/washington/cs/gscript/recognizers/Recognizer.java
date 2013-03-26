@@ -119,11 +119,11 @@ public class Recognizer {
 
         param.gamma = 1.0 / maxIndex;
 
-        crossValidation(problem, param, 5);
-
         Recognizer recognizer = new Recognizer();
         recognizer.model = svm.svm_train(problem, param);
         recognizer.project = project;
+
+        crossValidation(problem, param, 10);
 
         progress.setValue(currentProgress + progressTotal);
 
@@ -183,6 +183,7 @@ public class Recognizer {
 
             double[] fv = Learner.gestureFeatures(sample, Learner.NUM_OF_RESAMPLING);
             double d = Learner.distanceToTemplateAligned(fu, fv);
+
             if (GSMath.compareDouble(d, minDistance) < 0) {
                 minDistance = d;
             }

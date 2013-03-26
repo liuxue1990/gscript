@@ -281,13 +281,16 @@ public class Project implements Serializable {
         int initialProgress = progress.getValue();
 
         // @TODO clean up partsTable
+        Learner learner = new Learner();
+        ArrayList<Category> relatedCategories = learner.findRelatedCategories(this, category);
+        Map<String, Part> table = learner.learnPartsInCategories(
+                relatedCategories, progress, (int)(progressTotal * 0.95));
 
-        Map<String, Part> table = new Learner().learnPartsInRelatedCategories(
-                Project.this, category, progress, (int)(progressTotal * 0.95));
-        setSynthesizedSamples(category, new SampleGenerator(40).generate(category.getShapes()));
         for (Map.Entry<String, Part> entry : table.entrySet()) {
             partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
         }
+
+        setSynthesizedSamples(category, new SampleGenerator(category, 40).generate(category.getShapes()));
         progress.setValue(initialProgress + progressTotal);
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
@@ -321,8 +324,8 @@ public class Project implements Serializable {
         checkCategory(category);
         ArrayList<SynthesizedGestureSample> synthesized = new ArrayList<SynthesizedGestureSample>();
         synthesized.addAll(samples);
-        synthesized.addAll(category.getPositiveSamples());
-        synthesized.addAll(category.getNegativeSamples());
+//        synthesized.addAll(category.getPositiveSamples());
+//        synthesized.addAll(category.getNegativeSamples());
         category.setSynthesizedSamples(synthesized);
     }
 

@@ -55,13 +55,6 @@ public class Learner {
         return learnPartsInCategories(categories, progress, progressTotal);
     }
 
-    public Map<String, Part> learnPartsInRelatedCategories(
-            Project project, Category category, ReadWriteProperty<Integer> progress, int progressTotal) {
-
-        return learnPartsInCategories(
-                findRelatedCategories(project, category), progress, progressTotal);
-    }
-
     public ArrayList<Category> findRelatedCategories(Project project, Category category) {
         Set<String> usedPartNames = new HashSet<String>();
 
@@ -742,7 +735,29 @@ public class Learner {
         }
 
         return Math.acos(Math.max(-1, Math.min(1, dot / l1 / l2)));
-//        return (1 - dot / l1 / l2) * 2;
+//        return (1 - Math.max(-1, Math.min(1, dot / l1 / l2)));
+    }
+
+    public static double distanceAtAngle3(double[] features1, double[] features2, double angle) {
+        double dot = 0;
+
+        double l1 = GSMath.magnitude(features1);
+        double l2 = GSMath.magnitude(features2);
+
+        double cos = Math.cos(angle);
+        double sin = Math.sin(angle);
+
+        for (int i = 0; i < features1.length; i += 2) {
+            double x = features2[i];
+            double y = features2[i + 1];
+
+            double xt = cos * x - sin * y;
+            double yt = sin * x + cos * y;
+
+            dot += features1[i] * xt + features1[i + 1] * yt;
+        }
+
+        return Math.acos(Math.max(-1, Math.min(1, dot / l1 / l2)));
     }
 
     public static int[] computeEndLocations(Gesture gesture) {

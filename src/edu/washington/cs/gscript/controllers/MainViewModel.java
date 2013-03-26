@@ -1,5 +1,6 @@
 package edu.washington.cs.gscript.controllers;
 
+import com.sun.javaws.progress.Progress;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
@@ -8,6 +9,7 @@ import edu.washington.cs.gscript.helpers.OneDollarDataImporter;
 import edu.washington.cs.gscript.models.*;
 import edu.washington.cs.gscript.recognizers.Learner;
 import edu.washington.cs.gscript.recognizers.PartMatchResult;
+import edu.washington.cs.gscript.recognizers.Recognizer;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -32,6 +34,12 @@ public class MainViewModel {
 
     private ArrayList<ArrayList<PartMatchResult>> matchesForSelectedSample;
 
+    private Recognizer recognizer;
+
+    private double[][] confusionMatrix;
+
+    private double crossValidationAccuracy;
+
     private NotificationObserver partsObserver = new NotificationObserver() {
         @Override
         public void onNotified(Object arg) {
@@ -53,6 +61,10 @@ public class MainViewModel {
 	public Gesture getSelectedSample() {
 		return selectedSample;
 	}
+
+    public Recognizer getRecognizer() {
+        return recognizer;
+    }
 
 	public void newProject() {
 		project = new Project();
@@ -203,8 +215,9 @@ public class MainViewModel {
     }
 
     public void analyze(ReadWriteProperty<Integer> progress) {
+        progress.setValue(0);
         if (getSelectedCategory() != null) {
-            project.learnCategory(getSelectedCategory(), progress);
+            project.learnCategory(getSelectedCategory(), progress, 99);
         }
         progress.setValue(100);
     }
@@ -220,5 +233,12 @@ public class MainViewModel {
 
     public void setLabelOfSynthesizedSample(SynthesizedGestureSample sample, int label) {
         project.setLabelOfSynthesizedSample(getSelectedCategory(), sample, label);
+    }
+
+    public void trainRecognizer(ReadWriteProperty<Integer> progress) {
+        progress.setValue(0);
+        getProject().learnProject(progress, 70);
+        recognizer = Recognizer.train(getProject(), progress, 29);
+        progress.setValue(100);
     }
 }

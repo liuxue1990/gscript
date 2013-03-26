@@ -275,26 +275,33 @@ public class Project implements Serializable {
         setDirty(true);
     }
 
-    public void learnCategory(final Category category, ReadWriteProperty<Integer> progress) {
+    public void learnCategory(final Category category, ReadWriteProperty<Integer> progress, int progressTotal) {
         checkCategory(category);
+
+        int initialProgress = progress.getValue();
 
         // @TODO clean up partsTable
 
-        Map<String, Part> table = new Learner().learnPartsInRelatedCategories(Project.this, category, progress);
+        Map<String, Part> table = new Learner().learnPartsInRelatedCategories(
+                Project.this, category, progress, (int)(progressTotal * 0.95));
         setSynthesizedSamples(category, new SampleGenerator(40).generate(category.getShapes()));
         for (Map.Entry<String, Part> entry : table.entrySet()) {
             partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
         }
+        progress.setValue(initialProgress + progressTotal);
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
     }
 
-    public void learnProject() {
-        Map<String, Part> table = new Learner().learnAllPartsInProject(this, null);
+    public void learnProject(ReadWriteProperty<Integer> progress, int progressTotal) {
+        int initialProgress = progress.getValue();
+
+        Map<String, Part> table = new Learner().learnAllPartsInProject(this, progress, (int)(progressTotal * 0.95));
         for (Map.Entry<String, Part> entry : table.entrySet()) {
             partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
         }
+        progress.setValue(initialProgress + progressTotal);
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);

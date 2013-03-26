@@ -1,5 +1,6 @@
 package edu.washington.cs.gscript.recognizers;
 
+import edu.washington.cs.gscript.framework.ReadWriteProperty;
 import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.models.*;
 import libsvm.svm;
@@ -50,13 +51,14 @@ public class Recognizer {
         }
     }
 
-    public static Recognizer train(Project project) {
+    public static Recognizer train(Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
+
+        int currentProgress = progress.getValue();
 
         ArrayList<svm_node[]> xList = new ArrayList<svm_node[]>();
         ArrayList<Double> yList = new ArrayList<Double>();
 
         int maxIndex = 0;
-
         int numOfCategories = project.getNumOfCategories();
         for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
             Category category = project.getCategory(catIndex);
@@ -82,6 +84,8 @@ public class Recognizer {
                 }
                 System.out.println();
             }
+
+            progress.setValue(currentProgress + (int)((catIndex + 1) / (double) numOfCategories * 0.9 * progressTotal));
         }
 
         svm_problem problem = new svm_problem();
@@ -116,6 +120,7 @@ public class Recognizer {
 
         crossValidation(problem, param, 5);
 
+        progress.setValue(currentProgress + progressTotal);
 
         return null;
     }

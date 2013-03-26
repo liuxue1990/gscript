@@ -12,7 +12,5 @@ public class TestWindowController {
     public TestWindowController(Shell shell, MainViewModel viewModel) {
         mainViewModel = viewModel;
 
-        mainViewModel.getProject().learnProject();
-        Recognizer recognizer = Recognizer.train(mainViewModel.getProject());
     }
 }

@@ -42,7 +42,9 @@ public class Learner {
 
     }
 
-    public Map<String, Part> learnAllPartsInProject(Project project, ReadWriteProperty<Integer> progress) {
+    public Map<String, Part> learnAllPartsInProject(
+            Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
+
         ArrayList<Category> categories = new ArrayList<Category>();
 
         int numOfCategories = project.getNumOfCategories();
@@ -50,11 +52,14 @@ public class Learner {
             categories.add(project.getCategory(categoryIndex));
         }
 
-        return learnPartsInCategories(categories, progress);
+        return learnPartsInCategories(categories, progress, progressTotal);
     }
 
-    public Map<String, Part> learnPartsInRelatedCategories(Project project, Category category, ReadWriteProperty<Integer> progress) {
-        return learnPartsInCategories(findRelatedCategories(project, category), progress);
+    public Map<String, Part> learnPartsInRelatedCategories(
+            Project project, Category category, ReadWriteProperty<Integer> progress, int progressTotal) {
+
+        return learnPartsInCategories(
+                findRelatedCategories(project, category), progress, progressTotal);
     }
 
     public ArrayList<Category> findRelatedCategories(Project project, Category category) {
@@ -119,8 +124,11 @@ public class Learner {
         return table;
     }
 
-    public Map<String, Part> learnPartsInCategories(ArrayList<Category> categories, ReadWriteProperty<Integer> progress) {
-        System.out.println("learning " + categories.size() + " categories");
+    public Map<String, Part> learnPartsInCategories(
+            ArrayList<Category> categories, ReadWriteProperty<Integer> progress, int progressTotal) {
+
+        int initialProgress = progress.getValue();
+
         Map<String, Part> bestPartsTable = null;
 
         int numOfCategories = categories.size();
@@ -161,7 +169,9 @@ public class Learner {
         double minLoss = Double.POSITIVE_INFINITY;
 
         Random random = new Random();
-        for (int trial = 0; trial < 20; ++trial) {
+
+        int numOfTrials = 20;
+        for (int trial = 0; trial < numOfTrials; ++trial) {
             Map<String, Part> partsTable = createInitialPartsTable(categories);
 
             for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
@@ -193,9 +203,11 @@ public class Learner {
             }
 
             if (progress != null) {
-                progress.setValue((trial + 1) * 5);
+                progress.setValue(initialProgress + (int)((trial + 1) / (double) numOfTrials * progressTotal));
             }
         }
+
+        progress.setValue(initialProgress + progressTotal);
 
         return bestPartsTable;
     }

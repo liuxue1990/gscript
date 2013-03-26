@@ -336,6 +336,20 @@ public class MainWindowController {
         toolTestRecognizer.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+
+                final ReadWriteProperty<Integer> progress = new ReadWriteProperty<Integer>(0);
+                ProgressDialog dialog = new ProgressDialog(MainWindowController.this.shell, progress);
+                dialog.setText("Progress");
+                dialog.setPrompt("Training the recognizer...");
+                Thread trainingThread = new Thread() {
+                    @Override
+                    public void run() {
+                        mainViewModel.trainRecognizer(progress);
+                    }
+                };
+                trainingThread.start();
+                dialog.open();
+
                 Shell testShell = new Shell(shell, SWT.APPLICATION_MODAL | SWT.CLOSE);
                 testShell.setSize(400, 400);
 

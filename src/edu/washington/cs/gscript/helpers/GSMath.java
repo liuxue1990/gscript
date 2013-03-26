@@ -8,7 +8,7 @@ import java.util.List;
 
 public class GSMath {
 
-    public static final double REAL_PRECISION = 1e-16;
+    public static final double REAL_PRECISION = 1e-12;
 
     public static int compareDouble(double a, double b) {
         if (Double.compare(a + REAL_PRECISION, b) < 0) {
@@ -191,6 +191,15 @@ public class GSMath {
         }
 
         return output;
+    }
+
+    public static double normalizeAngle(double angle) {
+        angle -= Math.floor(angle / (2 * Math.PI)) * 2 * Math.PI;
+
+        if (Double.compare(angle, Math.PI) > 0) {
+            angle -= 2 * Math.PI;
+        }
+        return angle;
     }
 
 }

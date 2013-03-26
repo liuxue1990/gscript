@@ -10,4 +10,14 @@ public class GSMathTest {
         Assert.assertTrue(GSMath.compareDouble(Double.POSITIVE_INFINITY + 1, Double.POSITIVE_INFINITY) == 0);
         Assert.assertTrue(GSMath.compareDouble(Double.POSITIVE_INFINITY * 0, Double.NaN) == 0);
     }
+
+    @Test
+    public void testNormalizeAngle() throws Exception {
+        Assert.assertTrue(GSMath.compareDouble(GSMath.normalizeAngle(0.217 - Math.PI * 10), 0.217) == 0);
+        Assert.assertTrue(GSMath.compareDouble(GSMath.normalizeAngle(0.217 + Math.PI * 10), 0.217) == 0);
+        Assert.assertTrue(GSMath.compareDouble(GSMath.normalizeAngle(-Math.PI), Math.PI) == 0);
+        Assert.assertTrue(GSMath.compareDouble(GSMath.normalizeAngle(Math.PI), Math.PI) == 0);
+        Assert.assertTrue(GSMath.compareDouble(GSMath.normalizeAngle(Math.PI * 7), Math.PI) == 0);
+        Assert.assertTrue(GSMath.compareDouble(GSMath.normalizeAngle(Math.PI * 8), 0) == 0);
+    }
 }

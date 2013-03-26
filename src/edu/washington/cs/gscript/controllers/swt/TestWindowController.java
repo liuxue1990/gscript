@@ -10,7 +10,6 @@ public class TestWindowController {
     MainViewModel mainViewModel;
 
     public TestWindowController(Shell shell, MainViewModel viewModel) {
-
         mainViewModel = viewModel;
 
         mainViewModel.getProject().learnProject();

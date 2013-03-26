@@ -16,9 +16,9 @@ public class OneDollarWithinUserCrossValidation {
     public static void main(String[] args) {
 
 //        new OneDollarWithinUserCrossValidation().crossValidation1();
-//        new OneDollarWithinUserCrossValidation().crossValidation2();
+        new OneDollarWithinUserCrossValidation().crossValidation2();
 //        new OneDollarWithinUserCrossValidation().crossValidation3();
-        new OneDollarWithinUserCrossValidation().crossValidation4("/Users/hlv/Desktop/testtest3");
+//        new OneDollarWithinUserCrossValidation().crossValidation4("/Users/hlv/Desktop/testtest3");
     }
 
     private Random rand = new Random(9637);
@@ -114,7 +114,8 @@ public class OneDollarWithinUserCrossValidation {
 
     public void crossValidation2() {
 
-        String[] speeds = new String[] {"fast", "medium", "slow"};
+//        String[] speeds = new String[] {"fast", "medium", "slow"};
+        String[] speeds = new String[] {"medium"};
 
         int numOfTestGestures = 0;
         int numOfErrors = 0;
@@ -173,9 +174,9 @@ public class OneDollarWithinUserCrossValidation {
 
         int maxCaseNum = 11;
 
-        String[] speeds = new String[] {"fast", "medium", "slow"};
+//        String[] speeds = new String[] {"fast", "medium", "slow"};
 //        String[] speeds = new String[] {"fast"};
-//        String[] speeds = new String[] {"medium"};
+        String[] speeds = new String[] {"medium"};
 //        String[] speeds = new String[] {"slow"};
 
         ArrayList<Gesture> gestures = new ArrayList<Gesture>();

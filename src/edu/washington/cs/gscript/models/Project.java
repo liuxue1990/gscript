@@ -275,31 +275,23 @@ public class Project implements Serializable {
         setDirty(true);
     }
 
-    public void learnCategory(final Category category) {
+    public void learnCategory(final Category category, ReadWriteProperty<Integer> progress) {
         checkCategory(category);
 
         // @TODO clean up partsTable
 
-        // @TODO parse this script
-        Thread learningThread = new Thread() {
-            @Override
-            public void run() {
-                Map<String, Part> table = new Learner().learnPartsInRelatedCategories(Project.this, category);
-                setSynthesizedSamples(category, new SampleGenerator(40).generate(category.getShapes()));
-                for (Map.Entry<String, Part> entry : table.entrySet()) {
-                    partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
-                }
-                setDirty(true);
-                NotificationCenter.getDefaultCenter().postNotification(
-                        NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
-            }
-        };
-
-        learningThread.start();
+        Map<String, Part> table = new Learner().learnPartsInRelatedCategories(Project.this, category, progress);
+        setSynthesizedSamples(category, new SampleGenerator(40).generate(category.getShapes()));
+        for (Map.Entry<String, Part> entry : table.entrySet()) {
+            partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
+        }
+        setDirty(true);
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
     }
 
     public void learnProject() {
-        Map<String, Part> table = new Learner().learnAllPartsInProject(this);
+        Map<String, Part> table = new Learner().learnAllPartsInProject(this, null);
         for (Map.Entry<String, Part> entry : table.entrySet()) {
             partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
         }

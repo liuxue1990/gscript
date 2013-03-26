@@ -1,6 +1,7 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.framework.ReadWriteProperty;
 import edu.washington.cs.gscript.models.Project;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -164,6 +165,8 @@ public class MainWindowController {
 	public MainWindowController(Shell shell, MainViewModel mainViewModel) {
         this.shell = shell;
 		this.mainViewModel = mainViewModel;
+
+        shell.setSize(1280, 720);
 
         createMenu();
         createComponents();
@@ -385,6 +388,21 @@ public class MainWindowController {
         }
     }
 
+    private void onUserActionAnalyze() {
+        final ReadWriteProperty<Integer> progress = new ReadWriteProperty<Integer>(0);
+        ProgressDialog dialog = new ProgressDialog(this.shell, progress);
+        dialog.setText("Progress");
+        dialog.setPrompt("Analyzing parts...");
+        Thread learningThread = new Thread() {
+            @Override
+            public void run() {
+                mainViewModel.analyze(progress);
+            }
+        };
+        learningThread.start();
+        dialog.open();
+    }
+
     private void createComponents() {
 		shell.setLayout(new FillLayout());
 
@@ -422,7 +440,7 @@ public class MainWindowController {
         final SimpleButton btnAnalyze = new ButtonRefresh(clientContainer, SWT.BACKGROUND) {
             @Override
             protected void buttonClicked() {
-                mainViewModel.analyze();
+                onUserActionAnalyze();
             }
         };
         btnAnalyze.setBackground(clientContainer.getDisplay().getSystemColor(SWT.COLOR_WHITE));

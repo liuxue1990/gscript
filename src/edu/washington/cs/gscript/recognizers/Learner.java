@@ -1,5 +1,6 @@
 package edu.washington.cs.gscript.recognizers;
 
+import edu.washington.cs.gscript.framework.ReadWriteProperty;
 import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.Segmentation;
 import edu.washington.cs.gscript.models.*;
@@ -11,7 +12,8 @@ public class Learner {
     public static int NUM_OF_RESAMPLING = 32;
 
     public static int SEGMENTATION_ERROR = 1;
-    private static final double MAX_LOSS = 4;
+
+    public static final double MAX_LOSS = Math.PI;
 
     private static void search(int m, int n, int k, int total, int[] seq, ArrayList<int[]> list) {
         if (m == n - 1 && k == total) {
@@ -40,7 +42,7 @@ public class Learner {
 
     }
 
-    public Map<String, Part> learnAllPartsInProject(Project project) {
+    public Map<String, Part> learnAllPartsInProject(Project project, ReadWriteProperty<Integer> progress) {
         ArrayList<Category> categories = new ArrayList<Category>();
 
         int numOfCategories = project.getNumOfCategories();
@@ -48,11 +50,11 @@ public class Learner {
             categories.add(project.getCategory(categoryIndex));
         }
 
-        return learnPartsInCategories(categories);
+        return learnPartsInCategories(categories, progress);
     }
 
-    public Map<String, Part> learnPartsInRelatedCategories(Project project, Category category) {
-        return learnPartsInCategories(findRelatedCategories(project, category));
+    public Map<String, Part> learnPartsInRelatedCategories(Project project, Category category, ReadWriteProperty<Integer> progress) {
+        return learnPartsInCategories(findRelatedCategories(project, category), progress);
     }
 
     public ArrayList<Category> findRelatedCategories(Project project, Category category) {
@@ -117,7 +119,7 @@ public class Learner {
         return table;
     }
 
-    public Map<String, Part> learnPartsInCategories(ArrayList<Category> categories) {
+    public Map<String, Part> learnPartsInCategories(ArrayList<Category> categories, ReadWriteProperty<Integer> progress) {
         System.out.println("learning " + categories.size() + " categories");
         Map<String, Part> bestPartsTable = null;
 
@@ -188,6 +190,10 @@ public class Learner {
             if (GSMath.compareDouble(loss, minLoss) < 0) {
                 minLoss = loss;
                 bestPartsTable = partsTable;
+            }
+
+            if (progress != null) {
+                progress.setValue((trial + 1) * 5);
             }
         }
 
@@ -724,7 +730,7 @@ public class Learner {
         }
 
         return Math.acos(Math.max(-1, Math.min(1, dot / l1 / l2)));
-//        return (1 - dot / l1 / l2);
+//        return (1 - dot / l1 / l2) * 2;
     }
 
     public static int[] computeEndLocations(Gesture gesture) {

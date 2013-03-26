@@ -69,7 +69,7 @@ public class Recognizer {
                 for (int i = 0; i < features.length; ++i) {
                     x[i] = new svm_node();
                     x[i].index = i + 1;
-                    x[i].value = features[i];
+                    x[i].value = 1 - features[i];
                 }
 
                 maxIndex = x.length;
@@ -128,7 +128,7 @@ public class Recognizer {
         for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
             Category category = project.getCategory(catIndex);
 
-            featureList.add(minDistance(gesture, category) / 4);
+            featureList.add(minDistance(gesture, category) / Learner.MAX_LOSS);
 
             int numOfShapes = category.getNumOfShapes();
             if (numOfShapes <= 1) {
@@ -147,7 +147,7 @@ public class Recognizer {
                 for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
                     ShapeSpec shape = category.getShape(shapeIndex);
                     PartMatchResult match = matches.get(shapeIndex).get(0);
-                    featureList.add(match.getScore() / 4.0);
+                    featureList.add(match.getScore() / Learner.MAX_LOSS);
                 }
             }
         }

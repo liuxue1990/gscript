@@ -2,6 +2,7 @@ package edu.washington.cs.gscript.controllers;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
+import edu.washington.cs.gscript.framework.ReadWriteProperty;
 import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.OneDollarDataImporter;
 import edu.washington.cs.gscript.models.*;
@@ -201,10 +202,11 @@ public class MainViewModel {
         project.importCategories(OneDollarDataImporter.importDiretory("/Users/hlv/repos/gscript/data/one_dollar/s02/medium"));
     }
 
-    public void analyze() {
+    public void analyze(ReadWriteProperty<Integer> progress) {
         if (getSelectedCategory() != null) {
-            project.learnCategory(getSelectedCategory());
+            project.learnCategory(getSelectedCategory(), progress);
         }
+        progress.setValue(100);
     }
 
     public void setUserProvidedPart(Part part, Gesture gesture) {

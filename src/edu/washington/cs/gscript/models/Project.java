@@ -298,13 +298,15 @@ public class Project implements Serializable {
         int initialProgress = progress.getValue();
 
         Map<String, Part> table = new Learner().learnAllPartsInProject(this, progress, (int)(progressTotal * 0.95));
-        for (Map.Entry<String, Part> entry : table.entrySet()) {
-            partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
+        if (table != null) {
+            for (Map.Entry<String, Part> entry : table.entrySet()) {
+                partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
+            }
+            setDirty(true);
+            NotificationCenter.getDefaultCenter().postNotification(
+                    NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
         }
         progress.setValue(initialProgress + progressTotal);
-        setDirty(true);
-        NotificationCenter.getDefaultCenter().postNotification(
-                NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
     }
 
     public void setUserProvidedPart(Part part, PartFeatureVector fv) {

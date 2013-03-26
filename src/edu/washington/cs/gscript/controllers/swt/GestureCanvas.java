@@ -305,7 +305,7 @@ public class GestureCanvas extends Canvas {
 			renderTrajectory(gc, points);
 		} else {
 			if (mainViewModel.getSelectedSample() != null) {
-				renderTrajectory(gc, mainViewModel.getSelectedSample().resample(100));
+				renderTrajectory(gc, mainViewModel.getSelectedSample());
                 renderEndPoints(gc);
 			}
 

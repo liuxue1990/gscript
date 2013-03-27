@@ -226,7 +226,7 @@ public class MainViewModel {
         progress.setValue(0);
         if (getSelectedCategory() != null) {
             project.learnCategory(getSelectedCategory(), progress, 99);
-//            project.updateSynthesizedSamples(getSelectedCategory());
+            project.updateSynthesizedSamples(getSelectedCategory());
             if (!selectedSynthesizedSamples.isEmpty()) {
                 selectedSynthesizedSamples.clear();
                 NotificationCenter.getDefaultCenter().postNotification(SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, this);

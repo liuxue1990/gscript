@@ -183,6 +183,10 @@ public class SampleGenerator {
             }
         }
 
+        if (count == 0) {
+            return Double.NaN;
+        }
+
         int index = random.nextInt(count);
         int i = 0;
         for (DataPoint dp : dataPoints) {
@@ -280,6 +284,10 @@ public class SampleGenerator {
                             angle2 = currentAngle + value;
                         } else {
                             angle2 = currentAngle + randomPositive(dataPoints.get(j));
+
+                            if (Double.isNaN(angle2)) {
+                                angle2 = 0;
+                            }
                         }
                         seq.add(new PartInstance(shape.getPart(), angle2, scale));
                         currentAngle = angle2;

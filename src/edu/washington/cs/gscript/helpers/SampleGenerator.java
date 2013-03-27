@@ -175,6 +175,28 @@ public class SampleGenerator {
         }
     }
 
+    private double randomPositive(ArrayList<DataPoint> dataPoints) {
+        int count = 0;
+        for (DataPoint dp : dataPoints) {
+            if (dp.label == 1) {
+                ++count;
+            }
+        }
+
+        int index = random.nextInt(count);
+        int i = 0;
+        for (DataPoint dp : dataPoints) {
+            if (dp.label == 1) {
+                if (i == index) {
+                    return dp.value;
+                }
+                ++i;
+            }
+        }
+
+        return 0;
+    }
+
     public void refresh() {
         collection.clear();
 
@@ -210,6 +232,7 @@ public class SampleGenerator {
 
             for (double value : values) {
                 ArrayList<PartInstance> seq = new ArrayList<PartInstance>();
+                currentAngle = 0;
                 for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
                     ShapeSpec shape = shapes.get(shapeIndex);
                     if (!shape.isRepeatable()) {
@@ -218,8 +241,7 @@ public class SampleGenerator {
                         if (j == paramIndex) {
                             angle = currentAngle + value;
                         } else {
-                            int k = random.nextInt(dataPoints.get(j).size());
-                            angle = currentAngle + dataPoints.get(j).get(k).value;
+                            angle = currentAngle + randomPositive(dataPoints.get(j));
                         }
 
                         j = shapeIndex * 3 + 2;
@@ -227,8 +249,7 @@ public class SampleGenerator {
                         if (j == paramIndex) {
                             scale = value;
                         } else {
-                            int k = random.nextInt(dataPoints.get(j).size());
-                            scale = dataPoints.get(j).get(k).value;
+                            scale = randomPositive(dataPoints.get(j));
                         }
                         seq.add(new PartInstance(shape.getPart(), angle, scale));
                         currentAngle = angle;
@@ -240,8 +261,7 @@ public class SampleGenerator {
                         if (j == paramIndex) {
                             angle = currentAngle + value;
                         } else {
-                            int k = random.nextInt(dataPoints.get(j).size());
-                            angle = currentAngle + dataPoints.get(j).get(k).value;
+                            angle = currentAngle + randomPositive(dataPoints.get(j));
                         }
 
                         j = shapeIndex * 3 + 2;
@@ -249,8 +269,7 @@ public class SampleGenerator {
                         if (j == paramIndex) {
                             scale = value;
                         } else {
-                            int k = random.nextInt(dataPoints.get(j).size());
-                            scale = dataPoints.get(j).get(k).value;
+                            scale = randomPositive(dataPoints.get(j));
                         }
                         seq.add(new PartInstance(shape.getPart(), angle, scale));
                         currentAngle = angle;
@@ -260,8 +279,7 @@ public class SampleGenerator {
                         if (j == paramIndex) {
                             angle2 = currentAngle + value;
                         } else {
-                            int k = random.nextInt(dataPoints.get(j).size());
-                            angle2 = currentAngle + dataPoints.get(j).get(k).value;
+                            angle2 = currentAngle + randomPositive(dataPoints.get(j));
                         }
                         seq.add(new PartInstance(shape.getPart(), angle2, scale));
                         currentAngle = angle2;
@@ -338,6 +356,7 @@ public class SampleGenerator {
             }
         }
 
+        System.out.println(Arrays.toString(values));
         return values;
     }
 
@@ -367,8 +386,8 @@ public class SampleGenerator {
                 }
             } else if (p1.label != p2.label) {
                 if (GSMath.compareDouble(v2 - v1, gaps[3] - gaps[2]) > 0) {
-                    gaps[4] = v2;
-                    gaps[3] = v1;
+                    gaps[3] = v2;
+                    gaps[2] = v1;
                 }
             } else {
                 if (GSMath.compareDouble(v2 - v1, gaps[5] - gaps[4]) > 0) {
@@ -377,6 +396,8 @@ public class SampleGenerator {
                 }
             }
         }
+
+        System.out.println(Arrays.toString(gaps));
 
         return valuesFromGaps(numOfValues, gaps);
     }
@@ -403,8 +424,8 @@ public class SampleGenerator {
                 }
             } else if (label1 != label2) {
                 if (GSMath.compareDouble(v2 - v1, gaps[3] - gaps[2]) > 0) {
-                    gaps[4] = v2;
-                    gaps[3] = v1;
+                    gaps[3] = v2;
+                    gaps[2] = v1;
                 }
             } else {
                 if (GSMath.compareDouble(v2 - v1, gaps[5] - gaps[4]) > 0) {

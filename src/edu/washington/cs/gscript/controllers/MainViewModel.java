@@ -257,6 +257,7 @@ public class MainViewModel {
         }
 
         project.setLabelOfSynthesizedSample(selectedCategory, selectedSynthesizedSamples, label);
+        selectedSynthesizedSamples.clear();
     }
 
     public void toggleSelectionOnSynthesizedSample(SynthesizedGestureSample sample) {

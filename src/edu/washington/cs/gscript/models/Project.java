@@ -285,8 +285,10 @@ public class Project implements Serializable {
         Map<String, Part> table = learner.learnPartsInCategories(
                 relatedCategories, progress, (int)(progressTotal * 0.95));
 
-        for (Map.Entry<String, Part> entry : table.entrySet()) {
-            partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
+        if (table != null) {
+            for (Map.Entry<String, Part> entry : table.entrySet()) {
+                partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
+            }
         }
 
         progress.setValue(initialProgress + progressTotal);

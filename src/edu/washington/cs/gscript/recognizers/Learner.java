@@ -120,6 +120,16 @@ public class Learner {
     public Map<String, Part> learnPartsInCategories(
             ArrayList<Category> categories, ReadWriteProperty<Integer> progress, int progressTotal) {
 
+        for (int categoryIndex = categories.size() - 1; categoryIndex >= 0; --categoryIndex) {
+            if (categories.get(categoryIndex).getNumOfSamples() == 0) {
+                categories.remove(categoryIndex);
+            }
+        }
+
+        if (categories.size() == 0) {
+            return null;
+        }
+
         int initialProgress = progress.getValue();
 
         Map<String, Part> bestPartsTable = null;

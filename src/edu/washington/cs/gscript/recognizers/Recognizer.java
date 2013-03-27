@@ -71,6 +71,11 @@ public class Recognizer {
         for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
             Category category = project.getCategory(catIndex);
             int numOfSamples = category.getNumOfSamples();
+
+            if (numOfSamples == 0) {
+                continue;
+            }
+
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
                 Gesture sample = category.getSample(sampleIndex);
                 double[] features = generateFeatures(sample, project);
@@ -137,6 +142,10 @@ public class Recognizer {
 
         for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
             Category category = project.getCategory(catIndex);
+
+            if (category.getNumOfSamples() == 0) {
+                continue;
+            }
 
             featureList.add(minDistance(gesture, category) / Learner.MAX_LOSS);
 

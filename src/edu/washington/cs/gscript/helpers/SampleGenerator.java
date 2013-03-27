@@ -323,6 +323,9 @@ public class SampleGenerator {
                 if (GSMath.compareDouble(gaps[i * 2], gaps[i * 2 + 1]) < 0) {
                     ++numOfValuesPerGaps[i];
                     --numOfValues;
+                    if (numOfValues == 0) {
+                        break;
+                    }
                 }
             }
         }

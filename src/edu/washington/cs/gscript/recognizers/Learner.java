@@ -171,7 +171,7 @@ public class Learner {
                     int b = a + 1 + random.nextInt(numOfEndLocations - a - 1);
 
                     part.setTemplate(new PartFeatureVector(
-                            GSMath.normalize(featuresMap[categoryIndex][sampleIndex][a][b].getFeatures(), null)));
+                            GSMath.normalizeByMagnitude(featuresMap[categoryIndex][sampleIndex][a][b].getFeatures(), null)));
                 }
             }
 
@@ -244,7 +244,7 @@ public class Learner {
                         for (PartMatchResult match : matches.get(shapeIndex)) {
 
                             double[] v = GSMath.rotate(match.getMatchedFeatureVector().getFeatures(), match.getAlignedAngle(), null);
-                            GSMath.normalize(v, v);
+                            GSMath.normalizeByMagnitude(v, v);
                             partAverageTable.get(parts[shapeIndex].getName()).add(new PartFeatureVector(v));
                         }
                     }
@@ -398,7 +398,7 @@ public class Learner {
                         double score = distanceToTemplateAligned(u.getFeatures(), vf);
                         d = score * length + loss[i + 1][k];
                         mm.add(new PartMatchResult(
-                                parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalize(v.getFeatures(), null)), score));
+                                parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalizeByMagnitude(v.getFeatures(), null)), score));
                     }
 
                     if (GSMath.compareDouble(d, loss[i][j]) < 0) {
@@ -576,7 +576,7 @@ public class Learner {
             }
         }
 
-        return new PartFeatureVector(GSMath.normalize(average, average));
+        return new PartFeatureVector(GSMath.normalizeByMagnitude(average, average));
     }
 
     public static double bestAlignedAngle(double[] template, double[] features) {
@@ -597,12 +597,12 @@ public class Learner {
     }
 
     public static double distanceToTemplateAligned(double[] template, double[] features) {
-        double angle = bestAlignedAngle(template, GSMath.normalize(features, null));
+        double angle = bestAlignedAngle(template, GSMath.normalizeByMagnitude(features, null));
         return distanceAtAngle(template, features, angle);
     }
 
     public static double distanceToTemplateAtAngle(double[] template, double[] features, double angle) {
-        double[] normalized = GSMath.normalize(features, null);
+        double[] normalized = GSMath.normalizeByMagnitude(features, null);
         return distanceAtAngle(template, normalized, angle);
     }
 

@@ -239,7 +239,7 @@ public class MainViewModel {
         project.setUserProvidedPart(
                 part,
                 new PartFeatureVector(
-                        GSMath.normalize(
+                        GSMath.normalizeByMagnitude(
                                 Learner.gestureFeatures(gesture, Learner.NUM_OF_RESAMPLING),
                                 null)));
     }

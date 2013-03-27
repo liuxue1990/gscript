@@ -15,29 +15,6 @@ public class Learner {
 
     public static final double MAX_LOSS = Math.PI;
 
-    private static void search(int m, int n, int k, int total, int[] seq, ArrayList<int[]> list) {
-        if (m == n - 1 && k == total) {
-            System.out.println(Arrays.toString(seq));
-            list.add(Arrays.copyOf(seq, seq.length));
-        }
-
-        if (m == n - 1) {
-            return;
-        }
-
-        if (k == total) {
-            return;
-        }
-
-        for (int i = m + 1; i < n; ++i) {
-            seq[k * 2] = m;
-            seq[k * 2 + 1] = i;
-            search(i, n, k + 1, total, seq, list);
-            search(i, n, k, total, seq, list);
-        }
-    }
-
-
     public Learner() {
 
     }

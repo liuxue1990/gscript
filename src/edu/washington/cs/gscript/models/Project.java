@@ -265,8 +265,6 @@ public class Project implements Serializable {
             shapes.get(i).setPart(getPart(shapes.get(i).getPartName()));
         }
         category.setShapes(shapes);
-
-        setSynthesizedSamples(category, new ArrayList<SynthesizedGestureSample>());
     }
 
     public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double t) {
@@ -290,7 +288,7 @@ public class Project implements Serializable {
             partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
         }
 
-        setSynthesizedSamples(category, new SampleGenerator(category, 40).generate(category.getShapes()));
+        category.regenerateSynthesizedSamples();
         progress.setValue(initialProgress + progressTotal);
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
@@ -318,15 +316,6 @@ public class Project implements Serializable {
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
-    }
-
-    public void setSynthesizedSamples(Category category, ArrayList<SynthesizedGestureSample> samples) {
-        checkCategory(category);
-        ArrayList<SynthesizedGestureSample> synthesized = new ArrayList<SynthesizedGestureSample>();
-        synthesized.addAll(samples);
-//        synthesized.addAll(category.getPositiveSamples());
-//        synthesized.addAll(category.getNegativeSamples());
-        category.setSynthesizedSamples(synthesized);
     }
 
     public void setLabelOfSynthesizedSample(Category category, SynthesizedGestureSample sample, int label) {

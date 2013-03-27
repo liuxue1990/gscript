@@ -8,28 +8,88 @@ import java.util.*;
 
 public class SampleGenerator {
 
-    private double[] angles;
-    private double[] scales;
+    public static class DataPoint {
+        private double value;
+        private int label;
 
-    private int numOfGeneratedSamples;
+        private DataPoint(double value, int label) {
+            this.value = value;
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("(%f, %d)", value, label);
+        }
+    }
+
+    public static Gesture stitch(SynthesizedGestureSample sample) {
+
+        List<XYT> points = new ArrayList<XYT>();
+
+        double xf = 0;
+        double yf = 0;
+
+        double th;
+        double scale;
+
+        if (sample.getInstanceSequence().length == 0) {
+            return null;
+        }
+        double[] fv0 = sample.getInstanceSequence()[0].getPart().getTemplate().getFeatures();
+        double baseScale = GSMath.boundingCircle(fv0)[2];
+
+        for (PartInstance instance : sample.getInstanceSequence()) {
+            double[] features = GSMath.normalizeByRadius(instance.getPart().getTemplate().getFeatures(), null);
+            th = instance.getAngle();
+            scale = instance.getScale() * baseScale / GSMath.boundingCircle(features)[2];
+            System.out.println("scale = " + scale);
+            double cos = Math.cos(th);
+            double sin = Math.sin(th);
+
+            double x = features[0];
+            double y = features[1];
+            double x0 = (cos * x - sin * y) * scale;
+            double y0 = (sin * x + cos * y) * scale;
+
+            for (int i = 0; i < features.length; i += 2) {
+                x = features[i];
+                y = features[i + 1];
+                double xt = (cos * x - sin * y) * scale - x0;
+                double yt = (sin * x + cos * y) * scale - y0;
+
+                points.add(XYT.xy(xt + xf, yt + yf));
+            }
+
+            XYT lastPoint = points.get(points.size() - 1);
+            xf = lastPoint.getX();
+            yf = lastPoint.getY();
+        }
+
+        return new Gesture(points);
+    }
+
+
+    double angleResolution = 2 * Math.PI / 180;
+
+    double scaleResolution = 0.2;
 
     private Category category;
 
     private Random random = new Random();
 
-    public SampleGenerator(Category category, int n) {
+    private ArrayList<SynthesizedGestureSample> collection;
+
+    private ArrayList<ArrayList<DataPoint>> dataPoints;
+
+    public SampleGenerator(Category category) {
         this.category = category;
 
-        numOfGeneratedSamples = n;
-        angles = new double[8];
-        scales = new double[4];
-        for (int i = 0; i < angles.length; ++i) {
-            angles[i] = Math.PI * 2 / angles.length * i;
-        }
+        collection = new ArrayList<SynthesizedGestureSample>();
+    }
 
-        for (int i = 0; i < scales.length; ++i) {
-            scales[i] = 1 * (i + 1);
-        }
+    public ArrayList<SynthesizedGestureSample> getGeneratedSamples() {
+        return collection;
     }
 
     private static void addValueIfNotExist(double x, int label, ArrayList<DataPoint> xs, double resolution) {
@@ -47,28 +107,11 @@ public class SampleGenerator {
         xs.add(new DataPoint(x, label));
     }
 
-    public static class DataPoint {
-        private double value;
-        private int label;
+    public void resetFromCategorySamples() {
+        ArrayList<ShapeSpec> shapes = category.getShapes();
+        collection = new ArrayList<SynthesizedGestureSample>();
 
-        private DataPoint(double value, int label) {
-            this.value = value;
-            this.label = label;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("(%f, %d)", value, label);
-        }
-    }
-
-    public ArrayList<SynthesizedGestureSample> generate(ArrayList<ShapeSpec> shapes) {
-        ArrayList<SynthesizedGestureSample> collection = new ArrayList<SynthesizedGestureSample>();
-
-        double angleResolution = 2 * Math.PI / 180;
-        double scaleResolution = 0.2;
-
-        ArrayList<ArrayList<DataPoint>> dataPoints = new ArrayList<ArrayList<DataPoint>>();
+        dataPoints = new ArrayList<ArrayList<DataPoint>>();
 
         for (ShapeSpec shape : shapes) {
             if (!shape.isRepeatable()) {
@@ -130,7 +173,12 @@ public class SampleGenerator {
                 }
             }
         }
+    }
 
+    public void refresh() {
+        collection.clear();
+
+        ArrayList<ShapeSpec> shapes = category.getShapes();
         int numOfShapes = shapes.size();
 
         for (int paramIndex = 0; paramIndex < numOfShapes * 3; ++paramIndex) {
@@ -223,10 +271,42 @@ public class SampleGenerator {
                 collection.add(new SynthesizedGestureSample(seq));
             }
         }
+    }
 
-        System.out.println("Collection size = " + collection.size());
+    public void addSample(SynthesizedGestureSample sample, int label) {
+        ArrayList<ShapeSpec> shapes = category.getShapes();
+        PartInstance[] seq = sample.getInstanceSequence();
 
-        return collection;
+        double lastAngle = 0;
+        int numOfShapes = shapes.size();
+        for (int shapeIndex = 0, partInstanceIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+            ShapeSpec shape = shapes.get(shapeIndex);
+
+            PartInstance partInstance = seq[partInstanceIndex];
+
+            addValueIfNotExist(GSMath.normalizeAngle(partInstance.getAngle() - lastAngle), label, dataPoints.get(shapeIndex * 3), angleResolution);
+            addValueIfNotExist(partInstance.getScale(), label, dataPoints.get(shapeIndex * 3 + 2), scaleResolution);
+
+            lastAngle = partInstance.getAngle();
+
+            if (shape.isRepeatable()) {
+                PartInstance nextInstance = seq[partInstanceIndex + 1];
+                addValueIfNotExist(GSMath.normalizeAngle(nextInstance.getAngle() - lastAngle), label, dataPoints.get(shapeIndex * 3 + 2), angleResolution);
+                lastAngle = nextInstance.getAngle();
+            }
+
+            if (shape.isRepeatable()) {
+                partInstanceIndex += 2;
+            } else {
+                partInstanceIndex++;
+            }
+        }
+    }
+
+    public void addSamples(List<SynthesizedGestureSample> samples, int label) {
+        for (SynthesizedGestureSample sample : samples) {
+            addSample(sample, label);
+        }
     }
 
     private double[] valuesFromGaps(int numOfValues, double[] gaps) {
@@ -334,101 +414,5 @@ public class SampleGenerator {
         return valuesFromGaps(numOfValues, gaps);
     }
 
-
-    public static Gesture stitch(SynthesizedGestureSample sample) {
-
-        List<XYT> points = new ArrayList<XYT>();
-
-        double xf = 0;
-        double yf = 0;
-
-        double th;
-        double scale;
-
-        if (sample.getInstanceSequence().length == 0) {
-            return null;
-        }
-        double[] fv0 = sample.getInstanceSequence()[0].getPart().getTemplate().getFeatures();
-        double baseScale = GSMath.boundingCircle(fv0)[2];
-
-        for (PartInstance instance : sample.getInstanceSequence()) {
-            double[] features = GSMath.normalizeByRadius(instance.getPart().getTemplate().getFeatures(), null);
-            th = instance.getAngle();
-            scale = instance.getScale() * baseScale / GSMath.boundingCircle(features)[2];
-            System.out.println("scale = " + scale);
-            double cos = Math.cos(th);
-            double sin = Math.sin(th);
-
-            double x = features[0];
-            double y = features[1];
-            double x0 = (cos * x - sin * y) * scale;
-            double y0 = (sin * x + cos * y) * scale;
-
-            for (int i = 0; i < features.length; i += 2) {
-                x = features[i];
-                y = features[i + 1];
-                double xt = (cos * x - sin * y) * scale - x0;
-                double yt = (sin * x + cos * y) * scale - y0;
-
-                points.add(XYT.xy(xt + xf, yt + yf));
-            }
-
-            XYT lastPoint = points.get(points.size() - 1);
-            xf = lastPoint.getX();
-            yf = lastPoint.getY();
-        }
-
-        return new Gesture(points);
-    }
-
-//    private void sub(ArrayList<ShapeSpec> parts, int depth, ArrayList<PartInstance> instanceList, ArrayList<SynthesizedGestureSample> collection) {
-//        if (depth == parts.size()) {
-//            collection.add(new SynthesizedGestureSample(new ArrayList<PartInstance>(instanceList)));
-//            return;
-//        }
-//
-//        ShapeSpec part = parts.get(depth);
-//        Random r = new Random();
-//        for (double angle : angles) {
-//            angle = angles[r.nextInt(angles.length)];
-//            for (double scale : scales) {
-//                scale = scales[r.nextInt(scales.length)];
-//
-//                if (part.isRepeatable()) {
-//                    PartInstance instance0 = new PartInstance(part.getPart(), angle, scale);
-//                    instanceList.add(instance0);
-//                    for (double a : angles) {
-//                        a = angles[r.nextInt(angles.length)];
-//                        for (double s1 : scales) {
-//                            s1 = scales[r.nextInt(scales.length)];
-//
-//                            PartInstance instance1 = new PartInstance(part.getPart(), a, s1);
-//                            instanceList.add(instance1);
-//                            for (double s2  : scales) {
-//                                s2 = scales[r.nextInt(scales.length)];
-//
-//                                PartInstance instance2 = new PartInstance(part.getPart(), a, s2);
-//
-//                                instanceList.add(instance2);
-//                                sub(parts, depth + 1, instanceList, collection);
-//                                instanceList.remove(instanceList.size() - 1);
-//                            }
-//                            instanceList.remove(instanceList.size() - 1);
-//                        }
-//                    }
-//                    instanceList.remove(instanceList.size() - 1);
-//                } else {
-//                    PartInstance instance = new PartInstance(part.getPart(), angle, scale);
-//                    instanceList.add(instance);
-//                    sub(parts, depth + 1, instanceList, collection);
-//                    instanceList.remove(instanceList.size() - 1);
-//                }
-//
-//                if (collection.size() > numOfGeneratedSamples) {
-//                    return;
-//                }
-//            }
-//        }
-//    }
 
 }

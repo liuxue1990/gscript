@@ -9,6 +9,7 @@ import java.util.Arrays;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
+import edu.washington.cs.gscript.helpers.SampleGenerator;
 
 public class Category implements Serializable {
 
@@ -28,9 +29,7 @@ public class Category implements Serializable {
 
     private transient Property<Integer> synthesizedSamplesProperty;
 
-    private transient ArrayList<SynthesizedGestureSample> synthesizedSamples;
-
-    private ArrayList<SynthesizedGestureSample> positiveSamples;
+    private transient SampleGenerator sampleGenerator;
 
     private ArrayList<SynthesizedGestureSample> negativeSamples;
 
@@ -53,14 +52,10 @@ public class Category implements Serializable {
         shapesProperty = new Property<Integer>(0);
         synthesizedSamplesProperty = new Property<Integer>(0);
 
-        synthesizedSamples = new ArrayList<SynthesizedGestureSample>();
+        sampleGenerator = new SampleGenerator(this);
 
         if (shapes == null) {
             shapes = new ArrayList<ShapeSpec>();
-        }
-
-        if (positiveSamples == null) {
-            positiveSamples = new ArrayList<SynthesizedGestureSample>();
         }
 
         if (negativeSamples == null) {
@@ -140,33 +135,20 @@ public class Category implements Serializable {
     }
 
     public ArrayList<SynthesizedGestureSample> getSynthesizedSamples() {
-        return synthesizedSamples;
+        return sampleGenerator.getGeneratedSamples();
     }
 
-    ArrayList<SynthesizedGestureSample> getPositiveSamples() {
-        return positiveSamples;
-    }
-
-    ArrayList<SynthesizedGestureSample> getNegativeSamples() {
-        return negativeSamples;
-    }
-
-    void setSynthesizedSamples(ArrayList<SynthesizedGestureSample> gestures) {
-        this.synthesizedSamples = gestures;
+    void regenerateSynthesizedSamples() {
+        sampleGenerator.resetFromCategorySamples();
+        sampleGenerator.refresh();
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, synthesizedSamplesProperty);
     }
 
     void setLabelOfSynthesizedSample(SynthesizedGestureSample sample, int label) {
-        positiveSamples.remove(sample);
-        negativeSamples.remove(sample);
-
-        sample.setUserLabel(label);
-
-        if (label == 1) {
-            positiveSamples.add(sample);
-        } else {
-            negativeSamples.add(sample);
-        }
+        sampleGenerator.addSample(sample, label);
+        sampleGenerator.refresh();
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, synthesizedSamplesProperty);
     }
 }

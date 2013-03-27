@@ -72,6 +72,18 @@ public class GSMath {
         return Math.sqrt(mag2);
     }
 
+    public static double length(double[] trajectory) {
+        double length = 0;
+        for (int i = 2; i < trajectory.length; i += 2) {
+            double x0 = trajectory[i - 2];
+            double y0 = trajectory[i - 1];
+            double x1 = trajectory[i];
+            double y1 = trajectory[i + 1];
+            length += GSMath.distance(x0, y0, x1, y1);
+        }
+        return length;
+    }
+
     public static double[] boundingCircle(double[] trajectory) {
         double xc = 0;
         double yc = 0;

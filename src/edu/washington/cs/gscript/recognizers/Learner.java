@@ -334,14 +334,6 @@ public class Learner {
         return loss;
     }
 
-    private static int[] toIntArray(ArrayList<Integer> integerList) {
-        int[] intArray = new int[integerList.size()];
-        for (int i = 0; i < intArray.length; ++i) {
-            intArray[i] = integerList.get(i);
-        }
-        return intArray;
-    }
-
     private static double findPartsInSample(
             PartFeatureVector[][] sampleFeaturesMap,
             boolean[] userMarked,
@@ -370,7 +362,7 @@ public class Learner {
             }
         }
 
-        double totalLength = length(sampleFeaturesMap[0][sampleFeaturesMap.length - 1].getFeatures());
+        double totalLength = GSMath.length(sampleFeaturesMap[0][sampleFeaturesMap.length - 1].getFeatures());
 
         loss[numOfParts][lastEndLocationIndex] = 0;
 
@@ -404,8 +396,8 @@ public class Learner {
                     double[] vf = v.getFeatures();
 
                     double mag = GSMath.magnitude(vf);
-                    double length = length(vf) / totalLength;
-                    length = 1.0 / numOfParts;
+//                    double length = GSMath.length(vf) / totalLength;
+                    double length = 1.0 / numOfParts;
 
                     double d;
                     ArrayList<PartMatchResult> mm = null;
@@ -573,18 +565,6 @@ public class Learner {
         }
 
         return loss[0][bestK];
-    }
-
-    public static double length(double[] features) {
-        double length = 0;
-        for (int i = 2; i < features.length; i += 2) {
-            double x0 = features[i - 2];
-            double y0 = features[i - 1];
-            double x1 = features[i];
-            double y1 = features[i + 1];
-            length += GSMath.distance(x0, y0, x1, y1);
-        }
-        return length;
     }
 
     public static double[] gestureFeatures(Gesture gesture, int n) {

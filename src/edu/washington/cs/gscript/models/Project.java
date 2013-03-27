@@ -321,8 +321,10 @@ public class Project implements Serializable {
     public void setLabelOfSynthesizedSample(Category category, ArrayList<SynthesizedGestureSample> samples, int label) {
         checkCategory(category);
 
-        for (SynthesizedGestureSample sample : samples) {
-            addSample(category, adjust(SampleGenerator.stitch(sample)));
+        if (label == 1) {
+            for (SynthesizedGestureSample sample : samples) {
+                addSample(category, adjust(SampleGenerator.stitch(sample)));
+            }
         }
         category.setLabelOfSynthesizedSamples(samples, label);
 

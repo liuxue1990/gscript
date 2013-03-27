@@ -43,7 +43,7 @@ public class SampleGenerator {
             double[] features = GSMath.normalizeByRadius(instance.getPart().getTemplate().getFeatures(), null);
             th = instance.getAngle();
             scale = instance.getScale() * baseScale / GSMath.boundingCircle(features)[2];
-            System.out.println("scale = " + scale);
+
             double cos = Math.cos(th);
             double sin = Math.sin(th);
 

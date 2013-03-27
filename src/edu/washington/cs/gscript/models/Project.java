@@ -3,6 +3,7 @@ package edu.washington.cs.gscript.models;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
+import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.Parser;
 import edu.washington.cs.gscript.helpers.SampleGenerator;
 import edu.washington.cs.gscript.recognizers.Learner;
@@ -320,9 +321,31 @@ public class Project implements Serializable {
     public void setLabelOfSynthesizedSample(Category category, ArrayList<SynthesizedGestureSample> samples, int label) {
         checkCategory(category);
 
+        for (SynthesizedGestureSample sample : samples) {
+            addSample(category, adjust(SampleGenerator.stitch(sample)));
+        }
         category.setLabelOfSynthesizedSamples(samples, label);
 
         setDirty(true);
+    }
+
+    private Gesture adjust(Gesture gesture) {
+
+        double[] xys = new double[gesture.size() * 2];
+
+        int i = 0;
+        for (XYT point : gesture) {
+            xys[i++] = point.getX();
+            xys[i++] = point.getY();
+        }
+
+        GSMath.shift(GSMath.scale(GSMath.normalizeByRadius(xys, xys), 200, xys), 300, 300, xys);
+
+        ArrayList<XYT> points = new ArrayList<XYT>();
+        for (i =  0; i < xys.length; i += 2) {
+            points.add(XYT.xy(xys[i], xys[i + 1]));
+        }
+        return new Gesture(points);
     }
 
     public void updateSynthesizedSamples(Category category) {

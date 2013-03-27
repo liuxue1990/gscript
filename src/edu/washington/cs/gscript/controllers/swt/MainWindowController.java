@@ -145,6 +145,77 @@ public class MainWindowController {
         }
     }
 
+    public static class ButtonGreenCheck extends SimpleButton {
+
+        public ButtonGreenCheck(Composite parent, int style) {
+            super(parent, style);
+        }
+
+        @Override
+        void paint(GC gc) {
+            Rectangle bounds = getClientArea();
+
+            Transform transform = new Transform(getDisplay());
+            transform.translate(bounds.x, bounds.y);
+            gc.setTransform(transform);
+
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_DARK_GREEN);
+            Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
+
+            if (isHover() && !isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_GREEN);
+            } else if (isHover() && isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+            }
+
+            gc.setBackground(bg);
+            gc.setForeground(fg);
+
+            gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
+
+            gc.setLineWidth(2);
+            gc.drawPolyline(new int[] {bounds.width / 4, bounds.height / 2, bounds.width / 2, bounds.height / 4 * 3, bounds.width / 4 * 3, bounds.height / 4});
+
+            transform.dispose();
+        }
+    }
+
+    public static class ButtonRedCross extends SimpleButton {
+
+        public ButtonRedCross(Composite parent, int style) {
+            super(parent, style);
+        }
+
+        @Override
+        void paint(GC gc) {
+            Rectangle bounds = getClientArea();
+
+            Transform transform = new Transform(getDisplay());
+            transform.translate(bounds.x, bounds.y);
+            gc.setTransform(transform);
+
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_DARK_RED);
+            Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
+
+            if (isHover() && !isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_RED);
+            } else if (isHover() && isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+            }
+
+            gc.setBackground(bg);
+            gc.setForeground(fg);
+
+            gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
+
+            gc.setLineWidth(2);
+            gc.drawLine(bounds.width / 4, bounds.height / 4, bounds.width / 4 * 3, bounds.height / 4 * 3);
+            gc.drawLine(bounds.width / 4 * 3, bounds.height / 4, bounds.width / 4, bounds.height / 4 * 3);
+
+            transform.dispose();
+        }
+    }
+
     private NotificationObserver projectFileStatusObserver = new NotificationObserver() {
         @Override
         public void onNotified(Object arg) {
@@ -416,6 +487,14 @@ public class MainWindowController {
         new TestingDialog(shell, mainViewModel).open();
     }
 
+    private void onUserActionAccept() {
+        mainViewModel.setLabelOfSelectedSynthesizedSamples(1);
+    }
+
+    private void onUserActionReject() {
+        mainViewModel.setLabelOfSelectedSynthesizedSamples(-1);
+    }
+
     private void createComponents() {
 		shell.setLayout(new FillLayout());
 
@@ -555,8 +634,53 @@ public class MainWindowController {
 
 		scriptText = new ScriptText(rightPanel, SWT.MULTI, mainViewModel);
 
-		CandidateScrolledList outputComposite = new CandidateScrolledList(rightPanel, SWT.BACKGROUND, mainViewModel);
+        Composite candidatesContainer = new Composite(rightPanel, SWT.BACKGROUND);
+        candidatesContainer.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+
+        FormLayout formLayout = new FormLayout();
+        candidatesContainer.setLayout(formLayout);
+
+		CandidateScrolledList outputComposite = new CandidateScrolledList(candidatesContainer, SWT.BACKGROUND, mainViewModel);
 		outputComposite.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+
+        ButtonGreenCheck btnAccept = new ButtonGreenCheck(candidatesContainer, SWT.BACKGROUND) {
+            @Override
+            protected void buttonClicked() {
+                onUserActionAccept();
+            }
+        };
+        btnAccept.setBackground(candidatesContainer.getBackground());
+
+        ButtonRedCross btnReject = new ButtonRedCross(candidatesContainer, SWT.NONE) {
+            @Override
+            protected void buttonClicked() {
+                onUserActionReject();
+            }
+        };
+        btnReject.setBackground(candidatesContainer.getBackground());
+
+        FormData fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.top = new FormAttachment(0, 20);
+        fd.right = new FormAttachment(100);
+        fd.bottom = new FormAttachment(100);
+        outputComposite.setLayoutData(fd);
+
+        fd = new FormData();
+        fd.top = new FormAttachment(0, 2);
+        fd.right = new FormAttachment(btnReject, -5);
+
+        btnAccept.setSize(16, 16);
+        btnAccept.setLayoutData(fd);
+        btnAccept.moveAbove(outputComposite);
+
+        fd = new FormData();
+        fd.top = new FormAttachment(0, 2);
+        fd.right = new FormAttachment(100, -10);
+
+        btnReject.setSize(16, 16);
+        btnReject.setLayoutData(fd);
+        btnReject.moveAbove(outputComposite);
 
 		rightPanel.setWeights(new int[]{50, 50});
 

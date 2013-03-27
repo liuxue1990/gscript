@@ -85,7 +85,9 @@ public class Learner {
 
                 Part part = new Part(shape.getPartName());
                 part.setUserTemplate(shape.getPart().getUserTemplate());
-                part.setTemplate(shape.getPart().getUserTemplate());
+                if (shape.getPart().getUserTemplate() != null) {
+                    part.setTemplate(new PartFeatureVector(GSMath.normalizeByMagnitude(shape.getPart().getUserTemplate().getFeatures(), null)));
+                }
 
                 table.put(part.getName(), part);
             }
@@ -318,6 +320,7 @@ public class Learner {
             Part[] parts,
             ArrayList<ArrayList<PartMatchResult>> matches) {
 
+        final int numOfShapes = shapes.length;
         final int numOfParts = parts.length;
         final int numOfEndLocations  = sampleFeaturesMap.length;
         final int lastEndLocationIndex = numOfEndLocations - 1;
@@ -325,6 +328,27 @@ public class Learner {
         double[][] loss = new double[numOfParts + 1][numOfEndLocations];
         int[][] nextBreak = new int[numOfParts + 1][numOfEndLocations];
         ArrayList[][] subMatches = null;
+
+        double[][][][] abMap = new double[parts.length][sampleFeaturesMap.length][sampleFeaturesMap.length][];
+
+        for (int partIndex = 0; partIndex < parts.length; ++partIndex) {
+            for (int i = 0; i < sampleFeaturesMap.length; ++i) {
+                for (int j = i + 1; j < sampleFeaturesMap.length; ++j) {
+                    abMap[partIndex][i][j] = computeAB(
+                            GSMath.normalizeByMagnitude(parts[partIndex].getTemplate().getFeatures(), null),
+                            GSMath.normalizeByMagnitude(sampleFeaturesMap[i][j].getFeatures(), null));
+
+//                    double s = distanceToTemplateAligned(parts[partIndex].getTemplate().getFeatures(), sampleFeaturesMap[i][j].getFeatures());
+//                    double a = abMap[partIndex][i][j][0];
+//                    double b = abMap[partIndex][i][j][1];
+//                    double t = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+//
+//                    if (GSMath.compareDouble(s, t) != 0) {
+//                        System.out.println(s + " vssssss " + t);
+//                    }
+                }
+            }
+        }
 
         if (matches != null) {
              subMatches = new ArrayList[numOfParts + 1][numOfEndLocations];
@@ -339,7 +363,7 @@ public class Learner {
             }
         }
 
-        double totalLength = GSMath.length(sampleFeaturesMap[0][sampleFeaturesMap.length - 1].getFeatures());
+//        double totalLength = GSMath.length(sampleFeaturesMap[0][sampleFeaturesMap.length - 1].getFeatures());
 
         loss[numOfParts][lastEndLocationIndex] = 0;
 
@@ -372,7 +396,10 @@ public class Learner {
                     PartFeatureVector v = sampleFeaturesMap[j][k];
                     double[] vf = v.getFeatures();
 
-                    double mag = GSMath.magnitude(vf);
+                    double a = abMap[i][j][k][0];
+                    double b = abMap[i][j][k][1];
+
+//                    double mag = GSMath.magnitude(vf);
 //                    double length = GSMath.length(vf) / totalLength;
                     double length = 1.0 / numOfParts;
 
@@ -383,22 +410,28 @@ public class Learner {
                         mm = new ArrayList<PartMatchResult>();
                     }
 
-                    double[] angle = new double[1];
-
                     if (shapes[i].isRepeatable()) {
 
                         d = findRepetitionInFragment(
-                                u, sampleFeaturesMap, userMarked, j, k, mm) * length + loss[i + 1][k];
+                                u, sampleFeaturesMap, abMap[i], userMarked, j, k, mm) * length + loss[i + 1][k];
 
                         for (PartMatchResult match : mm) {
                             match.setPart(parts[i]);
                         }
 
                     } else {
-                        double score = distanceToTemplateAligned(u.getFeatures(), vf);
+//                        double score = distanceToTemplateAligned(u.getFeatures(), vf);
+                        double score = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+//                        if (GSMath.compareDouble(score, Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))))) != 0) {
+//                            System.out.println(score + " vs " + Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b)))));
+//                        }
+
                         d = score * length + loss[i + 1][k];
+//                        mm.add(new PartMatchResult(
+//                                parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalize(v.getFeatures(), null)), score));
                         mm.add(new PartMatchResult(
                                 parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalizeByMagnitude(v.getFeatures(), null)), score));
+//                                parts[i], null, j, k, v, Math.atan2(b, a), score));
                     }
 
                     if (GSMath.compareDouble(d, loss[i][j]) < 0) {
@@ -418,7 +451,6 @@ public class Learner {
 
         for (int i = 0, j = 0; i < numOfParts; ++i) {
             if (matches != null) {
-
                 matches.add(((ArrayList<PartMatchResult>) subMatches[i][j]));
             }
             j = nextBreak[i][j];
@@ -430,6 +462,7 @@ public class Learner {
     public static double findRepetitionInFragment(
             PartFeatureVector partFeatureVector,
             PartFeatureVector[][] sampleFeaturesMap,
+            double[][][] abMap,
             boolean[] userMarked,
             int beginIndex,
             int endIndex,
@@ -447,7 +480,7 @@ public class Learner {
                 mm = new ArrayList<PartMatchResult>();
             }
             double loss = findRepetitionInFragmentAtAngle(
-                    partFeatureVector.getFeatures(), sampleFeaturesMap, userMarked, beginIndex, endIndex, angle,
+                    partFeatureVector.getFeatures(), sampleFeaturesMap, abMap, userMarked, beginIndex, endIndex, angle,
                     mm);
 
             if (GSMath.compareDouble(loss, minLoss) < 0) {
@@ -468,6 +501,7 @@ public class Learner {
     public static double findRepetitionInFragmentAtAngle(
             double[] template,
             PartFeatureVector[][] sampleFeaturesMap,
+            double[][][] abMap,
             boolean[] userMarked,
             int beginIndex,
             int endIndex,
@@ -510,8 +544,17 @@ public class Learner {
                     if (GSMath.compareDouble(loss[j][k - 1], Double.POSITIVE_INFINITY) >= 0) {
                         continue;
                     }
+                    double a = abMap[beginIndex + i][beginIndex + j][0];
+                    double b = abMap[beginIndex + i][beginIndex + j][1];
+
                     double[] features = sampleFeaturesMap[beginIndex + i][beginIndex + j].getFeatures();
-                    double d = (distanceToTemplateAtAngle(template, features, angle) + loss[j][k - 1] * (k - 1)) / k;
+                    double d = (Math.acos(Math.max(-1, Math.min(1, a * Math.cos(angle) + b * Math.sin(angle)))) + loss[j][k - 1] * (k - 1)) / k;
+//                    double d = (distanceToTemplateAtAngle(template, features, angle) + loss[j][k - 1] * (k - 1)) / k;
+//
+//                    double dd = distanceToTemplateAtAngle(template, features, angle);
+//                    if (GSMath.compareDouble(Math.acos(Math.max(-1, Math.min(1, a * Math.cos(angle) + b * Math.sin(angle)))), dd) != 0) {
+//                        System.out.println(Math.acos(Math.max(-1, Math.min(1, a * Math.cos(angle) + b * Math.sin(angle)))) + " vs " + dd);
+//                    }
 
                     if (GSMath.compareDouble(d, loss[i][k]) < 0) {
                         loss[i][k] = d;
@@ -577,6 +620,23 @@ public class Learner {
         }
 
         return new PartFeatureVector(GSMath.normalizeByMagnitude(average, average));
+    }
+
+    private static double[] computeAB(double[] template, double[] features) {
+        double a = 0;
+        double b = 0;
+
+        for (int i = 0; i < template.length; i += 2) {
+            final double x1 = template[i];
+            final double y1 = template[i + 1];
+            final double x2 = features[i];
+            final double y2 = features[i + 1];
+
+            a += x1 * x2 + y1 * y2;
+            b += y1 * x2 - x1 * y2;
+        }
+
+        return new double[] {a, b};
     }
 
     public static double bestAlignedAngle(double[] template, double[] features) {

@@ -20,7 +20,7 @@ import org.eclipse.swt.widgets.Composite;
 public class CandidateListItem extends ScrolledList.ListItem {
     private CandidateScrolledList parentList;
 
-    private IconWithButtonOverlay.IconWithYesNoCancelButtonOverlay icon;
+    private IconWithButtonOverlay.IconWithEmptyButtonOverlay icon;
 
     private Composite iconContainer;
 
@@ -30,25 +30,9 @@ public class CandidateListItem extends ScrolledList.ListItem {
 
     private Gesture stitched;
 
-    private int label;
-
-    private NotificationObserver labelObserver = new NotificationObserver() {
-        @Override
-        public void onNotified(Object arg) {
-            updateLabel();
-        }
-    };
-
     public CandidateListItem(CandidateScrolledList parent, MainViewModel viewModel) {
         super(parent, SWT.BACKGROUND);
         setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
-
-        addDisposeListener(new DisposeListener() {
-            @Override
-            public void widgetDisposed(DisposeEvent e) {
-                NotificationCenter.getDefaultCenter().removeObserver(labelObserver);
-            }
-        });
 
         mainViewModel = viewModel;
 
@@ -60,25 +44,10 @@ public class CandidateListItem extends ScrolledList.ListItem {
 
         iconContainer = new Composite(this, SWT.BACKGROUND);
 
-        icon = new IconWithButtonOverlay.IconWithYesNoCancelButtonOverlay(iconContainer, SWT.BACKGROUND) {
-            @Override
-            protected void buttonClicked(int index) {
-                if (index == 0) {
-                    mainViewModel.setLabelOfSynthesizedSample(sample, 1);
-                } else if (index == 1) {
-                    mainViewModel.setLabelOfSynthesizedSample(sample, -1);
-                } else {
-                    mainViewModel.setLabelOfSynthesizedSample(sample, 0);
-                }
-            }
-
+        icon = new IconWithButtonOverlay.IconWithEmptyButtonOverlay(iconContainer, SWT.BACKGROUND) {
             @Override
             protected void mouseDownOnIcon() {
-                if (label != 0) {
-                    mainViewModel.setLabelOfSynthesizedSample(sample, 0);
-                } else {
-                    mainViewModel.setLabelOfSynthesizedSample(sample, -1);
-                }
+                mainViewModel.toggleSelectionOnSynthesizedSample(sample);
             }
         };
 
@@ -96,9 +65,11 @@ public class CandidateListItem extends ScrolledList.ListItem {
         onSelectionChanged();
     }
 
-    public void setDataSource(SynthesizedGestureSample sample) {
-        NotificationCenter.getDefaultCenter().removeObserver(labelObserver);
+    public SynthesizedGestureSample getDataSource() {
+        return sample;
+    }
 
+    public void setDataSource(SynthesizedGestureSample sample) {
         this.sample = sample;
         this.stitched = SampleGenerator.stitch(sample);
 
@@ -115,22 +86,11 @@ public class CandidateListItem extends ScrolledList.ListItem {
         gc.dispose();
 
         icon.setThumbnail(thumbnail);
-
-        updateLabel();
-
-        NotificationCenter.getDefaultCenter().addObserver(
-                labelObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, sample.getUserLabelProperty());
     }
 
-    private void updateLabel() {
-        this.label = sample.getUserLabelProperty().getValue();
-
-        if (label < 0) {
-            iconContainer.setBackground(getDisplay().getSystemColor(SWT.COLOR_DARK_RED));
-        } else if (label > 0) {
-            iconContainer.setBackground(getDisplay().getSystemColor(SWT.COLOR_DARK_GREEN));
-        } else {
-            iconContainer.setBackground(getBackground());
-        }
+    @Override
+    protected void onSelectionChanged() {
+        iconContainer.setBackground(
+                getDisplay().getSystemColor(isSelected() ? SWT.COLOR_LIST_SELECTION : SWT.COLOR_WHITE));
     }
 }

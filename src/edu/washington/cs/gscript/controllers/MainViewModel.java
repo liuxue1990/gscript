@@ -26,11 +26,15 @@ public class MainViewModel {
 
     public static final int SAMPLE_RECOGNITION_CHANGED_NOTIFICATION = 3;
 
+    public static final int SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION = 4;
+
 	private Project project;
 
 	private Category selectedCategory;
 
 	private Gesture selectedSample;
+
+    private ArrayList<SynthesizedGestureSample> selectedSynthesizedSamples;
 
     private ArrayList<ArrayList<PartMatchResult>> matchesForSelectedSample;
 
@@ -48,6 +52,7 @@ public class MainViewModel {
     };
 
 	public MainViewModel() {
+        selectedSynthesizedSamples = new ArrayList<SynthesizedGestureSample>();
 	}
 
 	public Project getProject() {
@@ -117,6 +122,9 @@ public class MainViewModel {
 		} else {
 			selectSample(null);
 		}
+
+        selectedSynthesizedSamples.clear();
+        NotificationCenter.getDefaultCenter().postNotification(SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, this);
 	}
 
 	public void selectSample(Gesture gesture) {
@@ -218,6 +226,11 @@ public class MainViewModel {
         progress.setValue(0);
         if (getSelectedCategory() != null) {
             project.learnCategory(getSelectedCategory(), progress, 99);
+            project.updateSynthesizedSamples(getSelectedCategory());
+            if (!selectedSynthesizedSamples.isEmpty()) {
+                selectedSynthesizedSamples.clear();
+                NotificationCenter.getDefaultCenter().postNotification(SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, this);
+            }
         }
         progress.setValue(100);
     }
@@ -231,14 +244,30 @@ public class MainViewModel {
                                 null)));
     }
 
-    public void setLabelOfSynthesizedSample(SynthesizedGestureSample sample, int label) {
-        project.setLabelOfSynthesizedSample(getSelectedCategory(), sample, label);
-    }
-
     public void trainRecognizer(ReadWriteProperty<Integer> progress) {
         progress.setValue(0);
         getProject().learnProject(progress, 70);
         recognizer = Recognizer.train(getProject(), progress, 29);
         progress.setValue(100);
     }
+
+    public void setLabelOfSelectedSynthesizedSamples(int label) {
+        project.setLabelOfSynthesizedSample(selectedCategory, selectedSynthesizedSamples, label);
+    }
+
+    public void toggleSelectionOnSynthesizedSample(SynthesizedGestureSample sample) {
+
+        if (selectedSynthesizedSamples.indexOf(sample) < 0) {
+            selectedSynthesizedSamples.add(sample);
+        } else {
+            selectedSynthesizedSamples.remove(sample);
+        }
+
+        NotificationCenter.getDefaultCenter().postNotification(SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, this);
+    }
+
+    public boolean isSynthesizedSampleSelected(SynthesizedGestureSample sample) {
+        return selectedSynthesizedSamples.indexOf(sample) >= 0;
+    }
+
 }

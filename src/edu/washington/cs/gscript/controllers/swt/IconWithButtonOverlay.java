@@ -45,6 +45,13 @@ public class IconWithButtonOverlay extends Canvas {
         }
     }
 
+    public static class IconWithEmptyButtonOverlay extends IconWithButtonOverlay {
+
+        public IconWithEmptyButtonOverlay(Composite parent, int style) {
+            super(parent, style, 0);
+        }
+    }
+
     public static class IconWithYesNoCancelButtonOverlay extends IconWithButtonOverlay {
 
         public IconWithYesNoCancelButtonOverlay(Composite parent, int style) {

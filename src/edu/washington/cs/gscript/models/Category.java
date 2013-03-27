@@ -145,8 +145,8 @@ public class Category implements Serializable {
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, synthesizedSamplesProperty);
     }
 
-    void setLabelOfSynthesizedSample(SynthesizedGestureSample sample, int label) {
-        sampleGenerator.addSample(sample, label);
+    void setLabelOfSynthesizedSamples(ArrayList<SynthesizedGestureSample> samples, int label) {
+        sampleGenerator.addSamples(samples, label);
         sampleGenerator.refresh();
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, synthesizedSamplesProperty);

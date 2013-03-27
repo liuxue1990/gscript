@@ -39,6 +39,21 @@ public class CandidateScrolledList extends ScrolledList {
                     }
                 },
                 MainViewModel.CATEGORY_SELECTED_NOTIFICATION, mainViewModel);
+
+        NotificationCenter.getDefaultCenter().addObserver(
+                new NotificationObserver() {
+                    @Override
+                    public void onNotified(Object arg) {
+                        CandidateScrolledList.this.getDisplay().asyncExec(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateSelection();
+                            }
+                        });
+                    }
+                },
+                MainViewModel.SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, mainViewModel);
+
     }
 
     public Category getDataSource() {
@@ -66,6 +81,16 @@ public class CandidateScrolledList extends ScrolledList {
         }
 
         updateContentLayout();
+        updateSelection();
+    }
+
+    private void updateSelection() {
+        for (ListItem item : getListItems()) {
+            if (item instanceof CandidateListItem) {
+                CandidateListItem listItem = (CandidateListItem) item;
+                listItem.setSelected(mainViewModel.isSynthesizedSampleSelected(listItem.getDataSource()));
+            }
+        }
     }
 
     private void addSample(SynthesizedGestureSample sample) {

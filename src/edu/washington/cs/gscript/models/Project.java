@@ -288,7 +288,6 @@ public class Project implements Serializable {
             partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
         }
 
-        category.regenerateSynthesizedSamples();
         progress.setValue(initialProgress + progressTotal);
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
@@ -318,15 +317,15 @@ public class Project implements Serializable {
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
     }
 
-    public void setLabelOfSynthesizedSample(Category category, SynthesizedGestureSample sample, int label) {
+    public void setLabelOfSynthesizedSample(Category category, ArrayList<SynthesizedGestureSample> samples, int label) {
         checkCategory(category);
 
-        if (category.getSynthesizedSamples().indexOf(sample) < 0) {
-            throw new RuntimeException("Invalid synthesized sample");
-        }
-
-        category.setLabelOfSynthesizedSample(sample, label);
+        category.setLabelOfSynthesizedSamples(samples, label);
 
         setDirty(true);
+    }
+
+    public void updateSynthesizedSamples(Category category) {
+        category.regenerateSynthesizedSamples();
     }
 }

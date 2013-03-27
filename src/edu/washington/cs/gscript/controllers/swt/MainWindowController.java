@@ -484,7 +484,9 @@ public class MainWindowController {
         trainingThread.start();
         dialog.open();
 
-        new TestingDialog(shell, mainViewModel).open();
+        if (mainViewModel.getRecognizer() != null) {
+            new TestingDialog(shell, mainViewModel).open();
+        }
     }
 
     private void onUserActionAccept() {

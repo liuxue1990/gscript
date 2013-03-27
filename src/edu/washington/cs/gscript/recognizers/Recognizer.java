@@ -94,44 +94,48 @@ public class Recognizer {
             progress.setValue(currentProgress + (int)((catIndex + 1) / (double) numOfCategories * 0.9 * progressTotal));
         }
 
-        svm_problem problem = new svm_problem();
-        problem.l = yList.size();
-        problem.x = new svm_node[problem.l][];
-        problem.y = new double[problem.l];
+        Recognizer recognizer = null;
 
-        for (int i = 0; i < problem.l; ++i) {
-            problem.x[i] = xList.get(i);
-            problem.y[i] = yList.get(i);
+        if (yList.size() > 0) {
+
+            svm_problem problem = new svm_problem();
+            problem.l = yList.size();
+            problem.x = new svm_node[problem.l][];
+            problem.y = new double[problem.l];
+
+            for (int i = 0; i < problem.l; ++i) {
+                problem.x[i] = xList.get(i);
+                problem.y[i] = yList.get(i);
+            }
+
+            svm_parameter param = new svm_parameter();
+            // default values
+            param.svm_type = svm_parameter.NU_SVC;
+            param.kernel_type = svm_parameter.LINEAR;
+            param.degree = 3;
+            param.gamma = 0;	// 1/num_features
+            param.coef0 = 0;
+            param.nu = 0.5;
+            param.cache_size = 100;
+            param.C = 1;
+            param.eps = 1e-3;
+            param.p = 0.1;
+            param.shrinking = 1;
+            param.probability = 0;
+            param.nr_weight = 0;
+            param.weight_label = new int[0];
+            param.weight = new double[0];
+
+            param.gamma = 1.0 / maxIndex;
+
+            recognizer = new Recognizer();
+            recognizer.model = svm.svm_train(problem, param);
+            recognizer.project = project;
+
+            crossValidation(problem, param, 10);
         }
 
-        svm_parameter param = new svm_parameter();
-        // default values
-        param.svm_type = svm_parameter.NU_SVC;
-        param.kernel_type = svm_parameter.LINEAR;
-        param.degree = 3;
-        param.gamma = 0;	// 1/num_features
-        param.coef0 = 0;
-        param.nu = 0.5;
-        param.cache_size = 100;
-        param.C = 1;
-        param.eps = 1e-3;
-        param.p = 0.1;
-        param.shrinking = 1;
-        param.probability = 0;
-        param.nr_weight = 0;
-        param.weight_label = new int[0];
-        param.weight = new double[0];
-
-        param.gamma = 1.0 / maxIndex;
-
-        Recognizer recognizer = new Recognizer();
-        recognizer.model = svm.svm_train(problem, param);
-        recognizer.project = project;
-
-        crossValidation(problem, param, 10);
-
         progress.setValue(currentProgress + progressTotal);
-
         return recognizer;
     }
 

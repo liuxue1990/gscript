@@ -99,7 +99,7 @@ public class SampleGenerator {
                 return;
             }
 
-            if (GSMath.compareDouble(x, xs.get(i).value) > 0) {
+            if (Double.compare(x, xs.get(i).value) < 0) {
                 xs.add(i, new DataPoint(x, label));
                 return;
             }
@@ -180,6 +180,10 @@ public class SampleGenerator {
 
         ArrayList<ShapeSpec> shapes = category.getShapes();
         int numOfShapes = shapes.size();
+
+        for (ArrayList<DataPoint> dpts : dataPoints) {
+            System.out.println(dpts);
+        }
 
         for (int paramIndex = 0; paramIndex < numOfShapes * 3; ++paramIndex) {
             double currentAngle = 0;
@@ -264,10 +268,6 @@ public class SampleGenerator {
                     }
                 }
 
-                for (PartInstance instance : seq) {
-                    System.out.print(instance.getAngle() + " : " + instance.getScale() + ", ");
-                }
-                System.out.println();
                 collection.add(new SynthesizedGestureSample(seq));
             }
         }

@@ -149,9 +149,14 @@ public class GSMath {
 //        return scale(vector, 1 / magnitude(vector), output);
 //    }
 
-    public static double[] normalize(double[] trajectory, double[] output) {
-        return normalizeByRadius(trajectory, output);
-//        return normalizeByBox(trajectory, output);
+    public static double[] normalize(double[] vector, double[] output) {
+        return normalizeByRadius(vector, output);
+    }
+
+    public static double[] normalizeByMagnitude(double[] vector, double[] output) {
+        return normalizeByRadius(vector, output);
+//        output = makeArray(vector.length, output);
+//        return scale(vector, 1 / magnitude(vector), output);
     }
 
     public static double[] normalizeByRadius(double[] trajectory, double[] output) {

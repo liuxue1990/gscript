@@ -37,7 +37,7 @@ public class OneDollarRecognizer {
 
     public void addGestureAsTemplate(String name, Gesture gesture) {
         double[] resampled = Learner.gestureFeatures(gesture, numOfSamplingPoints);
-        double[] vector = GSMath.normalize(resampled, null);
+        double[] vector = GSMath.normalizeByMagnitude(resampled, null);
 
         addToTemplate(templates, name, vector);
 
@@ -46,7 +46,7 @@ public class OneDollarRecognizer {
     }
 
     public String recognize(Gesture gesture) {
-        return recognize(GSMath.normalize(Learner.gestureFeatures(gesture, numOfSamplingPoints), null));
+        return recognize(GSMath.normalizeByMagnitude(Learner.gestureFeatures(gesture, numOfSamplingPoints), null));
     }
 
     private String recognize(double[] vector) {

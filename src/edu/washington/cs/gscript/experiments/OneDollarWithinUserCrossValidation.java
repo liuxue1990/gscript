@@ -16,9 +16,9 @@ public class OneDollarWithinUserCrossValidation {
     public static void main(String[] args) {
 
 //        new OneDollarWithinUserCrossValidation().crossValidation1();
-        new OneDollarWithinUserCrossValidation().crossValidation2();
+//        new OneDollarWithinUserCrossValidation().crossValidation2();
 //        new OneDollarWithinUserCrossValidation().crossValidation3();
-//        new OneDollarWithinUserCrossValidation().crossValidation4("/Users/hlv/Desktop/testtest3");
+        new OneDollarWithinUserCrossValidation().crossValidation4("/Users/hlv/Desktop/testtest3");
     }
 
     private Random rand = new Random(9637);

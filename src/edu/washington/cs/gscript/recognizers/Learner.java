@@ -412,7 +412,9 @@ public class Learner {
 
                     if (shapes[i].isRepeatable()) {
 
-                        d = findRepetitionInFragment(
+//                        d = findRepetitionInFragment(
+//                                u, sampleFeaturesMap, abMap[i], userMarked, j, k, mm) * length + loss[i + 1][k];
+                        d = findRepetitionGreedy(
                                 u, sampleFeaturesMap, abMap[i], userMarked, j, k, mm) * length + loss[i + 1][k];
 
                         for (PartMatchResult match : mm) {
@@ -457,6 +459,102 @@ public class Learner {
         }
 
         return loss[0][0];
+    }
+
+    public static double findRepetitionGreedy(
+            PartFeatureVector partFeatureVector,
+            PartFeatureVector[][] sampleFeaturesMap,
+            double[][][] abMap,
+            boolean[] userMarked,
+            int beginIndex,
+            int endIndex,
+            ArrayList<PartMatchResult> matches) {
+
+        double loss0 = Double.POSITIVE_INFINITY;
+        int to0 = -1;
+        double angle0 = 0;
+
+        int from = beginIndex;
+        for (int to = from + 1; to <= endIndex; ++to) {
+            if (to - 1 > from && userMarked[to - 1]) {
+                break;
+            }
+
+            double a = abMap[from][to][0];
+            double b = abMap[from][to][1];
+            double loss = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+
+            if (GSMath.compareDouble(loss, loss0) < 0) {
+                loss0 = loss;
+                to0 = to;
+                angle0 = Math.atan2(b, a);
+            }
+        }
+
+        matches.add(new PartMatchResult(null, null, from, to0, sampleFeaturesMap[from][to0], angle0, loss0));
+
+        if (to0 < endIndex) {
+            double loss1 = Double.POSITIVE_INFINITY;
+            int to1 = -1;
+            double angle1 = 0;
+
+            from = to0;
+            for (int to = from + 1; to <= endIndex; ++to) {
+                if (to - 1 > from && userMarked[to - 1]) {
+                    break;
+                }
+
+                double a = abMap[from][to][0];
+                double b = abMap[from][to][1];
+                double loss = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+
+                if (GSMath.compareDouble(loss, loss1) < 0) {
+                    loss1 = loss;
+                    to1 = to;
+                    angle1 = Math.atan2(b, a);
+                }
+            }
+
+            matches.add(new PartMatchResult(null, null, to0, to1, sampleFeaturesMap[to0][to1], angle1, loss1));
+
+            double da = angle1 - angle0;
+
+            from = to1;
+            int n = 0;
+            while (from < endIndex) {
+                n++;
+
+                double angle2 = angle1 + da * n;
+                double loss2 = Double.POSITIVE_INFINITY;
+                int to2 = -1;
+
+                for (int to = from + 1; to <= endIndex; ++to) {
+                    if (to - 1 > from && userMarked[to - 1]) {
+                        break;
+                    }
+
+                    double a = abMap[from][to][0];
+                    double b = abMap[from][to][1];
+                    double loss = Math.acos(Math.min(1, Math.max(-1, a * Math.cos(angle2) + b * Math.sin(angle2))));
+
+                    if (GSMath.compareDouble(loss, loss2) < 0) {
+                        loss2 = loss;
+                        to2 = to;
+                    }
+                }
+
+                matches.add(new PartMatchResult(null, null, from, to2, sampleFeaturesMap[from][to2], angle2, loss2));
+
+                from = to2;
+            }
+        }
+
+        double totalLoss = 0;
+        for (int i = 0; i < matches.size(); ++i) {
+            totalLoss += matches.get(i).getScore();
+        }
+
+        return totalLoss / matches.size();
     }
 
     public static double findRepetitionInFragment(

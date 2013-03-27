@@ -252,6 +252,10 @@ public class MainViewModel {
     }
 
     public void setLabelOfSelectedSynthesizedSamples(int label) {
+        if (selectedCategory == null || selectedSynthesizedSamples.size() == 0) {
+            return;
+        }
+
         project.setLabelOfSynthesizedSample(selectedCategory, selectedSynthesizedSamples, label);
     }
 

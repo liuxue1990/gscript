@@ -521,12 +521,14 @@ public class Learner {
 
             from = to1;
             int n = 0;
+            double angle2 = angle1;
             while (from < endIndex) {
                 n++;
 
-                double angle2 = angle1 + da * n;
+                angle2 = angle2 + da;
                 double loss2 = Double.POSITIVE_INFINITY;
                 int to2 = -1;
+                double angle3 = 0;
 
                 for (int to = from + 1; to <= endIndex; ++to) {
                     if (to - 1 > from && userMarked[to - 1]) {
@@ -540,10 +542,13 @@ public class Learner {
                     if (GSMath.compareDouble(loss, loss2) < 0) {
                         loss2 = loss;
                         to2 = to;
+                        angle3 = Math.atan2(b, a);
                     }
                 }
 
                 matches.add(new PartMatchResult(null, null, from, to2, sampleFeaturesMap[from][to2], angle2, loss2));
+                da = (da * n + angle3 - angle2) / (n + 1);
+                angle2 = angle3;
 
                 from = to2;
             }

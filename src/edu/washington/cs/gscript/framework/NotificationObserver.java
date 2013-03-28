@@ -13,7 +13,7 @@ public abstract class NotificationObserver {
     }
 
     void onRegistered(NotificationCenter center) {
-        if (this.center != center) {
+        if (this.center != null && this.center != center) {
             throw new RuntimeException(
                     "Registering the same observer to multiple notification centers is not supported yet.");
         }

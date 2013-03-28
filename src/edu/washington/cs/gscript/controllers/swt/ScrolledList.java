@@ -118,6 +118,9 @@ public class ScrolledList extends ScrolledComposite {
                 vertical ? getClientArea().width : SWT.DEFAULT,
                 vertical ? SWT.DEFAULT : getClientArea().height, true));
         listContainer.layout();
+        content.setSize(content.computeSize(
+                vertical ? getClientArea().width : SWT.DEFAULT,
+                vertical ? SWT.DEFAULT : getClientArea().height, true));
     }
 
     public ListItem[] getListItems() {

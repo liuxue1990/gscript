@@ -79,7 +79,7 @@ public class Recognizer {
 
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
                 Gesture sample = category.getSample(sampleIndex);
-                double[] features = generateSVMFeatures(sample, project);
+                double[] features = generateSVMFeatures(sample, project, useRotationFeatures, useScaleFeatures);
                 svm_node[] x = featuresToSVMNode(features);
                 maxIndex = x.length;
                 xList.add(x);
@@ -143,7 +143,7 @@ public class Recognizer {
         progress.setValue(currentProgress + progressTotal);
     }
 
-    public static double[] generateSVMFeatures(Gesture gesture, Project project) {
+    public static double[] generateSVMFeatures(Gesture gesture, Project project, boolean useAngle, boolean useScale) {
         int numOfCategories = project.getNumOfCategories();
 
         ArrayList<Double> featureList = new ArrayList<Double>();
@@ -175,6 +175,26 @@ public class Recognizer {
                     ShapeSpec shape = category.getShape(shapeIndex);
                     PartMatchResult match = matches.get(shapeIndex).get(0);
                     featureList.add(match.getScore() / Learner.MAX_LOSS);
+
+                    if (useAngle) {
+                        if (shapeIndex == 0) {
+                            featureList.add(match.getAlignedAngle());
+                        } else {
+                            ArrayList<PartMatchResult> lastSubMatches = matches.get(shapeIndex - 1);
+                            PartMatchResult lastMatch = lastSubMatches.get(lastSubMatches.size() - 1);
+                            featureList.add(match.getAlignedAngle() - lastMatch.getAlignedAngle());
+                        }
+                    }
+                }
+
+                if (useScale) {
+                    for (int i = 0; i < numOfShapes - 1; ++i) {
+                        for (int j = i + 1; j < numOfShapes; ++j) {
+                            double si = GSMath.boundingCircle(matches.get(i).get(0).getMatchedFeatureVector().getFeatures())[2];
+                            double sj = GSMath.boundingCircle(matches.get(j).get(0).getMatchedFeatureVector().getFeatures())[2];
+                            featureList.add(sj / si);
+                        }
+                    }
                 }
             }
         }
@@ -219,8 +239,12 @@ public class Recognizer {
     private double lower = -1;
     private double upper = 1;
 
-    public Recognizer() {
+    private boolean useRotationFeatures;
+    private boolean useScaleFeatures;
 
+    public Recognizer() {
+        useRotationFeatures = true;
+        useScaleFeatures = true;
     }
 
     public Project getProject() {
@@ -258,7 +282,7 @@ public class Recognizer {
     }
 
     public Category classify(Gesture gesture) {
-        double[] features = generateSVMFeatures(gesture, project);
+        double[] features = generateSVMFeatures(gesture, project, useRotationFeatures, useScaleFeatures);
         svm_node[] x = featuresToSVMNode(features);
         scale(x);
         int categoryIndex = (int) svm.svm_predict(model, x);

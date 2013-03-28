@@ -485,7 +485,7 @@ public class Learner {
 
 //                        d = findRepetitionInFragment(
 //                                u, sampleFeaturesMap, abMap[i], userMarked, j, k, mm) * length + loss[i + 1][k];
-                        d = findRepetitionGreedy(
+                        d = findRepetitionGreedy2(
                                 u, sampleFeaturesMap, abMap[i], userMarked, j, k, mm) * length + loss[i + 1][k];
 
                         for (PartMatchResult match : mm) {
@@ -529,6 +529,121 @@ public class Learner {
         }
 
         return loss[0][0];
+    }
+
+    public static double findRepetitionGreedy2(
+            PartFeatureVector partFeatureVector,
+            PartFeatureVector[][] sampleFeaturesMap,
+            double[][][] abMap,
+            boolean[] userMarked,
+            int beginIndex,
+            int endIndex,
+            ArrayList<PartMatchResult> matches) {
+
+
+        int to = beginIndex;
+        while (to < endIndex) {
+            int from = to;
+            for (to = from + 1; to <= endIndex; ++to) {
+                if (userMarked[to] || to == endIndex) {
+                    break;
+                }
+            }
+
+//            if (beginIndex == 1 && from == 14 && to == 19) {
+//                System.out.println("HERE");
+//            }
+
+            int i = from;
+            while (i < to) {
+                double minLoss = Double.POSITIVE_INFINITY;
+                int bestJ = i + 1;
+
+                double da = 0;
+
+                int numOfMatches = matches.size();
+
+                if (numOfMatches >= 2) {
+                    for (int matchIndex = 1; matchIndex < numOfMatches; ++matchIndex) {
+                        da += matches.get(matchIndex).getAlignedAngle() - matches.get(matchIndex - 1).getAlignedAngle();
+                    }
+                    da /= (numOfMatches - 1);
+                }
+
+                for (int j = i + 1; j <= to; ++j) {
+                    double a = abMap[i][j][0];
+                    double b = abMap[i][j][1];
+
+                    double loss;
+
+                    if (matches.size() < 2) {
+                        loss = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+                    } else {
+                        double angle2 = matches.get(matches.size() - 1).getAlignedAngle() + da;
+                        loss = Math.acos(Math.min(1, Math.max(-1, a * Math.cos(angle2) + b * Math.sin(angle2))));
+                    }
+
+                    if (GSMath.compareDouble(loss, minLoss) < 0) {
+                        minLoss = loss;
+                        bestJ = j;
+                    }
+                }
+
+                matches.add(new PartMatchResult(null, null, i, bestJ, sampleFeaturesMap[i][bestJ], Math.atan2(abMap[i][bestJ][1], abMap[i][bestJ][0]), minLoss));
+                i = bestJ;
+            }
+
+            i = matches.size() - 2;
+
+            while (i >= 0 && matches.get(i).getFrom() >= from) {
+                int u = matches.get(i).getFrom();
+                int v = matches.get(i + 1).getTo();
+                double a = abMap[u][v][0];
+                double b = abMap[u][v][1];
+
+                double da = 0;
+
+                if (i >= 2) {
+                    for (int matchIndex = 1; matchIndex < i; ++matchIndex) {
+                        da += matches.get(matchIndex).getAlignedAngle() - matches.get(matchIndex - 1).getAlignedAngle();
+                    }
+                    da /= (i - 1);
+                }
+
+                double newLoss;
+                if (i < 2) {
+                    newLoss = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+                } else {
+                    double newAngle = matches.get(i - 1).getAlignedAngle() + da;
+                    newLoss = Math.acos(Math.min(1, Math.max(-1, a * Math.cos(newAngle) + b * Math.sin(newAngle))));
+                }
+
+                int k = 0;
+                double s0 = 0;
+                for (int j = i - 1; j >= 0 && matches.get(j).getFrom() >= from; --j) {
+                    ++k;
+                    s0 += matches.get(j).getScore();
+                }
+
+                double s1 = (s0 + matches.get(i).getScore() + matches.get(i + 1).getScore()) / (k + 2);
+                double s2 = (s0 + newLoss) / (k + 1);
+
+                if (s2 < s1) {
+                    matches.remove(i + 1);
+                    matches.remove(i);
+                    matches.add(new PartMatchResult(
+                            null, null, u, v, sampleFeaturesMap[u][v], Math.atan2(abMap[u][v][1], abMap[u][v][0]), newLoss));
+                }
+
+                --i;
+            }
+        }
+
+        double score = 0;
+        for (PartMatchResult match : matches) {
+            score += match.getScore();
+        }
+        return score / matches.size();
     }
 
     public static double findRepetitionGreedy(

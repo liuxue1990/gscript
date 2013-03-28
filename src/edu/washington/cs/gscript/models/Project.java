@@ -347,6 +347,16 @@ public class Project implements Serializable {
     public void setUserProvidedPart(Part part, PartFeatureVector fv) {
         checkPart(part);
         part.setUserTemplate(fv);
+
+        for (Category category : categories) {
+            for (ShapeSpec shape : category.getShapes()) {
+                if (shape.getPart() == part) {
+                    category.setChangedSinceLearning(true);
+                    break;
+                }
+            }
+        }
+
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);

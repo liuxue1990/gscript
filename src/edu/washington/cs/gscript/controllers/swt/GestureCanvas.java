@@ -232,7 +232,7 @@ public class GestureCanvas extends Canvas {
                 for (int i = 0, n = partBounds.length; i < n; ++i) {
                     if (partBounds[i].contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
                         isForPart = true;
-                        mainViewModel.setUserProvidedPart(mainViewModel.getSelectedCategory().getShape(i).getPart(), new Gesture(points));
+                        mainViewModel.setUserProvidedPart(relatedParts.get(i), new Gesture(points));
                         break;
                     }
                 }
@@ -404,9 +404,9 @@ public class GestureCanvas extends Canvas {
                 renderFeatures(gc, part.getTemplate().getFeatures(), sx, sy, width);
             }
 
-            if (category.getShape(partIndex).getPart().getUserTemplate() != null) {
+            if (part.getUserTemplate() != null) {
                 gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_BLUE));
-                renderFeatures(gc, category.getShape(partIndex).getPart().getUserTemplate().getFeatures(), sx, sy, width);
+                renderFeatures(gc, part.getUserTemplate().getFeatures(), sx, sy, width);
             }
 
 //            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));

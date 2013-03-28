@@ -48,6 +48,10 @@ public class Learner {
         ArrayList<ArrayList<PartMatchResult>> matches = new ArrayList<ArrayList<PartMatchResult>>();
         Learner.findPartsInGesture(gesture, shapes, matches);
 
+        if (matches == null) {
+            return new HashMap<String, Object>();
+        }
+
         Map<String, Object> paramMap = new HashMap<String, Object>();
 
         double lastAngle = -Math.PI / 2;

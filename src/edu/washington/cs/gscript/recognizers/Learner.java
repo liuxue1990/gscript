@@ -15,11 +15,95 @@ public class Learner {
 
     public static final double MAX_LOSS = Math.PI;
 
-    public Learner() {
+    private Learner() {
 
     }
 
-    public ArrayList<Category> findRelatedCategories(Project project, Category category) {
+    private static double partStartingAngle(Part part) {
+        double[] partFeatures = part.getTemplate().getFeatures();
+        return Math.atan2(partFeatures[7] - partFeatures[1], partFeatures[6] - partFeatures[0]);
+    }
+
+    private static double partEndingAngle(Part part) {
+        double[] partFeatures = part.getTemplate().getFeatures();
+        int index = partFeatures.length - 8;
+        return Math.atan2(partFeatures[index + 7] - partFeatures[index + 1], partFeatures[index + 6] - partFeatures[index]);
+    }
+
+//    private static double matchStartingAngle(PartMatchResult m) {
+//        double[] partFeatures = m.getMatchedFeatureVector().getFeatures();
+//        return Math.atan2(partFeatures[3] - partFeatures[1], partFeatures[2] - partFeatures[0]);
+//    }
+//
+//    private static double matchEndingAngle(PartMatchResult m) {
+//        double[] partFeatures = m.getMatchedFeatureVector().getFeatures();
+//        int index = partFeatures.length - 4;
+//        return Math.atan2(partFeatures[index + 3] - partFeatures[index + 1], partFeatures[index + 2] - partFeatures[index]);
+//    }
+
+    public static Map<String, Object> findParametersInGesture(
+            Gesture gesture, ArrayList<ShapeSpec> shapes) {
+
+
+        ArrayList<ArrayList<PartMatchResult>> matches = new ArrayList<ArrayList<PartMatchResult>>();
+        Learner.findPartsInGesture(gesture, shapes, matches);
+
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+
+        double lastAngle = -Math.PI / 2;
+
+        int numOfShapes = shapes.size();
+        for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+            ShapeSpec shape = shapes.get(shapeIndex);
+            ArrayList<PartMatchResult> subMatches = matches.get(shapeIndex);
+
+            PartMatchResult match0 = subMatches.get(0);
+
+            if (shape.getNameOfAngle() != null) {
+
+//                System.out.println("part starting angle " + GSMath.normalizeAngle((partStartingAngle(shape.getPart()))) * 180 / Math.PI);
+//                System.out.println("part aligned angle " + GSMath.normalizeAngle(-match0.getAlignedAngle()) * 180 / Math.PI);
+//                System.out.println("starting at " + GSMath.normalizeAngle((partStartingAngle(shape.getPart()) - match0.getAlignedAngle())) * 180 / Math.PI);
+                double angle = GSMath.normalizeAngle(
+                        partStartingAngle(shape.getPart()) - match0.getAlignedAngle() - lastAngle);
+
+                paramMap.put(shape.getNameOfAngle(), angle * 180 / Math.PI);
+            }
+
+            lastAngle = partEndingAngle(shape.getPart()) - match0.getAlignedAngle();
+
+//            System.out.println("ending at " + GSMath.normalizeAngle(lastAngle) * 180 / Math.PI);
+
+            if (!shapes.get(shapeIndex).isRepeatable()) {
+
+            } else {
+                int numOfMatches = subMatches.size();
+
+                if (shape.getNameOfNumOfRepetition() != null) {
+                    paramMap.put(shape.getNameOfNumOfRepetition(), numOfMatches);
+                }
+
+                if (numOfMatches > 1 && shape.getNameOfRepeatAngle() != null) {
+
+                    double averageAngle = 0;
+                    for (int matchIndex = 1; matchIndex < numOfMatches; ++matchIndex) {
+                        averageAngle += -subMatches.get(matchIndex).getAlignedAngle() - (-subMatches.get(matchIndex - 1).getAlignedAngle());
+                        lastAngle = partEndingAngle(shape.getPart()) - subMatches.get(matchIndex).getAlignedAngle();
+                    }
+                    averageAngle /= (numOfMatches - 1);
+
+                    paramMap.put(
+                            shape.getNameOfRepeatAngle(),
+                            GSMath.normalizeAngle(partEndingAngle(shape.getPart()) - partStartingAngle(shape.getPart()) + averageAngle) * 180 / Math.PI);
+                }
+
+            }
+        }
+
+        return paramMap;
+    }
+
+    public static ArrayList<Category> findRelatedCategories(Project project, Category category) {
         Set<String> usedPartNames = new HashSet<String>();
 
         ArrayList<Category> categories = new ArrayList<Category>();
@@ -58,7 +142,7 @@ public class Learner {
         return categories;
     }
 
-    public Map<String, Part> createInitialPartsTable(ArrayList<Category> categories) {
+    public static Map<String, Part> createInitialPartsTable(ArrayList<Category> categories) {
         Map<String, Part> table = new HashMap<String, Part>();
 
         for (Category category : categories) {
@@ -83,7 +167,7 @@ public class Learner {
         return table;
     }
 
-    public Map<String, Part> learnPartsInCategories(
+    public static Map<String, Part> learnPartsInCategories(
             ArrayList<Category> categories, ReadWriteProperty<Integer> progress, int progressTotal) {
 
         for (int categoryIndex = categories.size() - 1; categoryIndex >= 0; --categoryIndex) {
@@ -419,8 +503,7 @@ public class Learner {
 //                        mm.add(new PartMatchResult(
 //                                parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalize(v.getFeatures(), null)), score));
                         mm.add(new PartMatchResult(
-                                parts[i], null, j, k, v, bestAlignedAngle(u.getFeatures(), GSMath.normalizeByMagnitude(v.getFeatures(), null)), score));
-//                                parts[i], null, j, k, v, Math.atan2(b, a), score));
+                                parts[i], null, j, k, v, Math.atan2(b, a), score));
                     }
 
                     if (GSMath.compareDouble(d, loss[i][j]) < 0) {

@@ -6,8 +6,6 @@ import edu.washington.cs.gscript.models.*;
 import libsvm.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class Recognizer {
 
@@ -78,7 +76,7 @@ public class Recognizer {
 
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
                 Gesture sample = category.getSample(sampleIndex);
-                double[] features = generateFeatures(sample, project);
+                double[] features = generateSVMFeatures(sample, project);
                 svm_node[] x = featuresToSVMNode(features);
                 maxIndex = x.length;
                 xList.add(x);
@@ -139,7 +137,7 @@ public class Recognizer {
         return recognizer;
     }
 
-    public static double[] generateFeatures(Gesture gesture, Project project) {
+    public static double[] generateSVMFeatures(Gesture gesture, Project project) {
         int numOfCategories = project.getNumOfCategories();
 
         ArrayList<Double> featureList = new ArrayList<Double>();
@@ -218,7 +216,7 @@ public class Recognizer {
     }
 
     public Category classify(Gesture gesture) {
-        double[] features = generateFeatures(gesture, project);
+        double[] features = generateSVMFeatures(gesture, project);
         svm_node[] x = featuresToSVMNode(features);
         int categoryIndex = (int) svm.svm_predict(model, x);
         return project.getCategory(categoryIndex);

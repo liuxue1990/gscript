@@ -276,8 +276,7 @@ public class Project implements Serializable {
     }
 
     public boolean isLearningNeeded(Category category) {
-        Learner learner = new Learner();
-        ArrayList<Category> relatedCategories = learner.findRelatedCategories(this, category);
+        ArrayList<Category> relatedCategories = Learner.findRelatedCategories(this, category);
 
         for (Category cat : relatedCategories) {
             if (cat.isChangedSinceLearning()) {
@@ -295,10 +294,9 @@ public class Project implements Serializable {
 
         // @TODO clean up partsTable
 
-        Learner learner = new Learner();
-        ArrayList<Category> relatedCategories = learner.findRelatedCategories(this, category);
+        ArrayList<Category> relatedCategories = Learner.findRelatedCategories(this, category);
 
-        Map<String, Part> table = learner.learnPartsInCategories(
+        Map<String, Part> table = Learner.learnPartsInCategories(
                 relatedCategories, progress, (int)(progressTotal * 0.95));
 
         if (table != null) {
@@ -324,11 +322,11 @@ public class Project implements Serializable {
 
         for (Category category : categories) {
             if (!set.contains(category) && category.isChangedSinceLearning()) {
-                set.addAll(new Learner().findRelatedCategories(this, category));
+                set.addAll(Learner.findRelatedCategories(this, category));
             }
         }
 
-        Map<String, Part> table = new Learner().learnPartsInCategories(
+        Map<String, Part> table = Learner.learnPartsInCategories(
                 new ArrayList<Category>(set), progress, (int)(progressTotal * 0.95));
 
         for (Category category : set) {

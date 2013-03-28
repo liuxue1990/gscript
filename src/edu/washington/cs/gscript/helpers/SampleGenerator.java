@@ -42,7 +42,7 @@ public class SampleGenerator {
         for (PartInstance instance : sample.getInstanceSequence()) {
             double[] features = GSMath.normalizeByRadius(instance.getPart().getTemplate().getFeatures(), null);
             th = instance.getAngle();
-            scale = instance.getScale() * baseScale / GSMath.boundingCircle(features)[2];
+            scale = instance.getScale();
 
             double cos = Math.cos(th);
             double sin = Math.sin(th);
@@ -72,7 +72,7 @@ public class SampleGenerator {
 
     double angleResolution = 2 * Math.PI / 180;
 
-    double scaleResolution = 0.2;
+    double scaleResolution = 0.1;
 
     private Category category;
 
@@ -158,6 +158,12 @@ public class SampleGenerator {
 
                     int numOfMatches = subMatches.size();
                     averageScale /= numOfMatches;
+
+                    if (baseScale < 0) {
+                        baseScale = averageScale;
+                    } else {
+                        averageScale /= baseScale;
+                    }
                     addValueIfNotExist(averageScale, 1, dataPoints.get(shapeIndex * 3 + 2), scaleResolution);
 
                     if (numOfMatches > 1) {
@@ -207,9 +213,9 @@ public class SampleGenerator {
         ArrayList<ShapeSpec> shapes = category.getShapes();
         int numOfShapes = shapes.size();
 
-        for (ArrayList<DataPoint> dpts : dataPoints) {
-            System.out.println(dpts);
-        }
+//        for (ArrayList<DataPoint> dpts : dataPoints) {
+//            System.out.println(dpts);
+//        }
 
         for (int paramIndex = 0; paramIndex < numOfShapes * 3; ++paramIndex) {
             double currentAngle = 0;
@@ -286,7 +292,7 @@ public class SampleGenerator {
                             angle2 = currentAngle + randomPositive(dataPoints.get(j));
 
                             if (Double.isNaN(angle2)) {
-                                angle2 = 0;
+                                angle2 = currentAngle;
                             }
                         }
                         seq.add(new PartInstance(shape.getPart(), angle2, scale));
@@ -317,7 +323,7 @@ public class SampleGenerator {
 
             if (shape.isRepeatable()) {
                 PartInstance nextInstance = seq[partInstanceIndex + 1];
-                addValueIfNotExist(GSMath.normalizeAngle(nextInstance.getAngle() - lastAngle), label, dataPoints.get(shapeIndex * 3 + 2), angleResolution);
+                addValueIfNotExist(GSMath.normalizeAngle(nextInstance.getAngle() - lastAngle), label, dataPoints.get(shapeIndex * 3 + 1), angleResolution);
                 lastAngle = nextInstance.getAngle();
             }
 
@@ -336,18 +342,25 @@ public class SampleGenerator {
     }
 
     private double[] valuesFromGaps(int numOfValues, double[] gaps) {
-        if (GSMath.compareDouble(gaps[0], gaps[1]) == 0 &&
-                GSMath.compareDouble(gaps[2], gaps[3]) == 0 &&
-                GSMath.compareDouble(gaps[4], gaps[5]) == 0) {
+        boolean empty = true;
+        for (int i = 0; i < gaps.length; i += 2) {
+            if (GSMath.compareDouble(gaps[i], gaps[i + 1]) != 0) {
+                empty = false;
+                break;
+            }
+        }
+
+        if (empty) {
             return null;
         }
 
         double[] values = new double[numOfValues];
-        int[] numOfValuesPerGaps = new int[]{0, 0, 0};
+        int[] numOfValuesPerGaps = new int[gaps.length / 2];
+        Arrays.fill(numOfValuesPerGaps, 0);
         while (numOfValues > 0) {
-            for (int i = 0; i < 3; ++i) {
-                if (GSMath.compareDouble(gaps[i * 2], gaps[i * 2 + 1]) < 0) {
-                    ++numOfValuesPerGaps[i];
+            for (int i = 0; i < gaps.length; i += 2) {
+                if (GSMath.compareDouble(gaps[i], gaps[i + 1]) < 0) {
+                    ++numOfValuesPerGaps[i / 2];
                     --numOfValues;
                     if (numOfValues == 0) {
                         break;
@@ -357,14 +370,13 @@ public class SampleGenerator {
         }
 
         numOfValues = 0;
-        for (int i = 0; i < 3; ++i) {
-            int m = numOfValuesPerGaps[i];
+        for (int i = 0; i < gaps.length; i += 2) {
+            int m = numOfValuesPerGaps[i / 2];
             for (int j = 0; j < m; ++j) {
-                values[numOfValues++] = GSMath.linearInterpolate(gaps[i * 2], gaps[i * 2 + 1], (j + 1) / (double) (m + 1));
+                values[numOfValues++] = GSMath.linearInterpolate(gaps[i], gaps[i + 1], (j + 1) / (double) (m + 1));
             }
         }
 
-        System.out.println(Arrays.toString(values));
         return values;
     }
 
@@ -405,8 +417,6 @@ public class SampleGenerator {
             }
         }
 
-        System.out.println(Arrays.toString(gaps));
-
         return valuesFromGaps(numOfValues, gaps);
     }
 
@@ -419,8 +429,14 @@ public class SampleGenerator {
         }
 
         for (int index = 0; index <= numOfDataPoints; ++ index) {
-            double v1 = index > 0 ? dataPoints.get(index - 1).value : 0;
-            double v2 = index < numOfDataPoints ? dataPoints.get(index).value : 4;
+            double v1 = index > 0 ? dataPoints.get(index - 1).value : 0.2;
+            double v2 = index < numOfDataPoints ? dataPoints.get(index).value : 5;
+
+            v1 = Math.min(5, Math.max(0.2, v1));
+            v2 = Math.min(5, Math.max(0.2, v2));
+
+            if (v1 < 1) { v1 = - 1 / v1 + 1; }
+            if (v2 < 1) { v2 = - 1 / v2 + 1; }
 
             int label1 = index > 0 ? dataPoints.get(index - 1).label : dataPoints.get(index).label;
             int label2 = index < numOfDataPoints ? dataPoints.get(index).label : label1;
@@ -443,7 +459,15 @@ public class SampleGenerator {
             }
         }
 
-        return valuesFromGaps(numOfValues, gaps);
+        double[] values = valuesFromGaps(numOfValues, gaps);
+
+        for (int i = 0; i < values.length; ++i) {
+            if (Double.compare(values[i], 0) < 0) {
+                values[i] = - 1 / (values[i] - 1);
+            }
+        }
+
+        return values;
     }
 
 

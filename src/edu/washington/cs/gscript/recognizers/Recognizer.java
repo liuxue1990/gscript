@@ -6,6 +6,7 @@ import edu.washington.cs.gscript.models.*;
 import libsvm.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Recognizer {
 
@@ -57,7 +58,9 @@ public class Recognizer {
         return x;
     }
 
-    public static Recognizer train(Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
+    public void train(Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
+
+        this.project = project;
 
         int currentProgress = progress.getValue();
 
@@ -92,9 +95,15 @@ public class Recognizer {
             progress.setValue(currentProgress + (int)((catIndex + 1) / (double) numOfCategories * 0.9 * progressTotal));
         }
 
-        Recognizer recognizer = null;
-
         if (yList.size() > 0) {
+
+            initScale(xList);
+            lower = -1;
+            upper = 1;
+
+            for (svm_node[] x : xList) {
+                scale(x);
+            }
 
             svm_problem problem = new svm_problem();
             problem.l = yList.size();
@@ -108,8 +117,8 @@ public class Recognizer {
 
             svm_parameter param = new svm_parameter();
             // default values
-            param.svm_type = svm_parameter.NU_SVC;
-            param.kernel_type = svm_parameter.LINEAR;
+            param.svm_type = svm_parameter.LINEAR;
+            param.kernel_type = svm_parameter.RBF;
             param.degree = 3;
             param.gamma = 0;	// 1/num_features
             param.coef0 = 0;
@@ -126,15 +135,12 @@ public class Recognizer {
 
             param.gamma = 1.0 / maxIndex;
 
-            recognizer = new Recognizer();
-            recognizer.model = svm.svm_train(problem, param);
-            recognizer.project = project;
+            model = svm.svm_train(problem, param);
 
             crossValidation(problem, param, 10);
         }
 
         progress.setValue(currentProgress + progressTotal);
-        return recognizer;
     }
 
     public static double[] generateSVMFeatures(Gesture gesture, Project project) {
@@ -152,7 +158,7 @@ public class Recognizer {
             featureList.add(minDistance(gesture, category) / Learner.MAX_LOSS);
 
             int numOfShapes = category.getNumOfShapes();
-            if (numOfShapes <= 1) {
+            if (numOfShapes <= 1 && !category.getShape(0).isRepeatable()) {
                 continue;
             }
 
@@ -207,6 +213,12 @@ public class Recognizer {
     private Project project;
     private svm_model model;
 
+    private double[] fMax;
+    private double[] fMin;
+
+    private double lower = -1;
+    private double upper = 1;
+
     public Recognizer() {
 
     }
@@ -215,9 +227,40 @@ public class Recognizer {
         return project;
     }
 
+    private void scale(svm_node[] x) {
+        for (int i = 0; i < fMax.length; ++i) {
+            if (x[i].value == fMax[i]) {
+                x[i].value = upper;
+            } else if (x[i].value == fMin[i]) {
+                x[i].value = lower;
+            } else {
+                x[i].value = GSMath.linearInterpolate(lower, upper, (x[i].value - fMin[i]) / (fMax[i] - fMin[i]));
+            }
+        }
+    }
+
+    private void initScale(ArrayList<svm_node[]> xList) {
+
+        int fLength = xList.get(0).length;
+        fMax = new double[fLength];
+        fMin = new double[fLength];
+
+        Arrays.fill(fMax, Double.NEGATIVE_INFINITY);
+        Arrays.fill(fMin, Double.POSITIVE_INFINITY);
+
+        for (svm_node[] x : xList) {
+            for (int i = 0; i < fLength; ++i) {
+                fMax[i] = Math.max(fMax[i], x[i].value);
+                fMin[i] = Math.min(fMin[i], x[i].value);
+            }
+        }
+
+    }
+
     public Category classify(Gesture gesture) {
         double[] features = generateSVMFeatures(gesture, project);
         svm_node[] x = featuresToSVMNode(features);
+        scale(x);
         int categoryIndex = (int) svm.svm_predict(model, x);
         return project.getCategory(categoryIndex);
     }

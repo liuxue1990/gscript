@@ -247,7 +247,8 @@ public class MainViewModel {
     public void trainRecognizer(ReadWriteProperty<Integer> progress) {
         progress.setValue(0);
         getProject().learnProject(progress, 70);
-        recognizer = Recognizer.train(getProject(), progress, 29);
+        recognizer = new Recognizer();
+        recognizer.train(getProject(), progress, 29);
         progress.setValue(100);
     }
 

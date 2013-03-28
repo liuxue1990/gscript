@@ -33,6 +33,8 @@ public class Category implements Serializable {
 
     private ArrayList<SynthesizedGestureSample> negativeSamples;
 
+    private Boolean changedSinceLearning;
+
     public Category(String name) {
 		nameProperty = new ReadWriteProperty<String>(name);
 		samples = new ArrayList<Gesture>();
@@ -58,8 +60,8 @@ public class Category implements Serializable {
             shapes = new ArrayList<ShapeSpec>();
         }
 
-        if (negativeSamples == null) {
-            negativeSamples = new ArrayList<SynthesizedGestureSample>();
+        if (changedSinceLearning == null) {
+            changedSinceLearning = true;
         }
     }
 
@@ -81,6 +83,14 @@ public class Category implements Serializable {
 
     public Property<Integer> getSynthesizedSamplesProperty() {
         return synthesizedSamplesProperty;
+    }
+
+    public boolean isChangedSinceLearning() {
+        return changedSinceLearning;
+    }
+
+    public void setChangedSinceLearning(boolean changedSinceLearning) {
+        this.changedSinceLearning = changedSinceLearning;
     }
 
     ReadWriteProperty<String> getNameReadWriteProperty() {
@@ -117,19 +127,21 @@ public class Category implements Serializable {
 
     void addSample(Gesture gesture) {
 		samples.add(gesture);
+        setChangedSinceLearning(true);
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_ADDED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
 	}
 
 	void removeSample(Gesture gesture) {
 		samples.remove(gesture);
+        setChangedSinceLearning(true);
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
 	}
 
     void setShapes(ArrayList<ShapeSpec> shapes) {
         this.shapes = new ArrayList<ShapeSpec>(shapes);
-
+        setChangedSinceLearning(true);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, shapesProperty);
     }

@@ -275,4 +275,10 @@ public class MainViewModel {
         return selectedSynthesizedSamples.indexOf(sample) >= 0;
     }
 
+    public boolean isLearningNeeded() {
+        if (selectedCategory == null) {
+            return false;
+        }
+        return project.isLearningNeeded(selectedCategory);
+    }
 }

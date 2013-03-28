@@ -19,19 +19,6 @@ public class Learner {
 
     }
 
-    public Map<String, Part> learnAllPartsInProject(
-            Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
-
-        ArrayList<Category> categories = new ArrayList<Category>();
-
-        int numOfCategories = project.getNumOfCategories();
-        for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
-            categories.add(project.getCategory(categoryIndex));
-        }
-
-        return learnPartsInCategories(categories, progress, progressTotal);
-    }
-
     public ArrayList<Category> findRelatedCategories(Project project, Category category) {
         Set<String> usedPartNames = new HashSet<String>();
 

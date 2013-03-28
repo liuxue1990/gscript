@@ -456,6 +456,10 @@ public class MainWindowController {
     }
 
     private void onUserActionAnalyze() {
+        if (!mainViewModel.isLearningNeeded()) {
+            return;
+        }
+
         final ReadWriteProperty<Integer> progress = new ReadWriteProperty<Integer>(0);
         ProgressDialog dialog = new ProgressDialog(this.shell, progress);
         dialog.setText("Progress");

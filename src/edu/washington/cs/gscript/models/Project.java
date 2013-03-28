@@ -271,7 +271,21 @@ public class Project implements Serializable {
     public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double t) {
         checkCategoryAndSample(category, sample);
         sample.toggleUserLabelAtLocation(t);
+        category.setChangedSinceLearning(true);
         setDirty(true);
+    }
+
+    public boolean isLearningNeeded(Category category) {
+        Learner learner = new Learner();
+        ArrayList<Category> relatedCategories = learner.findRelatedCategories(this, category);
+
+        for (Category cat : relatedCategories) {
+            if (cat.isChangedSinceLearning()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void learnCategory(final Category category, ReadWriteProperty<Integer> progress, int progressTotal) {
@@ -280,8 +294,10 @@ public class Project implements Serializable {
         int initialProgress = progress.getValue();
 
         // @TODO clean up partsTable
+
         Learner learner = new Learner();
         ArrayList<Category> relatedCategories = learner.findRelatedCategories(this, category);
+
         Map<String, Part> table = learner.learnPartsInCategories(
                 relatedCategories, progress, (int)(progressTotal * 0.95));
 
@@ -289,6 +305,10 @@ public class Project implements Serializable {
             for (Map.Entry<String, Part> entry : table.entrySet()) {
                 partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());
             }
+        }
+
+        for (Category cat : relatedCategories) {
+            cat.setChangedSinceLearning(false);
         }
 
         progress.setValue(initialProgress + progressTotal);
@@ -300,7 +320,21 @@ public class Project implements Serializable {
     public void learnProject(ReadWriteProperty<Integer> progress, int progressTotal) {
         int initialProgress = progress.getValue();
 
-        Map<String, Part> table = new Learner().learnAllPartsInProject(this, progress, (int)(progressTotal * 0.95));
+        Set<Category> set = new HashSet<Category>();
+
+        for (Category category : categories) {
+            if (!set.contains(category) && category.isChangedSinceLearning()) {
+                set.addAll(new Learner().findRelatedCategories(this, category));
+            }
+        }
+
+        Map<String, Part> table = new Learner().learnPartsInCategories(
+                new ArrayList<Category>(set), progress, (int)(progressTotal * 0.95));
+
+        for (Category category : set) {
+            category.setChangedSinceLearning(false);
+        }
+
         if (table != null) {
             for (Map.Entry<String, Part> entry : table.entrySet()) {
                 partsTable.get(entry.getKey()).setTemplate(entry.getValue().getTemplate());

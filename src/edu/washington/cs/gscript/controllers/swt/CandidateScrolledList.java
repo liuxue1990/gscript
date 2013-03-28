@@ -3,6 +3,7 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
+import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.SynthesizedGestureSample;
 import org.eclipse.swt.SWT;
@@ -14,15 +15,10 @@ public class CandidateScrolledList extends ScrolledList {
 
     private Category category;
 
-    private NotificationObserver listObserver = new NotificationObserver() {
+    private NotificationObserver listObserver = new NotificationObserverFromUI(this) {
         @Override
-        public void onNotified(Object arg) {
-            CandidateScrolledList.this.getDisplay().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    reloadData();
-                }
-            });
+        public void onUINotified(Object arg) {
+            reloadData();
         }
     };
 
@@ -32,32 +28,23 @@ public class CandidateScrolledList extends ScrolledList {
         this.mainViewModel = viewModel;
 
         NotificationCenter.getDefaultCenter().addObserver(
-                new NotificationObserver() {
+                new NotificationObserverFromUI(this) {
                     @Override
-                    public void onNotified(Object arg) {
+                    public void onUINotified(Object arg) {
                         reloadData();
                     }
                 },
                 MainViewModel.CATEGORY_SELECTED_NOTIFICATION, mainViewModel);
 
         NotificationCenter.getDefaultCenter().addObserver(
-                new NotificationObserver() {
+                new NotificationObserverFromUI(this) {
                     @Override
-                    public void onNotified(Object arg) {
-                        CandidateScrolledList.this.getDisplay().asyncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateSelection();
-                            }
-                        });
+                    public void onUINotified(Object arg) {
+                        updateSelection();
                     }
                 },
                 MainViewModel.SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, mainViewModel);
 
-    }
-
-    public Category getDataSource() {
-        return category;
     }
 
     private void reloadData() {
@@ -67,7 +54,9 @@ public class CandidateScrolledList extends ScrolledList {
 
         if (category != null) {
             NotificationCenter.getDefaultCenter().addObserver(
-                    listObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, category.getSynthesizedSamplesProperty());
+                    listObserver,
+                    NotificationCenter.VALUE_CHANGED_NOTIFICATION,
+                    category.getSynthesizedSamplesProperty());
         }
 
         for (ListItem item : getListItems()) {

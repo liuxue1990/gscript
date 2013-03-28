@@ -15,7 +15,6 @@ public class NotificationCenter {
 
 	private static NotificationCenter defaultCenter;
 
-
 	public static NotificationCenter getDefaultCenter() {
 		return defaultCenter != null ? defaultCenter : (defaultCenter = new NotificationCenter());
 	}
@@ -29,6 +28,7 @@ public class NotificationCenter {
 
 	public void addObserver(NotificationObserver observer, int name, Object sender) {
 		entries.add(new Entry(name, sender, observer));
+        observer.onRegistered(this);
 	}
 
 	public void removeObserver(NotificationObserver observer, int name, Object sender) {

@@ -2,6 +2,8 @@ package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.framework.Property;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Rectangle;
@@ -13,6 +15,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ProgressDialog extends Dialog {
+
+    private static int CHECKING_INTERVAL = 200;
 
     private Property<Integer> progress;
 
@@ -29,18 +33,8 @@ public class ProgressDialog extends Dialog {
     }
 
     public Object open () {
-        Shell parent = getParent();
-        final Shell shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+        final Shell shell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
         shell.setText(getText());
-
-        shell.addShellListener(new ShellAdapter() {
-            @Override
-            public void shellClosed(ShellEvent e) {
-                if (progress.getValue() < 100) {
-                    e.doit = false;
-                }
-            }
-        });
 
         GridLayout gridLayout = new GridLayout(1, true);
         shell.setLayout(gridLayout);
@@ -58,10 +52,28 @@ public class ProgressDialog extends Dialog {
         progressBar.setLayoutData(gd);
         shell.pack();
 
-        Rectangle rect = parent.getBounds();
+        Rectangle rect = getParent().getBounds();
         shell.setLocation(
                 rect.x + rect.width / 2 - shell.getSize().x / 2,
                 rect.y + rect.height / 2 - shell.getSize().y / 2);
+
+        shell.addShellListener(new ShellAdapter() {
+            @Override
+            public void shellClosed(ShellEvent e) {
+                if (progress.getValue() < 100) {
+                    e.doit = false;
+                }
+            }
+        });
+
+        shell.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e) {
+                if (checkProgressTimer != null) {
+                    checkProgressTimer.cancel();
+                }
+            }
+        });
 
         shell.open();
 
@@ -69,7 +81,7 @@ public class ProgressDialog extends Dialog {
         checkProgressTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                ProgressDialog.this.getParent().getDisplay().asyncExec(
+                shell.getDisplay().asyncExec(
                         new Runnable() {
                             @Override
                             public void run() {
@@ -77,17 +89,19 @@ public class ProgressDialog extends Dialog {
                                     return;
                                 }
                                 progressBar.setSelection(progress.getValue());
+
                                 if (progress.getValue() == 100) {
                                     checkProgressTimer.cancel();
+                                    checkProgressTimer = null;
                                     shell.close();
                                 }
                             }
                         }
                 );
             }
-        }, 0, 100);
+        }, 0, CHECKING_INTERVAL);
 
-        Display display = parent.getDisplay();
+        Display display = shell.getDisplay();
         while (!shell.isDisposed()) {
             if (!display.readAndDispatch()) {
                 display.sleep();

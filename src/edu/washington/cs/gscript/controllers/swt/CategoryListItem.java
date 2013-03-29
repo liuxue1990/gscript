@@ -113,15 +113,11 @@ public class CategoryListItem extends ScrolledList.ListItem {
                 } else if (e.keyCode == SWT.CR) {
                     String newName = renameText.getText();
 
-                    if (newName.contains(" ")) {
-                        return;
-                    }
-
-                    stackLayout.topControl = nameLabel;
-                    nameContainer.layout();
-
-                    if (!newName.equals(category.getNameProperty().getValue())) {
-                        mainViewModel.getProject().renameCategory(category, renameText.getText());
+                    if (!newName.contains(" ") && !newName.equals(category.getNameProperty().getValue())) {
+                        if (mainViewModel.getProject().renameCategory(category, renameText.getText())) {
+                            stackLayout.topControl = nameLabel;
+                            nameContainer.layout();
+                        }
                     }
                 }
             }

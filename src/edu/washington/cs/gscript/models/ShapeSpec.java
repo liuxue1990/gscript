@@ -1,6 +1,10 @@
 package edu.washington.cs.gscript.models;
 
-public class ShapeSpec {
+import java.io.Serializable;
+
+public class ShapeSpec implements Serializable {
+
+    private static final long serialVersionUID = -6865153366359050627L;
 
     private String nameOfAngle;
 
@@ -16,6 +20,31 @@ public class ShapeSpec {
 
     public ShapeSpec() {
 
+    }
+
+    private boolean nameEquals(String name1, String name2) {
+        if (name1 == null && name2 == null) {
+            return true;
+        }
+
+        if ((name1 == null && name2 != null) || (name1 != null && name2 == null)) {
+            return false;
+        }
+
+        return name1.equals(name2);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof ShapeSpec) {
+            ShapeSpec shape = (ShapeSpec)o;
+            return part == shape.part
+                    && isRepeatable == shape.isRepeatable
+                    && nameEquals(nameOfAngle, shape.nameOfAngle)
+                    && nameEquals(nameOfNumOfRepetition, shape.nameOfNumOfRepetition)
+                    && nameEquals(nameOfRepeatAngle, shape.nameOfRepeatAngle);
+        }
+        return false;
     }
 
     public String getNameOfAngle() {

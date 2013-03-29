@@ -124,9 +124,13 @@ public class MainViewModel {
 		}
 
         selectedSynthesizedSamples.clear();
-        if (category.getSynthesizedSamples() == null || category.getSynthesizedSamples().size() == 0) {
-            category.synthesize();
+
+        if (category != null) {
+            if (category.getSynthesizedSamples() == null || category.getSynthesizedSamples().size() == 0) {
+                category.synthesize();
+            }
         }
+
         NotificationCenter.getDefaultCenter().postNotification(SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, this);
 	}
 

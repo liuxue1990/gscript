@@ -25,7 +25,7 @@ public class Category implements Serializable {
 
     private transient Property<Integer> shapesProperty;
 
-    private transient ArrayList<ShapeSpec> shapes;
+    private ArrayList<ShapeSpec> shapes;
 
     private transient Property<Integer> synthesizedSamplesProperty;
 

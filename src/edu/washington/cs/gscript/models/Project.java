@@ -3,9 +3,7 @@ package edu.washington.cs.gscript.models;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
-import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.Parser;
-import edu.washington.cs.gscript.helpers.SampleGenerator;
 import edu.washington.cs.gscript.recognizers.Learner;
 
 import java.io.IOException;
@@ -58,7 +56,7 @@ public class Project implements Serializable {
         }
 
         for (Category category : categories) {
-            initParts(category);
+            updateParts(category);
         }
     }
 
@@ -152,7 +150,7 @@ public class Project implements Serializable {
         if (findCategoryIndexByName(name) < 0) {
             Category category = new Category(name);
             categories.add(category);
-            initParts(category);
+            updateParts(category);
 
             setDirty(true);
 
@@ -170,11 +168,39 @@ public class Project implements Serializable {
                 NotificationCenter.ITEMS_REMOVED_NOTIFICATION, categoriesProperty, Arrays.asList(category));
     }
 
-    public void renameCategory(Category category, String name) {
+    public boolean renameCategory(Category category, String name) {
         checkCategory(category);
-        // TODO check duplicated names
+        String oldName = category.getNameProperty().getValue();
+        if (oldName.equals(name)) {
+            return false;
+        }
+
+        for (Category cat : categories) {
+            if (cat != category && cat.getNameProperty().getValue().equals(name)) {
+                return false;
+            }
+        }
+
+        Part part = partsTable.remove(getDefaultPartName(oldName));
+        if (part != null) {
+            String newPartName = getDefaultPartName(name);
+            part.setName(newPartName);
+            partsTable.put(newPartName, part);
+            for (Category cat : categories) {
+                for (ShapeSpec shape : cat.getShapes()) {
+                    if (shape.getPart() == part) {
+                        shape.setPartName(newPartName);
+                    }
+                }
+            }
+
+            NotificationCenter.getDefaultCenter().postNotification(
+                    NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
+        }
+
         category.getNameReadWriteProperty().setValue(name);
         setDirty(true);
+        return true;
     }
 
     public void addSample(Category category, Gesture sample) {
@@ -200,7 +226,7 @@ public class Project implements Serializable {
             if (index < 0) {
 
                 categories.add(newCategory);
-                initParts(newCategory);
+                updateParts(newCategory);
                 addedCategories.add(newCategory);
 
             } else if (newCategory.getNumOfSamples() > 0) {
@@ -224,13 +250,10 @@ public class Project implements Serializable {
     public void setScript(Category category, String text) {
         checkCategory(category);
         category.getScriptTextReadWriteProperty().setValue(text);
-        initParts(category);
-        category.setChangedSinceLearning(true);
+        if (updateParts(category)) {
+            category.setChangedSinceLearning(true);
+        }
         setDirty(true);
-    }
-
-    private String getCategoryDefaultScript(String categoryName) {
-        return String.format("%s", categoryName);
     }
 
     public Collection<Part> getParts() {
@@ -246,22 +269,41 @@ public class Project implements Serializable {
         return part;
     }
 
-    void initParts(Category category) {
+    private static String getDefaultPartName(String categoryName) {
+        return "(" + categoryName + ")";
+    }
+
+    private static boolean shapesEquals(ArrayList<ShapeSpec> shapes1, ArrayList<ShapeSpec> shapes2) {
+        if (shapes1.size() != shapes2.size()) {
+            return false;
+        }
+
+        int numOfShapes = shapes1.size();
+        for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
+            if (!shapes1.get(shapeIndex).equals(shapes2.get(shapeIndex))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    boolean updateParts(Category category) {
         checkCategory(category);
         String scriptText = category.getScriptTextProperty().getValue();
         if (scriptText == null) {
-            scriptText = getCategoryDefaultScript(category.getNameProperty().getValue());
+            scriptText = "";
         }
 
         ArrayList<ShapeSpec> shapes = Parser.parseScript(scriptText);
 
         if (shapes == null) {
-            shapes = new ArrayList<ShapeSpec>();
+            return false;
         }
 
         if (shapes.size() == 0) {
             ShapeSpec shape = new ShapeSpec();
-            shape.setPartName(category.getNameProperty().getValue());
+            shape.setPartName(getDefaultPartName(category.getNameProperty().getValue()));
             shapes.add(shape);
         }
 
@@ -269,7 +311,13 @@ public class Project implements Serializable {
         for (int i = 0; i < numOfParts; ++i) {
             shapes.get(i).setPart(getPart(shapes.get(i).getPartName()));
         }
-        category.setShapes(shapes);
+
+        if (!shapesEquals(category.getShapes(), shapes)) {
+            category.setShapes(shapes);
+            return true;
+        }
+
+        return false;
     }
 
     public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double t) {

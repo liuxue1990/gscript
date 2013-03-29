@@ -30,6 +30,10 @@ public class Part implements Serializable {
         return userTemplate;
     }
 
+    void setName(String name) {
+        this.name = name;
+    }
+
     // @TODO make it package private
     public void setTemplate(PartFeatureVector template) {
         this.template = template;

@@ -582,6 +582,9 @@ public class MainWindowController {
         formLayout.marginWidth = formLayout.marginHeight = 0;
         leftPanel.setLayout(formLayout);
 
+        TitleBar titleBar = new TitleBar(leftPanel, SWT.BACKGROUND);
+        titleBar.setTitle("Category List");
+
         SimpleTextButton itemAdd = new SimpleTextButton(leftPanel, SWT.BACKGROUND) {
             @Override
             protected void buttonClicked() {
@@ -594,14 +597,20 @@ public class MainWindowController {
         categoryScrolledList = new CategoryScrolledList(leftPanel, SWT.NONE, mainViewModel);
 
         FormData fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.right = new FormAttachment(100);
+        fd.top = new FormAttachment(0);
+        titleBar.setLayoutData(fd);
+
+        fd = new FormData();
         fd.right = new FormAttachment(100, -20);
-        fd.top = new FormAttachment(0, 2);
+        fd.top = new FormAttachment(titleBar, 2);
         itemAdd.setLayoutData(fd);
 
         fd = new FormData();
         fd.left = new FormAttachment(0);
         fd.right = new FormAttachment(100);
-        fd.top = new FormAttachment(0);
+        fd.top = new FormAttachment(titleBar);
         fd.bottom = new FormAttachment(100);
         categoryScrolledList.setLayoutData(fd);
         itemAdd.moveAbove(categoryScrolledList);
@@ -649,7 +658,11 @@ public class MainWindowController {
         FormLayout formLayout = new FormLayout();
         candidatesContainer.setLayout(formLayout);
 
-		CandidateScrolledList outputComposite = new CandidateScrolledList(candidatesContainer, SWT.BACKGROUND, mainViewModel);
+        TitleBar titleBar = new TitleBar(candidatesContainer, SWT.BACKGROUND);
+        titleBar.setTitle("Generated Samples");
+
+        CandidateScrolledList outputComposite = new CandidateScrolledList(
+                candidatesContainer, SWT.BACKGROUND, mainViewModel);
 		outputComposite.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
         ButtonGreenCheck btnAccept = new ButtonGreenCheck(candidatesContainer, SWT.BACKGROUND) {
@@ -670,7 +683,13 @@ public class MainWindowController {
 
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);
-        fd.top = new FormAttachment(0, 20);
+        fd.top = new FormAttachment(0, 0);
+        fd.right = new FormAttachment(100);
+        titleBar.setLayoutData(fd);
+
+        fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.top = new FormAttachment(titleBar);
         fd.right = new FormAttachment(100);
         fd.bottom = new FormAttachment(100);
         outputComposite.setLayoutData(fd);
@@ -682,6 +701,7 @@ public class MainWindowController {
         btnAccept.setSize(16, 16);
         btnAccept.setLayoutData(fd);
         btnAccept.moveAbove(outputComposite);
+        btnAccept.moveAbove(titleBar);
 
         fd = new FormData();
         fd.top = new FormAttachment(0, 2);
@@ -690,6 +710,7 @@ public class MainWindowController {
         btnReject.setSize(16, 16);
         btnReject.setLayoutData(fd);
         btnReject.moveAbove(outputComposite);
+        btnReject.moveAbove(titleBar);
 
 		rightPanel.setWeights(new int[]{50, 50});
 

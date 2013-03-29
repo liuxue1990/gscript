@@ -363,7 +363,7 @@ public class Project implements Serializable {
 
         collectGarbageParts();
         progress.setValue(initialProgress + progressTotal);
-        
+
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);

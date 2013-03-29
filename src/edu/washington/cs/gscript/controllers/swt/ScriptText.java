@@ -43,6 +43,9 @@ public class ScriptText extends Composite {
 
         this.mainViewModel = viewModel;
 
+        TitleBar titleBar = new TitleBar(this, SWT.BACKGROUND);
+        titleBar.setTitle("Script");
+
         valid = true;
         text = new Text(this, SWT.MULTI | SWT.V_SCROLL);
         status = new Canvas(this, SWT.BACKGROUND);
@@ -51,6 +54,12 @@ public class ScriptText extends Composite {
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);
         fd.top = new FormAttachment(0);
+        fd.right = new FormAttachment(100);
+        titleBar.setLayoutData(fd);
+
+        fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.top = new FormAttachment(titleBar);
         fd.right = new FormAttachment(100);
         fd.bottom = new FormAttachment(status);
         text.setLayoutData(fd);

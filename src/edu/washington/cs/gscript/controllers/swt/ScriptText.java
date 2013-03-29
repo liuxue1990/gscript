@@ -23,20 +23,16 @@ public class ScriptText extends Composite {
 
         private int paddingHeight = 8;
 
-        private double lineHeight = 1.3;
-
         private Font font0;
 
         private Font font1;
 
-        private String content = "rotate(X) repeat(N, Y) draw(S)\n" +
-                "        -- Rotate X then repeat N times drawing S\n" +
-                "           and rotating Y between repetitions.";
+        private String content = "Syntax: [rotate(X)] [repeat(N, Y)] draw(S)";
 
         public StatusArea(Composite parent, int style) {
             super(parent, style);
 
-            font0 = new Font(getDisplay(), "Menlo", 13, SWT.BOLD);
+            font0 = new Font(getDisplay(), "Courier New", 11, SWT.BOLD);
             font1 = new Font(getDisplay(), "Arial", 11, SWT.NORMAL);
 
             addDisposeListener(new DisposeListener() {
@@ -58,29 +54,19 @@ public class ScriptText extends Composite {
         }
 
         private void renderContent(GC gc) {
+            Rectangle r = getBounds();
+
             gc.setFont(font0);
-            gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY));
+            gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_GRAY));
             int sx = paddingWidth;
             int sy = paddingHeight;
-            String[] lines = content.split("\n");
-            for (String line : lines) {
-                gc.drawString(line, sx, sy);
-                sy += (int)(gc.stringExtent(line).y * lineHeight);
-                gc.setFont(font1);
-            }
+            Point stringExtent = gc.stringExtent(content);
+            gc.drawString(content, (r.width - stringExtent.x) / 2, sy);
 
-            Rectangle r = getBounds();
-            if (valid) {
-                gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_GREEN));
-            } else {
-                gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_RED));
-            }
-            gc.fillArc(r.width - 24, r.height / 2 - 8, 16, 16, 0, 360);
-
-            String s = "Status: ";
-            Point stringExtent = gc.stringExtent(s);
-
-            gc.drawString(s, r.width - 24 - stringExtent.x, (r.height - stringExtent.y) / 2, true);
+//            String s = "Status: ";
+//            stringExtent = gc.stringExtent(s);
+//
+//            gc.drawString(s, r.width - 24 - stringExtent.x, (r.height - stringExtent.y) / 2, true);
 
         }
     }
@@ -92,6 +78,8 @@ public class ScriptText extends Composite {
     private Text text;
 
     private Canvas status;
+
+    private TitleBar titleBar;
 
     private boolean valid;
 
@@ -109,21 +97,34 @@ public class ScriptText extends Composite {
 
         this.mainViewModel = viewModel;
 
-        TitleBar titleBar = new TitleBar(this, SWT.BACKGROUND);
-        titleBar.setTitle("Script");
+        titleBar = new TitleBar(this, SWT.BACKGROUND);
+        final String title = "Script    ";
+        titleBar.setTitle(title);
+
+        titleBar.addPaintListener(new PaintListener() {
+            @Override
+            public void paintControl(PaintEvent e) {
+                GC gc = e.gc;
+
+                Point titleExtent = gc.stringExtent(title);
+                Rectangle r = titleBar.getBounds();
+                r.x = (r.width - titleExtent.x) / 2;
+                r.width = titleExtent.x;
+
+                if (valid) {
+                    gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_GREEN));
+                } else {
+                    gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_RED));
+                }
+                gc.fillArc(r.x + r.width - 2, (r.height - 8) / 2, 8, 8, 0, 360);
+            }
+        });
 
         valid = true;
         text = new Text(this, SWT.MULTI | SWT.V_SCROLL);
         status = new StatusArea(this, SWT.BACKGROUND);
 
-        final Color statusAreaColor = new Color(getDisplay(), 0xFF, 0xFF, 0xCC);
-        addDisposeListener(new DisposeListener() {
-            @Override
-            public void widgetDisposed(DisposeEvent e) {
-                statusAreaColor.dispose();
-            }
-        });
-        status.setBackground(statusAreaColor);
+        status.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);
@@ -142,16 +143,8 @@ public class ScriptText extends Composite {
         fd.left = new FormAttachment(0);
         fd.right = new FormAttachment(100);
         fd.bottom = new FormAttachment(100);
-        fd.height = 60;
+        fd.height = 24;
         status.setLayoutData(fd);
-
-        status.addPaintListener(new PaintListener() {
-            @Override
-            public void paintControl(PaintEvent e) {
-                GC gc = e.gc;
-
-            }
-        });
 
         text.addModifyListener(textModifyListener);
 
@@ -171,7 +164,7 @@ public class ScriptText extends Composite {
         if (Parser.parseScript(text.getText()) == null) {
             valid = false;
         }
-        status.redraw();
+        titleBar.redraw();
     }
 
     private void reloadData() {

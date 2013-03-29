@@ -73,6 +73,13 @@ public class MainWindowController {
         }
     }
 
+    public class ButtonRetrain extends ButtonRefresh {
+
+        public ButtonRetrain(Composite parent, int style) {
+            super(parent, style);
+        }
+    }
+
     public static class SimpleTextButton extends SimpleButton {
 
         private String text;
@@ -609,6 +616,10 @@ public class MainWindowController {
         TitleBar titleBar = new TitleBar(leftPanel, SWT.BACKGROUND);
         titleBar.setTitle("Category List");
 
+        ButtonRetrain btnRetrain = new ButtonRetrain(leftPanel, SWT.NO_BACKGROUND);
+        btnRetrain.setBackground(leftPanel.getBackground());
+        btnRetrain.setSize(32, 32);
+
         Composite buttonContainer = new Composite(leftPanel, SWT.BACKGROUND);
         buttonContainer.setBackground(leftPanel.getBackground());
         buttonContainer.setLayout(new RowLayout());
@@ -629,6 +640,12 @@ public class MainWindowController {
         fd.right = new FormAttachment(100);
         fd.top = new FormAttachment(0);
         titleBar.setLayoutData(fd);
+
+        fd = new FormData();
+        fd.left = new FormAttachment(0);
+        fd.top = new FormAttachment(0);
+        btnRetrain.setLayoutData(fd);
+        btnRetrain.moveAbove(titleBar);
 
         fd = new FormData();
         fd.left = new FormAttachment(0);

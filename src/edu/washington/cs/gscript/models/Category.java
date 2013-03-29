@@ -123,6 +123,15 @@ public class Category implements Serializable {
         return new ArrayList<ShapeSpec>(shapes);
     }
 
+    public boolean containsUndefinedParts() {
+        for (ShapeSpec shape : shapes) {
+            if (shape.getPart().getTemplate() == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void addSample(Gesture gesture) {
 		samples.add(gesture);
 		NotificationCenter.getDefaultCenter().postNotification(
@@ -145,14 +154,16 @@ public class Category implements Serializable {
         return sampleGenerator.getGeneratedSamples();
     }
 
-    public void regenerateSynthesizedSamples() {
-        sampleGenerator.resetFromCategorySamples();
-        sampleGenerator.refresh();
-        NotificationCenter.getDefaultCenter().postNotification(
-                NotificationCenter.VALUE_CHANGED_NOTIFICATION, synthesizedSamplesProperty);
+    public void synthesize() {
+        if (!containsUndefinedParts()) {
+            sampleGenerator.reset();
+            sampleGenerator.refresh();
+            NotificationCenter.getDefaultCenter().postNotification(
+                    NotificationCenter.VALUE_CHANGED_NOTIFICATION, synthesizedSamplesProperty);
+        }
     }
 
-    void setLabelOfSynthesizedSamples(ArrayList<SynthesizedGestureSample> samples, int label) {
+    public void setLabelOfSynthesizedSamples(ArrayList<SynthesizedGestureSample> samples, int label) {
         sampleGenerator.addSamples(samples, label);
         sampleGenerator.refresh();
         NotificationCenter.getDefaultCenter().postNotification(

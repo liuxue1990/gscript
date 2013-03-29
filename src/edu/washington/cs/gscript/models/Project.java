@@ -366,39 +366,20 @@ public class Project implements Serializable {
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
     }
 
-    public void setLabelOfSynthesizedSample(Category category, ArrayList<SynthesizedGestureSample> samples, int label) {
-        checkCategory(category);
-
-        if (label == 1) {
-            for (SynthesizedGestureSample sample : samples) {
-                addSample(category, adjust(SampleGenerator.stitch(sample)));
-            }
-        }
-        category.setLabelOfSynthesizedSamples(samples, label);
-
-        setDirty(true);
-    }
-
-    private Gesture adjust(Gesture gesture) {
-
-        double[] xys = new double[gesture.size() * 2];
-
-        int i = 0;
-        for (XYT point : gesture) {
-            xys[i++] = point.getX();
-            xys[i++] = point.getY();
-        }
-
-        GSMath.shift(GSMath.scale(GSMath.normalizeByRadius(xys, xys), 200, xys), 300, 300, xys);
-
-        ArrayList<XYT> points = new ArrayList<XYT>();
-        for (i =  0; i < xys.length; i += 2) {
-            points.add(XYT.xy(xys[i], xys[i + 1]));
-        }
-        return new Gesture(points);
-    }
+//    public void setLabelOfSynthesizedSample(Category category, ArrayList<SynthesizedGestureSample> samples, int label) {
+//        checkCategory(category);
+//
+//        if (label == 1) {
+//            for (SynthesizedGestureSample sample : samples) {
+//                addSample(category, adjust(SampleGenerator.stitch(sample)));
+//            }
+//        }
+//        category.setLabelOfSynthesizedSamples(samples, label);
+//
+//        setDirty(true);
+//    }
 
     public void updateSynthesizedSamples(Category category) {
-        category.regenerateSynthesizedSamples();
+        category.synthesize();
     }
 }

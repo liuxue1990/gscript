@@ -1,11 +1,11 @@
 package edu.washington.cs.gscript.controllers;
 
-import com.sun.javaws.progress.Progress;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
 import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.OneDollarDataImporter;
+import edu.washington.cs.gscript.helpers.SampleGenerator;
 import edu.washington.cs.gscript.models.*;
 import edu.washington.cs.gscript.recognizers.Learner;
 import edu.washington.cs.gscript.recognizers.PartMatchResult;
@@ -125,7 +125,7 @@ public class MainViewModel {
 
         selectedSynthesizedSamples.clear();
         if (category.getSynthesizedSamples() == null || category.getSynthesizedSamples().size() == 0) {
-            category.regenerateSynthesizedSamples();
+            category.synthesize();
         }
         NotificationCenter.getDefaultCenter().postNotification(SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, this);
 	}
@@ -260,7 +260,13 @@ public class MainViewModel {
             return;
         }
 
-        project.setLabelOfSynthesizedSample(selectedCategory, selectedSynthesizedSamples, label);
+        if (label == 1) {
+            for (SynthesizedGestureSample sample : selectedSynthesizedSamples) {
+                project.addSample(selectedCategory, SampleGenerator.stitch(sample, 300, 300, 200));
+            }
+        }
+
+        selectedCategory.setLabelOfSynthesizedSamples(selectedSynthesizedSamples, label);
         selectedSynthesizedSamples.clear();
     }
 

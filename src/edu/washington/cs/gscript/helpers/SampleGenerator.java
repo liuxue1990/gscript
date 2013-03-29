@@ -24,7 +24,6 @@ public class SampleGenerator {
     }
 
     public static Gesture stitch(SynthesizedGestureSample sample) {
-
         List<XYT> points = new ArrayList<XYT>();
 
         double xf = 0;
@@ -69,6 +68,28 @@ public class SampleGenerator {
         return new Gesture(points);
     }
 
+    public static Gesture stitch(SynthesizedGestureSample sample, double centerX, double centerY, double radius) {
+        return adjust(stitch(sample), centerX, centerY, radius);
+    }
+
+    private static Gesture adjust(Gesture gesture, double centerX, double centerY, double radius) {
+        double[] xys = new double[gesture.size() * 2];
+
+        int i = 0;
+        for (XYT point : gesture) {
+            xys[i++] = point.getX();
+            xys[i++] = point.getY();
+        }
+
+        GSMath.shift(GSMath.scale(GSMath.normalizeByRadius(xys, xys), radius, xys), centerX, centerY, xys);
+
+        ArrayList<XYT> points = new ArrayList<XYT>();
+        for (i =  0; i < xys.length; i += 2) {
+            points.add(XYT.xy(xys[i], xys[i + 1]));
+        }
+        return new Gesture(points);
+    }
+
 
     double angleResolution = 2 * Math.PI / 180;
 
@@ -107,7 +128,7 @@ public class SampleGenerator {
         xs.add(new DataPoint(x, label));
     }
 
-    public void resetFromCategorySamples() {
+    public void reset() {
         ArrayList<ShapeSpec> shapes = category.getShapes();
         collection = new ArrayList<SynthesizedGestureSample>();
 
@@ -212,10 +233,6 @@ public class SampleGenerator {
 
         ArrayList<ShapeSpec> shapes = category.getShapes();
         int numOfShapes = shapes.size();
-
-//        for (ArrayList<DataPoint> dpts : dataPoints) {
-//            System.out.println(dpts);
-//        }
 
         for (int paramIndex = 0; paramIndex < numOfShapes * 3; ++paramIndex) {
             double currentAngle = 0;

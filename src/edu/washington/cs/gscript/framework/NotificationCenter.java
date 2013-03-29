@@ -1,7 +1,6 @@
 package edu.washington.cs.gscript.framework;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 public class NotificationCenter {
 
@@ -11,8 +10,6 @@ public class NotificationCenter {
 
 	public static int ITEMS_REMOVED_NOTIFICATION = 2;
 
-    public static int ITEMS_CHANGED_NOTIFICATION = 3;
-
 	private static NotificationCenter defaultCenter;
 
 	public static NotificationCenter getDefaultCenter() {
@@ -20,19 +17,24 @@ public class NotificationCenter {
 	}
 
 
-    private LinkedList<Entry> entries;
+    private Map<Object, LinkedList<Entry>> entryMap;
 
     private NotificationCenter() {
-		entries = new LinkedList<Entry>();
+        entryMap = new HashMap<Object, LinkedList<Entry>>();
 	}
 
 	public void addObserver(NotificationObserver observer, int name, Object sender) {
+        LinkedList<Entry> entries = entryMap.get(sender);
+        if (entries == null) {
+            entries = new LinkedList<Entry>();
+            entryMap.put(sender, entries);
+        }
 		entries.add(new Entry(name, sender, observer));
         observer.onRegistered(this);
 	}
 
 	public void removeObserver(NotificationObserver observer, int name, Object sender) {
-		for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
+		for (Iterator<Entry> it = entryMap.get(sender).iterator(); it.hasNext();) {
 			Entry entry = it.next();
 			if (entry.observer == observer && entry.name == name && entry.sender == sender) {
 				it.remove();
@@ -41,11 +43,13 @@ public class NotificationCenter {
 	}
 
 	public void removeObserver(NotificationObserver observer) {
-		for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
-			if (it.next().observer == observer) {
-				it.remove();
-			}
-		}
+        for (LinkedList<Entry> entries : entryMap.values()) {
+            for (Iterator<Entry> it = entries.iterator(); it.hasNext();) {
+                if (it.next().observer == observer) {
+                    it.remove();
+                }
+            }
+        }
 	}
 
 	public void postNotification(int name, Object sender) {
@@ -53,11 +57,18 @@ public class NotificationCenter {
 	}
 
 	public void postNotification(int name, Object sender, Object arg) {
-		for (Entry entry : new LinkedList<Entry>(entries)) {
-			if (entry.name == name && entry.sender == sender) {
-				entry.observer.onNotified(arg);
-			}
-		}
+        LinkedList<Entry> entries = entryMap.get(sender);
+        if (entries != null && !entries.isEmpty()) {
+            ArrayList<Entry> posts = new ArrayList<Entry>();
+            for (Entry entry : entries) {
+                if (entry.name == name && entry.sender == sender) {
+                    posts.add(entry);
+                }
+            }
+            for (Entry entry : posts) {
+                entry.observer.onNotified(arg);
+            }
+        }
 	}
 
 

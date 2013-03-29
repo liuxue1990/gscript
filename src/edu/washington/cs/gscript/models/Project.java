@@ -361,7 +361,9 @@ public class Project implements Serializable {
             cat.setChangedSinceLearning(false);
         }
 
+        collectGarbageParts();
         progress.setValue(initialProgress + progressTotal);
+        
         setDirty(true);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
@@ -393,6 +395,7 @@ public class Project implements Serializable {
             NotificationCenter.getDefaultCenter().postNotification(
                     NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
         }
+        collectGarbageParts();
         progress.setValue(initialProgress + progressTotal);
     }
 
@@ -414,20 +417,16 @@ public class Project implements Serializable {
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, partsTableProperty);
     }
 
-//    public void setLabelOfSynthesizedSample(Category category, ArrayList<SynthesizedGestureSample> samples, int label) {
-//        checkCategory(category);
-//
-//        if (label == 1) {
-//            for (SynthesizedGestureSample sample : samples) {
-//                addSample(category, adjust(SampleGenerator.stitch(sample)));
-//            }
-//        }
-//        category.setLabelOfSynthesizedSamples(samples, label);
-//
-//        setDirty(true);
-//    }
-
     public void updateSynthesizedSamples(Category category) {
         category.synthesize();
+    }
+
+    private void collectGarbageParts() {
+        partsTable.clear();
+        for (Category category : categories) {
+            for (ShapeSpec shape : category.getShapes()) {
+                partsTable.put(shape.getPartName(), shape.getPart());
+            }
+        }
     }
 }

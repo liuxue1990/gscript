@@ -18,7 +18,9 @@ public abstract class NotificationObserverFromUI extends NotificationObserver {
         widget.addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e) {
-                getCenter().removeObserver(NotificationObserverFromUI.this);
+                if (getCenter() != null) {
+                    getCenter().removeObserver(NotificationObserverFromUI.this);
+                }
             }
         });
     }

@@ -55,7 +55,8 @@ public class CategoryListItem extends ScrolledList.ListItem {
         stackLayout = new StackLayout();
         nameContainer.setLayout(stackLayout);
 
-		nameLabel = new Label(nameContainer, SWT.NONE);
+		nameLabel = new Label(nameContainer, SWT.BACKGROUND);
+        nameLabel.setBackground(getBackground());
 		nameLabel.setAlignment(SWT.CENTER);
 
         renameText = new Text(nameContainer, SWT.SINGLE | SWT.BORDER | SWT.CENTER);

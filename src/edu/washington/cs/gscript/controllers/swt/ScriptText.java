@@ -2,14 +2,12 @@ package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.NotificationCenter;
-import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import edu.washington.cs.gscript.helpers.Parser;
 import edu.washington.cs.gscript.models.Category;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -18,6 +16,74 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 public class ScriptText extends Composite {
+
+    private class StatusArea extends Canvas {
+
+        private int paddingWidth = 30;
+
+        private int paddingHeight = 8;
+
+        private double lineHeight = 1.3;
+
+        private Font font0;
+
+        private Font font1;
+
+        private String content = "rotate(X) repeat(N, Y) draw(S)\n" +
+                "        -- Rotate X then repeat N times drawing S\n" +
+                "           and rotating Y between repetitions.";
+
+        public StatusArea(Composite parent, int style) {
+            super(parent, style);
+
+            font0 = new Font(getDisplay(), "Menlo", 13, SWT.BOLD);
+            font1 = new Font(getDisplay(), "Arial", 11, SWT.NORMAL);
+
+            addDisposeListener(new DisposeListener() {
+                @Override
+                public void widgetDisposed(DisposeEvent e) {
+                    font0.dispose();
+                    font1.dispose();
+                }
+            });
+
+            addPaintListener(new PaintListener() {
+                @Override
+                public void paintControl(PaintEvent e) {
+                    GC gc = e.gc;
+                    gc.setTextAntialias(SWT.ON);
+                    renderContent(gc);
+                }
+            });
+        }
+
+        private void renderContent(GC gc) {
+            gc.setFont(font0);
+            gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY));
+            int sx = paddingWidth;
+            int sy = paddingHeight;
+            String[] lines = content.split("\n");
+            for (String line : lines) {
+                gc.drawString(line, sx, sy);
+                sy += (int)(gc.stringExtent(line).y * lineHeight);
+                gc.setFont(font1);
+            }
+
+            Rectangle r = getBounds();
+            if (valid) {
+                gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_GREEN));
+            } else {
+                gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_RED));
+            }
+            gc.fillArc(r.width - 24, r.height / 2 - 8, 16, 16, 0, 360);
+
+            String s = "Status: ";
+            Point stringExtent = gc.stringExtent(s);
+
+            gc.drawString(s, r.width - 24 - stringExtent.x, (r.height - stringExtent.y) / 2, true);
+
+        }
+    }
 
     private MainViewModel mainViewModel;
 
@@ -48,8 +114,16 @@ public class ScriptText extends Composite {
 
         valid = true;
         text = new Text(this, SWT.MULTI | SWT.V_SCROLL);
-        status = new Canvas(this, SWT.BACKGROUND);
-        status.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+        status = new StatusArea(this, SWT.BACKGROUND);
+
+        final Color statusAreaColor = new Color(getDisplay(), 0xFF, 0xFF, 0xCC);
+        addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e) {
+                statusAreaColor.dispose();
+            }
+        });
+        status.setBackground(statusAreaColor);
 
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);
@@ -68,7 +142,7 @@ public class ScriptText extends Composite {
         fd.left = new FormAttachment(0);
         fd.right = new FormAttachment(100);
         fd.bottom = new FormAttachment(100);
-        fd.height = 20;
+        fd.height = 60;
         status.setLayoutData(fd);
 
         status.addPaintListener(new PaintListener() {
@@ -76,13 +150,6 @@ public class ScriptText extends Composite {
             public void paintControl(PaintEvent e) {
                 GC gc = e.gc;
 
-                Rectangle r = status.getBounds();
-                if (valid) {
-                    gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_GREEN));
-                } else {
-                    gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_RED));
-                }
-                gc.fillArc(r.width - 24, r.height / 2 - 8, 16, 16, 0, 360);
             }
         });
 

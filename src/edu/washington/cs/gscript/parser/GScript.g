@@ -35,7 +35,7 @@ expr returns [ShapeSpec shape]
     ;
 
 repeatExpr returns [ShapeSpec shape]
-    : REPEAT (LPAREN n=SYMBOL COMMA r=SYMBOL RPAREN)? s=primitiveExpr {
+    : REPEAT (LPAREN n=SYMBOL (COMMA r=SYMBOL)? RPAREN)? s=primitiveExpr {
             $shape = $s.shape;
             $shape.setRepeatable(true);
             $shape.setNameOfNumOfRepetition($n.text);

@@ -145,7 +145,7 @@ public class Category implements Serializable {
         return sampleGenerator.getGeneratedSamples();
     }
 
-    void regenerateSynthesizedSamples() {
+    public void regenerateSynthesizedSamples() {
         sampleGenerator.resetFromCategorySamples();
         sampleGenerator.refresh();
         NotificationCenter.getDefaultCenter().postNotification(

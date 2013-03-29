@@ -89,6 +89,6 @@ public class CategoryScrolledList extends ScrolledList {
 	}
 
     protected int computeTopBarHeight() {
-        return 20;
+        return 0;
     }
 }

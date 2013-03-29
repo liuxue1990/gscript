@@ -8,12 +8,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
@@ -92,7 +87,7 @@ public class MainWindowController {
             super(parent, style);
 
             text = "";
-            font = new Font(getDisplay(),"Arial", 10, SWT.BOLD );
+            font = new Font(getDisplay(),"Arial", 12, SWT.BOLD );
             this.addDisposeListener(new DisposeListener() {
                 @Override
                 public void widgetDisposed(DisposeEvent e) {
@@ -111,11 +106,11 @@ public class MainWindowController {
 
             gc.setFont(font);
 
-            Color bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_DARK_GREEN);
             Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
 
             if (isHover() && !isPressed()) {
-                bg = getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
+                bg = getDisplay().getSystemColor(SWT.COLOR_GREEN);
             } else if (isHover() && isPressed()) {
                 bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
             }
@@ -126,10 +121,10 @@ public class MainWindowController {
             Point ext = gc.stringExtent(text);
 
             gc.fillRoundRectangle(
-                    bounds.x + bounds.width / 2 - ext.x / 2 - paddingWidth,
-                    bounds.y + bounds.height / 2 - ext.y / 2 - paddingHeight,
-                    ext.x + paddingWidth * 2,
-                    ext.y + paddingHeight * 2,
+                    bounds.x,
+                    bounds.y,
+                    bounds.width,
+                    bounds.height,
                     5, 5);
 
             gc.drawString(text, bounds.x + bounds.width / 2 - ext.x / 2, bounds.y + bounds.height / 2 - ext.y / 2, true);
@@ -142,14 +137,23 @@ public class MainWindowController {
             Point stringExtent = gc.stringExtent(text);
             gc.dispose();
 
-            return new Point(stringExtent.x + paddingWidth * 2, stringExtent.y + paddingHeight * 2);
+            return new Point(200, 50);
         }
     }
 
-    public static class ButtonGreenCheck extends SimpleButton {
+    public static class ButtonGreenYes extends SimpleButton {
 
-        public ButtonGreenCheck(Composite parent, int style) {
+        Font font;
+
+        public ButtonGreenYes(Composite parent, int style) {
             super(parent, style);
+            font = new Font(getDisplay(), "Arial", 12, SWT.NORMAL);
+            addDisposeListener(new DisposeListener() {
+                @Override
+                public void widgetDisposed(DisposeEvent e) {
+                    font.dispose();
+                }
+            });
         }
 
         @Override
@@ -172,19 +176,34 @@ public class MainWindowController {
             gc.setBackground(bg);
             gc.setForeground(fg);
 
-            gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
+            gc.fillRoundRectangle(0, 0, bounds.width, bounds.height, 10, 10);
 
+            int w = bounds.height;
             gc.setLineWidth(2);
-            gc.drawPolyline(new int[] {bounds.width / 4, bounds.height / 2, bounds.width / 2, bounds.height / 4 * 3, bounds.width / 4 * 3, bounds.height / 4});
+            gc.drawLine(w / 4, bounds.height / 2, w * 3 / 4, bounds.height / 2);
+            gc.drawLine(w / 2, bounds.height / 4, w / 2, bounds.height * 3/ 4);
+
+            gc.setFont(font);
+            String s = "Add to samples";
+            gc.drawString(s, w, (bounds.height - gc.stringExtent(s).y) / 2, true);
 
             transform.dispose();
         }
     }
 
-    public static class ButtonRedCross extends SimpleButton {
+    public static class ButtonRedNo extends SimpleButton {
 
-        public ButtonRedCross(Composite parent, int style) {
+        Font font;
+
+        public ButtonRedNo(Composite parent, int style) {
             super(parent, style);
+            font = new Font(getDisplay(), "Arial", 12, SWT.NORMAL);
+            addDisposeListener(new DisposeListener() {
+                @Override
+                public void widgetDisposed(DisposeEvent e) {
+                    font.dispose();
+                }
+            });
         }
 
         @Override
@@ -207,11 +226,16 @@ public class MainWindowController {
             gc.setBackground(bg);
             gc.setForeground(fg);
 
-            gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
+            gc.fillRoundRectangle(0, 0, bounds.width, bounds.height, 10, 10);
 
+            int w = bounds.height;
             gc.setLineWidth(2);
-            gc.drawLine(bounds.width / 4, bounds.height / 4, bounds.width / 4 * 3, bounds.height / 4 * 3);
-            gc.drawLine(bounds.width / 4 * 3, bounds.height / 4, bounds.width / 4, bounds.height / 4 * 3);
+            gc.drawLine(w / 4, bounds.height / 4, w / 4 * 3, bounds.height / 4 * 3);
+            gc.drawLine(w / 4 * 3, bounds.height / 4, w / 4, bounds.height / 4 * 3);
+
+            gc.setFont(font);
+            String s = "No and Refresh";
+            gc.drawString(s, w, (bounds.height - gc.stringExtent(s).y) / 2, true);
 
             transform.dispose();
         }
@@ -585,7 +609,11 @@ public class MainWindowController {
         TitleBar titleBar = new TitleBar(leftPanel, SWT.BACKGROUND);
         titleBar.setTitle("Category List");
 
-        SimpleTextButton itemAdd = new SimpleTextButton(leftPanel, SWT.BACKGROUND) {
+        Composite buttonContainer = new Composite(leftPanel, SWT.BACKGROUND);
+        buttonContainer.setBackground(leftPanel.getBackground());
+        buttonContainer.setLayout(new RowLayout());
+
+        SimpleTextButton itemAdd = new SimpleTextButton(buttonContainer, SWT.BACKGROUND) {
             @Override
             protected void buttonClicked() {
                 mainViewModel.addNewCategory();
@@ -603,17 +631,16 @@ public class MainWindowController {
         titleBar.setLayoutData(fd);
 
         fd = new FormData();
-        fd.right = new FormAttachment(100, -20);
-        fd.top = new FormAttachment(titleBar, 2);
-        itemAdd.setLayoutData(fd);
-
-        fd = new FormData();
         fd.left = new FormAttachment(0);
         fd.right = new FormAttachment(100);
         fd.top = new FormAttachment(titleBar);
-        fd.bottom = new FormAttachment(100);
+        fd.bottom = new FormAttachment(buttonContainer);
         categoryScrolledList.setLayoutData(fd);
-        itemAdd.moveAbove(categoryScrolledList);
+
+        fd = new FormData();
+        fd.left = new FormAttachment(categoryScrolledList, 0, SWT.CENTER);
+        fd.bottom = new FormAttachment(100, -5);
+        buttonContainer.setLayoutData(fd);
 
         return leftPanel;
     }
@@ -665,7 +692,11 @@ public class MainWindowController {
                 candidatesContainer, SWT.BACKGROUND, mainViewModel);
 		outputComposite.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
-        ButtonGreenCheck btnAccept = new ButtonGreenCheck(candidatesContainer, SWT.BACKGROUND) {
+        Composite buttonContainer = new Composite(candidatesContainer, SWT.BACKGROUND);
+        buttonContainer.setBackground(candidatesContainer.getBackground());
+        buttonContainer.setLayout(new RowLayout());
+
+        ButtonGreenYes btnAccept = new ButtonGreenYes(buttonContainer, SWT.BACKGROUND) {
             @Override
             protected void buttonClicked() {
                 onUserActionAccept();
@@ -673,13 +704,16 @@ public class MainWindowController {
         };
         btnAccept.setBackground(candidatesContainer.getBackground());
 
-        ButtonRedCross btnReject = new ButtonRedCross(candidatesContainer, SWT.NONE) {
+        ButtonRedNo btnReject = new ButtonRedNo(buttonContainer, SWT.NONE) {
             @Override
             protected void buttonClicked() {
                 onUserActionReject();
             }
         };
         btnReject.setBackground(candidatesContainer.getBackground());
+
+        btnAccept.setSize(120, 24);
+        btnReject.setSize(120, 24);
 
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);
@@ -691,28 +725,18 @@ public class MainWindowController {
         fd.left = new FormAttachment(0);
         fd.top = new FormAttachment(titleBar);
         fd.right = new FormAttachment(100);
-        fd.bottom = new FormAttachment(100);
+        fd.bottom = new FormAttachment(btnAccept);
         outputComposite.setLayoutData(fd);
 
         fd = new FormData();
-        fd.top = new FormAttachment(0, 2);
-        fd.right = new FormAttachment(btnReject, -5);
+        fd.left = new FormAttachment(outputComposite, 0, SWT.CENTER);
+        fd.bottom = new FormAttachment(100, -5);
+        buttonContainer.setLayoutData(fd);
 
-        btnAccept.setSize(16, 16);
-        btnAccept.setLayoutData(fd);
-        btnAccept.moveAbove(outputComposite);
-        btnAccept.moveAbove(titleBar);
+        buttonContainer.moveAbove(outputComposite);
+        buttonContainer.moveAbove(titleBar);
 
-        fd = new FormData();
-        fd.top = new FormAttachment(0, 2);
-        fd.right = new FormAttachment(100, -10);
-
-        btnReject.setSize(16, 16);
-        btnReject.setLayoutData(fd);
-        btnReject.moveAbove(outputComposite);
-        btnReject.moveAbove(titleBar);
-
-		rightPanel.setWeights(new int[]{50, 50});
+		rightPanel.setWeights(new int[]{40, 60});
 
 		return rightPanel;
 	}

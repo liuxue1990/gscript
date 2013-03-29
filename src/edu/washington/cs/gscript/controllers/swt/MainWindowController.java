@@ -152,6 +152,8 @@ public class MainWindowController {
 
         Font font;
 
+        String text = "Add to Samples";
+
         public ButtonGreenYes(Composite parent, int style) {
             super(parent, style);
             font = new Font(getDisplay(), "Arial", 12, SWT.NORMAL);
@@ -191,16 +193,26 @@ public class MainWindowController {
             gc.drawLine(w / 2, bounds.height / 4, w / 2, bounds.height * 3/ 4);
 
             gc.setFont(font);
-            String s = "Add to samples";
-            gc.drawString(s, w, (bounds.height - gc.stringExtent(s).y) / 2, true);
+            gc.drawString(text, w, (bounds.height - gc.stringExtent(text).y) / 2, true);
 
             transform.dispose();
+        }
+
+        @Override
+        public Point computeSize(int wHint, int hHint, boolean changed) {
+            GC gc = new GC(this);
+            gc.setFont(font);
+            Point stringExtent = gc.stringExtent(text);
+            gc.dispose();
+            return new Point(stringExtent.x + stringExtent.y + 16, stringExtent.y + 8);
         }
     }
 
     public static class ButtonRedNo extends SimpleButton {
 
         Font font;
+
+        String text = "Reject and Refresh";
 
         public ButtonRedNo(Composite parent, int style) {
             super(parent, style);
@@ -241,10 +253,18 @@ public class MainWindowController {
             gc.drawLine(w / 4 * 3, bounds.height / 4, w / 4, bounds.height / 4 * 3);
 
             gc.setFont(font);
-            String s = "No and Refresh";
-            gc.drawString(s, w, (bounds.height - gc.stringExtent(s).y) / 2, true);
+            gc.drawString(text, w, (bounds.height - gc.stringExtent(text).y) / 2, true);
 
             transform.dispose();
+        }
+
+        @Override
+        public Point computeSize(int wHint, int hHint, boolean changed) {
+            GC gc = new GC(this);
+            gc.setFont(font);
+            Point stringExtent = gc.stringExtent(text);
+            gc.dispose();
+            return new Point(stringExtent.x + stringExtent.y + 16, stringExtent.y + 8);
         }
     }
 
@@ -729,9 +749,6 @@ public class MainWindowController {
         };
         btnReject.setBackground(candidatesContainer.getBackground());
 
-        btnAccept.setSize(120, 24);
-        btnReject.setSize(120, 24);
-
         FormData fd = new FormData();
         fd.left = new FormAttachment(0);
         fd.top = new FormAttachment(0, 0);
@@ -742,7 +759,7 @@ public class MainWindowController {
         fd.left = new FormAttachment(0);
         fd.top = new FormAttachment(titleBar);
         fd.right = new FormAttachment(100);
-        fd.bottom = new FormAttachment(btnAccept);
+        fd.bottom = new FormAttachment(buttonContainer);
         outputComposite.setLayoutData(fd);
 
         fd = new FormData();

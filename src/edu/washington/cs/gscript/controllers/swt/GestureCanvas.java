@@ -3,6 +3,7 @@ package edu.washington.cs.gscript.controllers.swt;
 import java.util.ArrayList;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import edu.washington.cs.gscript.models.*;
 import edu.washington.cs.gscript.recognizers.Learner;
 import edu.washington.cs.gscript.recognizers.PartMatchResult;
@@ -50,22 +51,17 @@ public class GestureCanvas extends Canvas {
 
     private Rectangle[] partBounds;
 
-    private NotificationObserver partsListener = new NotificationObserver() {
+    private NotificationObserverFromUI partsListener = new NotificationObserverFromUI(this) {
         @Override
-        public void onNotified(Object arg) {
+        public void onUINotified(Object arg) {
             updateParts();
-            GestureCanvas.this.getDisplay().syncExec(new Runnable() {
-                @Override
-                public void run() {
-                    redraw();
-                }
-            });
+            redraw();
         }
     };
 
-    private NotificationObserver sampleListener = new NotificationObserver() {
+    private NotificationObserverFromUI sampleListener = new NotificationObserverFromUI(this) {
         @Override
-        public void onNotified(Object arg) {
+        public void onUINotified(Object arg) {
             updateEndLocations();
             redraw();
         }
@@ -288,6 +284,7 @@ public class GestureCanvas extends Canvas {
 
         if (g == null) {
             gesture = null;
+            redraw();
             return;
         }
 

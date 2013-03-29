@@ -3,6 +3,7 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
+import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import edu.washington.cs.gscript.helpers.Parser;
 import edu.washington.cs.gscript.models.Category;
 import org.eclipse.swt.SWT;
@@ -79,9 +80,9 @@ public class ScriptText extends Composite {
         text.addModifyListener(textModifyListener);
 
         NotificationCenter.getDefaultCenter().addObserver(
-                new NotificationObserver() {
+                new NotificationObserverFromUI(this) {
                     @Override
-                    public void onNotified(Object arg) {
+                    public void onUINotified(Object arg) {
                         reloadData();
                     }
                 },

@@ -2,6 +2,7 @@ package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
+import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import edu.washington.cs.gscript.models.Project;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -216,12 +217,7 @@ public class MainWindowController {
         }
     }
 
-    private NotificationObserver projectFileStatusObserver = new NotificationObserver() {
-        @Override
-        public void onNotified(Object arg) {
-            updateShellText();
-        }
-    };
+    private NotificationObserver projectFileStatusObserver;
 
 	private MainViewModel mainViewModel;
 
@@ -242,10 +238,17 @@ public class MainWindowController {
         createMenu();
         createComponents();
 
-		NotificationCenter.getDefaultCenter().addObserver(
-				new NotificationObserver() {
+        projectFileStatusObserver = new NotificationObserverFromUI(shell) {
+            @Override
+            public void onUINotified(Object arg) {
+                updateShellText();
+            }
+        };
+
+        NotificationCenter.getDefaultCenter().addObserver(
+				new NotificationObserverFromUI(shell) {
 					@Override
-					public void onNotified(Object arg) {
+					public void onUINotified(Object arg) {
 						reloadProject();
 					}
 				},

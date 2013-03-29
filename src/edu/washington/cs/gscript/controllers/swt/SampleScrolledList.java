@@ -1,6 +1,7 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -18,9 +19,9 @@ public class SampleScrolledList extends ScrolledList {
 
 	private Category category;
 
-	private NotificationObserver listObserver = new NotificationObserver() {
+	private NotificationObserver listObserver = new NotificationObserverFromUI(this) {
 		@Override
-		public void onNotified(Object arg) {
+		public void onUINotified(Object arg) {
 			reloadData();
 		}
 	};
@@ -31,18 +32,18 @@ public class SampleScrolledList extends ScrolledList {
 		this.mainViewModel = mainViewModel;
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				new NotificationObserver() {
+				new NotificationObserverFromUI(this) {
 					@Override
-					public void onNotified(Object arg) {
+					public void onUINotified(Object arg) {
 						reloadData();
 					}
 				},
 				MainViewModel.CATEGORY_SELECTED_NOTIFICATION, mainViewModel);
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				new NotificationObserver() {
+				new NotificationObserverFromUI(this) {
 					@Override
-					public void onNotified(Object arg) {
+					public void onUINotified(Object arg) {
 						updateSelection();
 
                         if (getSelectedItemIndex() >= 0) {

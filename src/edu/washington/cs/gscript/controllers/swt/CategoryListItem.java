@@ -1,6 +1,7 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.*;
@@ -33,9 +34,9 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 	private Category category;
 
-	private NotificationObserver itemObserver = new NotificationObserver() {
+	private NotificationObserver itemObserver = new NotificationObserverFromUI(this) {
 		@Override
-		public void onNotified(Object arg) {
+		public void onUINotified(Object arg) {
 			reloadData();
 		}
 	};

@@ -1,6 +1,7 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
+import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
@@ -12,9 +13,9 @@ public class CategoryScrolledList extends ScrolledList {
 
 	private MainViewModel mainViewModel;
 
-	private NotificationObserver listObserver = new NotificationObserver() {
+	private NotificationObserver listObserver = new NotificationObserverFromUI(this) {
 		@Override
-		public void onNotified(Object arg) {
+		public void onUINotified(Object arg) {
 			reloadData();
 		}
 	};
@@ -25,18 +26,18 @@ public class CategoryScrolledList extends ScrolledList {
 		this.mainViewModel = viewModel;
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				new NotificationObserver() {
+				new NotificationObserverFromUI(this) {
                     @Override
-                    public void onNotified(Object arg) {
+                    public void onUINotified(Object arg) {
                         reloadData();
                     }
                 },
 				MainViewModel.PROJECT_CHANGED_NOTIFICATION, mainViewModel);
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				new NotificationObserver() {
+				new NotificationObserverFromUI(this) {
 					@Override
-					public void onNotified(Object arg) {
+					public void onUINotified(Object arg) {
 						updateSelection();
                         if (getSelectedItemIndex() >= 0) {
                             scrollItemIntoView(getSelectedItemIndex());

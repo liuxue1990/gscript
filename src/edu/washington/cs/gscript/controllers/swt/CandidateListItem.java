@@ -1,15 +1,10 @@
 package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
-import edu.washington.cs.gscript.framework.NotificationCenter;
-import edu.washington.cs.gscript.framework.NotificationObserver;
 import edu.washington.cs.gscript.helpers.SampleGenerator;
-import edu.washington.cs.gscript.models.Category;
 import edu.washington.cs.gscript.models.Gesture;
 import edu.washington.cs.gscript.models.SynthesizedGestureSample;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;

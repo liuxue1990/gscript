@@ -153,32 +153,27 @@ public class GestureCanvas extends Canvas {
 		this.mainViewModel = viewModel;
 
 		NotificationCenter.getDefaultCenter().addObserver(
-				new NotificationObserver() {
+				new NotificationObserverFromUI(this) {
 					@Override
-					public void onNotified(Object arg) {
+					public void onUINotified(Object arg) {
                         onSampleSelected(mainViewModel.getSelectedSample());
 					}
 				},
 				MainViewModel.SAMPLE_SELECTED_NOTIFICATION, mainViewModel);
 
         NotificationCenter.getDefaultCenter().addObserver(
-                new NotificationObserver() {
+                new NotificationObserverFromUI(this) {
                     @Override
-                    public void onNotified(Object arg) {
-                        getDisplay().syncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                redraw();
-                            }
-                        });
+                    public void onUINotified(Object arg) {
+                        redraw();
                     }
                 },
                 MainViewModel.SAMPLE_RECOGNITION_CHANGED_NOTIFICATION, mainViewModel);
 
         NotificationCenter.getDefaultCenter().addObserver(
-                new NotificationObserver() {
+                new NotificationObserverFromUI(this) {
                     @Override
-                    public void onNotified(Object arg) {
+                    public void onUINotified(Object arg) {
                         NotificationCenter.getDefaultCenter().removeObserver(partsListener);
 
                         updateParts();

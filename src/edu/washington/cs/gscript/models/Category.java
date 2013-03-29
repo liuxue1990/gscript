@@ -31,8 +31,6 @@ public class Category implements Serializable {
 
     private transient SampleGenerator sampleGenerator;
 
-    private ArrayList<SynthesizedGestureSample> negativeSamples;
-
     private Boolean changedSinceLearning;
 
     public Category(String name) {
@@ -127,21 +125,18 @@ public class Category implements Serializable {
 
     void addSample(Gesture gesture) {
 		samples.add(gesture);
-        setChangedSinceLearning(true);
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_ADDED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
 	}
 
 	void removeSample(Gesture gesture) {
 		samples.remove(gesture);
-        setChangedSinceLearning(true);
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
 	}
 
     void setShapes(ArrayList<ShapeSpec> shapes) {
         this.shapes = new ArrayList<ShapeSpec>(shapes);
-        setChangedSinceLearning(true);
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, shapesProperty);
     }

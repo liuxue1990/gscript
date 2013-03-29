@@ -172,6 +172,7 @@ public class Project implements Serializable {
 
     public void renameCategory(Category category, String name) {
         checkCategory(category);
+        // TODO check duplicated names
         category.getNameReadWriteProperty().setValue(name);
         setDirty(true);
     }
@@ -179,12 +180,14 @@ public class Project implements Serializable {
     public void addSample(Category category, Gesture sample) {
         checkCategory(category);
         category.addSample(sample);
+        category.setChangedSinceLearning(true);
         setDirty(true);
     }
 
     public void removeSample(Category category, Gesture sample) {
         checkCategoryAndSample(category, sample);
         category.removeSample(sample);
+        category.setChangedSinceLearning(true);
         setDirty(true);
     }
 
@@ -222,6 +225,7 @@ public class Project implements Serializable {
         checkCategory(category);
         category.getScriptTextReadWriteProperty().setValue(text);
         initParts(category);
+        category.setChangedSinceLearning(true);
         setDirty(true);
     }
 

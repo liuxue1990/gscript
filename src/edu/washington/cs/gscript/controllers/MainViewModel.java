@@ -254,13 +254,17 @@ public class MainViewModel {
 
     public void analyze(ReadWriteProperty<Integer> progress) {
         progress.setValue(0);
-        if (getSelectedCategory() != null) {
-            project.learnCategory(getSelectedCategory(), progress, 99);
-            project.updateSynthesizedSamples(getSelectedCategory());
-            if (!selectedSynthesizedSamples.isEmpty()) {
-                selectedSynthesizedSamples.clear();
-                NotificationCenter.getDefaultCenter().postNotification(SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, this);
+        try {
+            if (getSelectedCategory() != null) {
+                project.learnCategory(getSelectedCategory(), progress, 99);
+                project.updateSynthesizedSamples(getSelectedCategory());
+                if (!selectedSynthesizedSamples.isEmpty()) {
+                    selectedSynthesizedSamples.clear();
+                    NotificationCenter.getDefaultCenter().postNotification(SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION, this);
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         progress.setValue(100);
     }

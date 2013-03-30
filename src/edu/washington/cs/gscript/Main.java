@@ -19,11 +19,16 @@ public class Main {
 
         mainViewModel.newProject();
 
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
+        try {
+            while (!shell.isDisposed()) {
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            shell.dispose();
+        }
 
         display.dispose();
 	}

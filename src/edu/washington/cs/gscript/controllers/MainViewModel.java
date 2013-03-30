@@ -49,10 +49,6 @@ public class MainViewModel {
 
     private transient Map<Category, Recognizer.RecognitionInfo> recallMap;
 
-    private double[][] confusionMatrix;
-
-    private double crossValidationAccuracy;
-
     private NotificationObserver partsObserver = new NotificationObserver() {
         @Override
         public void onNotified(Object arg) {
@@ -90,8 +86,16 @@ public class MainViewModel {
         return accuracyProperty;
     }
 
+    private void setProject(Project project) {
+        this.project = project;
+        accuracyProperty.setValue(null);
+        recallMap.clear();;
+
+        NotificationCenter.getDefaultCenter().postNotification(RECOGNITION_CHANGED_NOTIFICATION, this);
+    }
+
     public void newProject() {
-		project = new Project();
+        setProject(new Project());
 		NotificationCenter.getDefaultCenter().postNotification(PROJECT_CHANGED_NOTIFICATION, this);
 
         NotificationCenter.getDefaultCenter().addObserver(
@@ -107,7 +111,7 @@ public class MainViewModel {
 
         newProject.setFileName(fileName);
 
-        project = newProject;
+        setProject(newProject);
         NotificationCenter.getDefaultCenter().postNotification(PROJECT_CHANGED_NOTIFICATION, this);
 
         NotificationCenter.getDefaultCenter().addObserver(

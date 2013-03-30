@@ -61,6 +61,7 @@ public class SimpleButton extends Composite {
             @Override
             public void mouseDown(MouseEvent e) {
                 pressed = true;
+                hover = true;
                 if (!isDisposed()) {
                     redraw();
                 }

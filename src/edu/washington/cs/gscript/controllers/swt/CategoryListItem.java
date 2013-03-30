@@ -179,14 +179,16 @@ public class CategoryListItem extends ScrolledList.ListItem {
         onSelectionChanged();
 	}
 
-    public void setRecallValue(Double recall) {
+    public void setRecallInfo(Double recall, String detail) {
         this.recallValue = recall;
 
         if (recall == null) {
             recallTag.setVisible(false);
+            icon.setToolTipText(null);
         } else {
             recallTag.setVisible(true);
             recallTag.redraw();
+            icon.setToolTipText(detail);
         }
     }
 

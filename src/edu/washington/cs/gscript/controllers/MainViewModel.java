@@ -47,7 +47,7 @@ public class MainViewModel {
 
     private transient ReadWriteProperty<Double> accuracyProperty;
 
-    private transient Map<Category, Double> recallMap;
+    private transient Map<Category, Recognizer.RecognitionInfo> recallMap;
 
     private double[][] confusionMatrix;
 
@@ -63,7 +63,7 @@ public class MainViewModel {
 	public MainViewModel() {
         selectedSynthesizedSamples = new ArrayList<SynthesizedGestureSample>();
         accuracyProperty = new ReadWriteProperty<Double>(null);
-        recallMap = new HashMap<Category, Double>();
+        recallMap = new HashMap<Category, Recognizer.RecognitionInfo>();
 	}
 
 	public Project getProject() {
@@ -328,7 +328,7 @@ public class MainViewModel {
         return project.isLearningNeeded(selectedCategory);
     }
 
-    public Double getRecallValue(Category category) {
+    public Recognizer.RecognitionInfo getRecognitionInfo(Category category) {
         if (recallMap == null) {
             return null;
         }

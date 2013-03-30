@@ -9,6 +9,25 @@ import java.util.*;
 
 public class Recognizer {
 
+    public static class RecognitionInfo {
+        private double recall;
+
+        private Category[] confusedCategories;
+
+        public RecognitionInfo(double r, Category[] categories) {
+            this.recall = r;
+            this.confusedCategories = categories;
+        }
+
+        public double getRecall() {
+            return recall;
+        }
+
+        public Category[] getConfusedCategories() {
+            return confusedCategories;
+        }
+    }
+
     public static double[] crossValidation(svm_problem prob, svm_parameter param, int nr_fold) {
         int i;
         int total_correct = 0;
@@ -63,7 +82,7 @@ public class Recognizer {
     }
 
     public static double crossValidation(
-            Project project, Map<Category, Double> recallMap, boolean useAngle, boolean useScale, ReadWriteProperty<Integer> progress, int progressTotal) {
+            Project project, Map<Category, RecognitionInfo> recallMap, boolean useAngle, boolean useScale, ReadWriteProperty<Integer> progress, int progressTotal) {
 
         int currentProgress = 0;
 
@@ -165,19 +184,46 @@ public class Recognizer {
         if (recallMap != null) {
             recallMap.clear();
 
-            int numOfCategory = project.getNumOfCategories();
-            for (int categoryIndex = 0; categoryIndex < numOfCategory; ++categoryIndex) {
+            for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
                 Category category = project.getCategory(categoryIndex);
-                recallMap.put(category, 0.0);
-            }
 
-            for (int i = 0; i < numOfTotalSamples; ++i) {
-                System.out.println(results[i] + " vs " + yList.get(i));
-                if (GSMath.compareDouble(results[i], yList.get(i)) == 0) {
-                    int categoryIndex = (int)Math.round(yList.get(i));
-                    Category category = project.getCategory(categoryIndex);
-                    recallMap.put(category, recallMap.get(category) + 1.0 / category.getNumOfSamples());
+                final int[] row = new int[numOfCategories];
+                Arrays.fill(row, 0);
+
+                int total = 0;
+
+                for (int i = 0; i < numOfTotalSamples; ++i) {
+                    if (categoryIndex == (int)Math.round(yList.get(i))) {
+                        ++row[(int)Math.round(results[i])];
+                        ++total;
+                    }
                 }
+
+                double recall = row[categoryIndex] / (double) total;
+
+                ArrayList<Integer> ids = new ArrayList<Integer>();
+                for (int i = 0; i < numOfCategories; ++i) {
+                    if (i != categoryIndex && row[i] > 0) {
+                        ids.add(i);
+                    }
+                }
+
+                Collections.sort(ids, new Comparator<Integer>() {
+                    @Override
+                    public int compare(Integer id1, Integer id2) {
+                        return row[id2.intValue()] - row[id1.intValue()];
+                    }
+                });
+
+                int n = ids.size();
+                Category[] cats = new Category[n];
+                for (int i = 0; i < n; ++i) {
+                    cats[i] = project.getCategory(ids.get(i));
+                    System.out.print(row[ids.get(i)] + "  ");
+                }
+                System.out.println();
+
+                recallMap.put(category, new RecognitionInfo(recall, cats));
             }
         }
 

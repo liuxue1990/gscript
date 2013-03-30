@@ -3,6 +3,7 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import edu.washington.cs.gscript.models.Project;
+import edu.washington.cs.gscript.recognizers.Recognizer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
@@ -77,7 +78,24 @@ public class CategoryScrolledList extends ScrolledList {
         for (ListItem item : getListItems()) {
             if (item instanceof CategoryListItem) {
                 CategoryListItem listItem = (CategoryListItem) item;
-                listItem.setRecallValue(mainViewModel.getRecallValue(listItem.getDataSource()));
+                Recognizer.RecognitionInfo info = mainViewModel.getRecognitionInfo(listItem.getDataSource());
+
+                if (info == null) {
+                    listItem.setRecallInfo(null, null);
+                } else {
+                    String desc = null;
+
+                    if (info.getConfusedCategories() != null && info.getConfusedCategories().length > 0) {
+                        desc = "Most confused with ";
+                        for (int i = 0; i < 2 && i < info.getConfusedCategories().length; ++i) {
+                            if (i > 0) {
+                                desc = desc + " & ";
+                            }
+                            desc = desc + info.getConfusedCategories()[i].getNameProperty().getValue();
+                        }
+                    }
+                    listItem.setRecallInfo(info.getRecall(), desc);
+                }
             }
         }
     }

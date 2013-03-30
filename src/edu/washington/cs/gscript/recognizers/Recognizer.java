@@ -112,8 +112,12 @@ public class Recognizer {
         }
 
         int numOfTotalSamples = sampleList.size();
-        svm_node[][] featureList = new svm_node[numOfTotalSamples][];
 
+        if (numOfTotalSamples == 0) {
+            throw new RuntimeException("No samples is found in the project");
+        }
+
+        svm_node[][] featureList = new svm_node[numOfTotalSamples][];
         for (int i = 0; i < numOfTotalSamples; ++i) {
             featureList[i] = generateSVMFeatures(sampleList.get(i), project, null, -1, useAngle, useScale);
         }

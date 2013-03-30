@@ -272,9 +272,13 @@ public class MainViewModel {
 
     public void validateRecognition(ReadWriteProperty<Integer> progress) {
         progress.setValue(0);
-        getProject().learnProject(progress, 30);
-        accuracyProperty.setValue(Recognizer.crossValidation(project, recallMap, true, true, progress, 69));
-        project.setChangedSinceTraining(false);
+        try {
+            getProject().learnProject(progress, 30);
+            recallMap.clear();
+            accuracyProperty.setValue(Recognizer.crossValidation(project, recallMap, true, true, progress, 69));
+            project.setChangedSinceTraining(false);
+        } catch (Exception e) {
+        }
         progress.setValue(100);
 
         NotificationCenter.getDefaultCenter().postNotification(RECOGNITION_CHANGED_NOTIFICATION, this);
@@ -282,10 +286,13 @@ public class MainViewModel {
 
     public void trainRecognizer(ReadWriteProperty<Integer> progress) {
         progress.setValue(0);
-        getProject().learnProject(progress, 70);
-        recognizer = new Recognizer();
-        recognizer.train(getProject(), progress, 29);
-        project.setChangedSinceTraining(false);
+        try {
+            getProject().learnProject(progress, 70);
+            recognizer = new Recognizer();
+            recognizer.train(getProject(), progress, 29);
+            project.setChangedSinceTraining(false);
+        } catch (Exception e) {
+        }
         progress.setValue(100);
 
         NotificationCenter.getDefaultCenter().postNotification(RECOGNITION_CHANGED_NOTIFICATION, this);

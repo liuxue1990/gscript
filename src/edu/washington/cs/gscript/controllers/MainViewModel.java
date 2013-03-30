@@ -2,6 +2,7 @@ package edu.washington.cs.gscript.controllers;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
+import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
 import edu.washington.cs.gscript.helpers.GSMath;
 import edu.washington.cs.gscript.helpers.OneDollarDataImporter;
@@ -15,6 +16,7 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 
 public class MainViewModel {
 
@@ -28,6 +30,8 @@ public class MainViewModel {
 
     public static final int SYNTHESIZED_SAMPLE_SELECTED_NOTIFICATION = 4;
 
+    public static final int RECOGNITION_CHANGED_NOTIFICATION = 5;
+
 	private Project project;
 
 	private Category selectedCategory;
@@ -39,6 +43,10 @@ public class MainViewModel {
     private ArrayList<ArrayList<PartMatchResult>> matchesForSelectedSample;
 
     private Recognizer recognizer;
+
+    private transient ReadWriteProperty<Double> accuracyProperty;
+
+    private transient Map<Category, Double> recallMap;
 
     private double[][] confusionMatrix;
 
@@ -53,6 +61,7 @@ public class MainViewModel {
 
 	public MainViewModel() {
         selectedSynthesizedSamples = new ArrayList<SynthesizedGestureSample>();
+        accuracyProperty = new ReadWriteProperty<Double>(null);
 	}
 
 	public Project getProject() {
@@ -71,7 +80,15 @@ public class MainViewModel {
         return recognizer;
     }
 
-	public void newProject() {
+    public Property<Double> getAccuracyProperty() {
+        return accuracyProperty;
+    }
+
+    ReadWriteProperty<Double> getAccuracyReadWriteProperty() {
+        return accuracyProperty;
+    }
+
+    public void newProject() {
 		project = new Project();
 		NotificationCenter.getDefaultCenter().postNotification(PROJECT_CHANGED_NOTIFICATION, this);
 
@@ -255,8 +272,12 @@ public class MainViewModel {
         progress.setValue(0);
         getProject().learnProject(progress, 70);
         recognizer = new Recognizer();
-        recognizer.train(getProject(), progress, 29);
+        double accuracy = recognizer.train(getProject(), progress, 29);
+        accuracyProperty.setValue(accuracy);
+        project.setChangedSinceTraining(false);
         progress.setValue(100);
+
+        NotificationCenter.getDefaultCenter().postNotification(RECOGNITION_CHANGED_NOTIFICATION, this);
     }
 
     public void setLabelOfSelectedSynthesizedSamples(int label) {

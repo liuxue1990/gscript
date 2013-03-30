@@ -30,8 +30,14 @@ public class MainWindowController {
 
     public static class ButtonRefresh extends SimpleButton {
 
+        int lineWidth = 4;
+
         public ButtonRefresh(Composite parent, int style) {
             super(parent, style);
+        }
+
+        public void setLineWidth(int lineWidth) {
+            this.lineWidth = lineWidth;
         }
 
         @Override
@@ -56,7 +62,7 @@ public class MainWindowController {
 
             gc.fillArc(0, 0, bounds.width, bounds.height, 0, 360);
 
-            gc.setLineWidth(4);
+            gc.setLineWidth(lineWidth);
 
             gc.setLineCap(SWT.CAP_ROUND);
             gc.drawArc(8, 8, bounds.width - 16, bounds.height - 16, 45, 270);
@@ -66,7 +72,7 @@ public class MainWindowController {
             int r = (bounds.width - 16) / 2;
             int xc = bounds.width / 2 + (int)(r / 1.414 + 4.5);
             int yc = bounds.height / 2 - (int)(r / 1.414 - 4.5);
-            gc.fillPolygon(new int[] {xc, yc, xc - 9, yc, xc, yc - 9});
+            gc.fillPolygon(new int[] {xc, yc, xc - lineWidth * 2 - 1, yc, xc, yc - lineWidth * 2 - 1});
             gc.setBackground(bg);
 
             transform.dispose();
@@ -75,8 +81,75 @@ public class MainWindowController {
 
     public class ButtonRetrain extends ButtonRefresh {
 
+        private String text;
+
+        private Font font;
+
         public ButtonRetrain(Composite parent, int style) {
             super(parent, style);
+
+            font = new Font(getDisplay(), "Courier New", 10, SWT.BOLD);
+            this.addDisposeListener(new DisposeListener() {
+                @Override
+                public void widgetDisposed(DisposeEvent e) {
+                    font.dispose();
+                }
+            });
+        }
+
+        public void setText(String text) {
+            this.text = text;
+            redraw();
+        }
+
+        @Override
+        void paint(GC gc) {
+            Rectangle bounds = getClientArea();
+
+            Transform transform = new Transform(getDisplay());
+            transform.translate(bounds.x, bounds.y);
+            gc.setTransform(transform);
+
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_BLUE);
+            Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
+
+            if (isHover() && !isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
+            } else if (isHover() && isPressed()) {
+                bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+            }
+
+            gc.setBackground(bg);
+            gc.setForeground(fg);
+
+            gc.fillRoundRectangle(1, 1, bounds.width - 2, bounds.height - 2, 10, 10);
+
+            if (text == null) {
+                gc.setLineWidth(2);
+
+                gc.setLineCap(SWT.CAP_ROUND);
+                gc.drawArc(6, 6, bounds.width - 12, bounds.height - 12, 45, 270);
+
+                bg = gc.getBackground();
+                gc.setBackground(gc.getForeground());
+                int r = (bounds.width - 16) / 2;
+                int xc = bounds.width / 2 + (int)(r / 1.414 + 4.5);
+                int yc = bounds.height / 2 - (int)(r / 1.414 - 4.5);
+                gc.fillPolygon(new int[] {xc, yc, xc - lineWidth * 2 - 1, yc, xc, yc - lineWidth * 2 - 1});
+                gc.setBackground(bg);
+
+            } else {
+                gc.setFont(font);
+                Point ext = gc.stringExtent(text);
+                gc.drawString(text, (bounds.width - ext.x) / 2, (bounds.height - ext.y) / 2, true);
+            }
+
+            transform.dispose();
+        }
+
+        @Override
+        public Point computeSize(int wHint, int hHint, boolean changed) {
+            return new Point(32, 32);
         }
     }
 
@@ -113,11 +186,11 @@ public class MainWindowController {
 
             gc.setFont(font);
 
-            Color bg = getDisplay().getSystemColor(SWT.COLOR_DARK_GREEN);
+            Color bg = getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
             Color fg = getDisplay().getSystemColor(SWT.COLOR_WHITE);
 
             if (isHover() && !isPressed()) {
-                bg = getDisplay().getSystemColor(SWT.COLOR_GREEN);
+                bg = getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
             } else if (isHover() && isPressed()) {
                 bg = getDisplay().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
             }
@@ -280,6 +353,10 @@ public class MainWindowController {
 
     private ScriptText scriptText;
 
+    private ButtonRetrain btnRetrain;
+
+    private ButtonRefresh btnAnalyze;
+
 	public MainWindowController(Shell shell, MainViewModel mainViewModel) {
         this.shell = shell;
 		this.mainViewModel = mainViewModel;
@@ -305,6 +382,18 @@ public class MainWindowController {
 				},
 				MainViewModel.PROJECT_CHANGED_NOTIFICATION,
 				mainViewModel);
+
+        NotificationCenter.getDefaultCenter().addObserver(
+                new NotificationObserverFromUI(shell) {
+                    @Override
+                    public void onUINotified(Object arg) {
+                        btnRetrain.setText(
+                                "" + (int) Math.round(MainWindowController.this.mainViewModel.getAccuracyProperty().getValue()));
+                    }
+                },
+                MainViewModel.RECOGNITION_CHANGED_NOTIFICATION,
+                mainViewModel
+        );
 
         shell.addShellListener(new ShellAdapter() {
             @Override
@@ -589,7 +678,7 @@ public class MainWindowController {
 		clientArea.setWeights(new int[]{20, 60, 40});
 		clientArea.setFocus();
 
-        final SimpleButton btnAnalyze = new ButtonRefresh(clientContainer, SWT.BACKGROUND) {
+        btnAnalyze = new ButtonRefresh(clientContainer, SWT.BACKGROUND) {
             @Override
             protected void buttonClicked() {
                 onUserActionAnalyze();
@@ -636,7 +725,23 @@ public class MainWindowController {
         TitleBar titleBar = new TitleBar(leftPanel, SWT.BACKGROUND);
         titleBar.setTitle("Category List");
 
-        ButtonRetrain btnRetrain = new ButtonRetrain(leftPanel, SWT.NO_BACKGROUND);
+        btnRetrain = new ButtonRetrain(leftPanel, SWT.BACKGROUND) {
+            @Override
+            protected void buttonClicked() {
+                final ReadWriteProperty<Integer> progress = new ReadWriteProperty<Integer>(0);
+                ProgressDialog dialog = new ProgressDialog(shell, progress);
+                dialog.setText("Progress");
+                dialog.setPrompt("Training the recognizer...");
+                Thread trainingThread = new Thread() {
+                    @Override
+                    public void run() {
+                        mainViewModel.trainRecognizer(progress);
+                    }
+                };
+                trainingThread.start();
+                dialog.open();
+            }
+        };
         btnRetrain.setBackground(leftPanel.getBackground());
         btnRetrain.setSize(32, 32);
 

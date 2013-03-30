@@ -10,12 +10,14 @@ import java.util.Arrays;
 
 public class Recognizer {
 
-    public static void crossValidation(svm_problem prob, svm_parameter param, int nr_fold) {
+    public static double crossValidation(svm_problem prob, svm_parameter param, int nr_fold) {
         int i;
         int total_correct = 0;
         double total_error = 0;
         double sumv = 0, sumy = 0, sumvv = 0, sumyy = 0, sumvy = 0;
         double[] target = new double[prob.l];
+
+        double accu = 0;
 
         svm.svm_cross_validation(prob, param, nr_fold, target);
         if(param.svm_type == svm_parameter.EPSILON_SVR ||
@@ -43,8 +45,11 @@ public class Recognizer {
             for(i=0;i<prob.l;i++)
                 if(target[i] == prob.y[i])
                     ++total_correct;
-            System.out.print("Cross Validation Accuracy = "+100.0*total_correct/prob.l+"%\n");
+            accu = 100.0*total_correct/prob.l;
+            System.out.print("Cross Validation Accuracy = "+accu+"%\n");
         }
+
+        return accu;
     }
 
     private static svm_node[] featuresToSVMNode(double[] features) {
@@ -58,7 +63,7 @@ public class Recognizer {
         return x;
     }
 
-    public void train(Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
+    public double train(Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
 
         this.project = project;
 
@@ -94,6 +99,8 @@ public class Recognizer {
 
             progress.setValue(currentProgress + (int)((catIndex + 1) / (double) numOfCategories * 0.9 * progressTotal));
         }
+
+        double accuracy = 0;
 
         if (yList.size() > 0) {
 
@@ -137,10 +144,11 @@ public class Recognizer {
 
             model = svm.svm_train(problem, param);
 
-            crossValidation(problem, param, 10);
+            accuracy = crossValidation(problem, param, 10);
         }
 
         progress.setValue(currentProgress + progressTotal);
+        return accuracy;
     }
 
     public static double[] generateSVMFeatures(Gesture gesture, Project project, boolean useAngle, boolean useScale) {

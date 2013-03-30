@@ -27,6 +27,8 @@ public class Project implements Serializable {
 
     private Map<String, Part> partsTable;
 
+    private transient boolean changedSinceTraining;
+
 	public Project() {
 		categories = new ArrayList<Category>();
         partsTable = new HashMap<String, Part>();
@@ -50,6 +52,8 @@ public class Project implements Serializable {
         fileNameProperty = new ReadWriteProperty<String>(null);
         categoriesProperty = new Property<Integer>(0);
         dirtyProperty = new ReadWriteProperty<Boolean>(false);
+
+        changedSinceTraining = true;
 
         if (partsTable == null) {
             partsTable = new HashMap<String, Part>();
@@ -108,6 +112,14 @@ public class Project implements Serializable {
         if (flag != isDirty()) {
             dirtyProperty.setValue(flag);
         }
+    }
+
+    public boolean isChangedSinceTraining() {
+        return changedSinceTraining;
+    }
+
+    public void setChangedSinceTraining(boolean changedSinceTraining) {
+        this.changedSinceTraining = changedSinceTraining;
     }
 
     public int getNumOfCategories() {

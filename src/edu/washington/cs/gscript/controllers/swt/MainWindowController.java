@@ -608,6 +608,10 @@ public class MainWindowController {
             return;
         }
 
+        onUserActionForceAnalyze();
+    }
+
+    private void onUserActionForceAnalyze() {
         final ReadWriteProperty<Integer> progress = new ReadWriteProperty<Integer>(0);
         ProgressDialog dialog = new ProgressDialog(this.shell, progress);
         dialog.setText("Progress");
@@ -685,8 +689,12 @@ public class MainWindowController {
 
         btnAnalyze = new ButtonRefresh(clientContainer, SWT.BACKGROUND) {
             @Override
-            protected void buttonClicked() {
-                onUserActionAnalyze();
+            protected void buttonClicked(MouseEvent e) {
+                if ((e.stateMask & SWT.CTRL) != 0) {
+                    onUserActionForceAnalyze();
+                } else {
+                    onUserActionAnalyze();
+                }
             }
         };
         btnAnalyze.setBackground(clientContainer.getDisplay().getSystemColor(SWT.COLOR_WHITE));
@@ -732,7 +740,7 @@ public class MainWindowController {
 
         btnRetrain = new ButtonRetrain(leftPanel, SWT.BACKGROUND) {
             @Override
-            protected void buttonClicked() {
+            protected void buttonClicked(MouseEvent e) {
                 final ReadWriteProperty<Integer> progress = new ReadWriteProperty<Integer>(0);
                 ProgressDialog dialog = new ProgressDialog(shell, progress);
                 dialog.setText("Progress");
@@ -756,7 +764,7 @@ public class MainWindowController {
 
         SimpleTextButton itemAdd = new SimpleTextButton(buttonContainer, SWT.BACKGROUND) {
             @Override
-            protected void buttonClicked() {
+            protected void buttonClicked(MouseEvent e) {
                 mainViewModel.addNewCategory();
             }
         };
@@ -845,7 +853,7 @@ public class MainWindowController {
 
         ButtonGreenYes btnAccept = new ButtonGreenYes(buttonContainer, SWT.BACKGROUND) {
             @Override
-            protected void buttonClicked() {
+            protected void buttonClicked(MouseEvent e) {
                 onUserActionAccept();
             }
         };
@@ -853,7 +861,7 @@ public class MainWindowController {
 
         ButtonRedNo btnReject = new ButtonRedNo(buttonContainer, SWT.NONE) {
             @Override
-            protected void buttonClicked() {
+            protected void buttonClicked(MouseEvent e) {
                 onUserActionReject();
             }
         };

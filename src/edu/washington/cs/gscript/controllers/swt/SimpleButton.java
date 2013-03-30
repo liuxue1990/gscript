@@ -36,7 +36,6 @@ public class SimpleButton extends Composite {
                     redraw();
                 }
             }
-
         });
 
         addMouseTrackListener(new MouseTrackAdapter() {
@@ -70,7 +69,7 @@ public class SimpleButton extends Composite {
             @Override
             public void mouseUp(MouseEvent e) {
                 if (pressed && hover) {
-                    buttonClicked();
+                    buttonClicked(e);
                 }
                 pressed = false;
 
@@ -92,7 +91,7 @@ public class SimpleButton extends Composite {
     void paint(GC gc) {
     }
 
-    protected void buttonClicked() {
+    protected void buttonClicked(MouseEvent e) {
     }
 
     @Override

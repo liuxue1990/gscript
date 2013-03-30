@@ -5,11 +5,8 @@ import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.RowData;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
@@ -26,6 +23,10 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
     private Text renameText;
 
+    private Composite recallTag;
+
+    private Double recallValue;
+
     private StackLayout stackLayout;
 
 	private IconWithButtonOverlay.IconWithRemoveButtonOverlay icon;
@@ -33,6 +34,8 @@ public class CategoryListItem extends ScrolledList.ListItem {
 	private Composite iconContainer;
 
 	private Category category;
+
+    private Font recallFont;
 
 	private NotificationObserver itemObserver = new NotificationObserverFromUI(this) {
 		@Override
@@ -45,9 +48,10 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		super(parent, SWT.BACKGROUND);
 		setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
-		RowLayout rowLayout = new RowLayout(SWT.VERTICAL);
-		rowLayout.spacing = 5;
-		setLayout(rowLayout);
+        recallFont = new Font(getDisplay(), "Courier New", 10, SWT.BOLD);
+
+        FormLayout formLayout = new FormLayout();
+		setLayout(formLayout);
 
         final Composite nameContainer = new Composite(this, SWT.BACKGROUND);
         nameContainer.setBackground(getBackground());
@@ -55,7 +59,15 @@ public class CategoryListItem extends ScrolledList.ListItem {
         stackLayout = new StackLayout();
         nameContainer.setLayout(stackLayout);
 
-		nameLabel = new Label(nameContainer, SWT.BACKGROUND);
+        recallTag = new Composite(this, SWT.BACKGROUND) {
+            @Override
+            public Point computeSize(int wHint, int hHint, boolean changed) {
+                return new Point(24, 16);
+            }
+        };
+        recallTag.setBackground(getDisplay().getSystemColor(SWT.COLOR_BLUE));
+
+        nameLabel = new Label(nameContainer, SWT.BACKGROUND);
         nameLabel.setBackground(getBackground());
 		nameLabel.setAlignment(SWT.CENTER);
 
@@ -78,14 +90,45 @@ public class CategoryListItem extends ScrolledList.ListItem {
 
 		icon.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
-		RowData rd = new RowData();
-		rd.width = 120;
-		nameContainer.setLayoutData(rd);
+		FormData fd = new FormData();
+        fd.top = new FormAttachment(0);
+        fd.left = new FormAttachment(0);
+		fd.width = 120;
+		nameContainer.setLayoutData(fd);
 
-		rd = new RowData();
-		rd.width = 120;
-		rd.height = 120;
-		iconContainer.setLayoutData(rd);
+		fd = new FormData();
+        fd.top = new FormAttachment(nameContainer);
+        fd.left = new FormAttachment(nameContainer, 0, SWT.CENTER);
+		fd.width = 120;
+		fd.height = 120;
+		iconContainer.setLayoutData(fd);
+
+        fd = new FormData();
+        fd.top = new FormAttachment(iconContainer, 0, SWT.TOP);
+        fd.left = new FormAttachment(iconContainer, 0, SWT.LEFT);
+        recallTag.setLayoutData(fd);
+
+        recallTag.addPaintListener(new PaintListener() {
+            @Override
+            public void paintControl(PaintEvent e) {
+
+                if (recallValue != null) {
+                    GC gc = e.gc;
+
+                    gc.setTextAntialias(SWT.ON);
+
+                    gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
+
+                    gc.setFont(recallFont);
+                    String text = String.format("%d", Math.round(recallValue * 100));
+                    Point stringExtent = gc.stringExtent(text);
+                    Rectangle rect = recallTag.getClientArea();
+                    gc.fillRectangle(rect);
+
+                    gc.drawString(text, (rect.width - stringExtent.x) / 2, (rect.height - stringExtent.y) / 2, true);
+                }
+            }
+        });
 
 		FillLayout fillLayout = new FillLayout();
 		fillLayout.marginHeight = 5;
@@ -128,12 +171,24 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e) {
+                recallFont.dispose();
                 NotificationCenter.getDefaultCenter().removeObserver(itemObserver);
             }
         });
 
         onSelectionChanged();
 	}
+
+    public void setRecallValue(Double recall) {
+        this.recallValue = recall;
+
+        if (recall == null) {
+            recallTag.setVisible(false);
+        } else {
+            recallTag.setVisible(true);
+            recallTag.redraw();
+        }
+    }
 
 	public void setDataSource(Category category) {
 		this.category = category;

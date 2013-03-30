@@ -2,6 +2,7 @@ package edu.washington.cs.gscript.controllers.swt;
 
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
+import edu.washington.cs.gscript.models.Project;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
@@ -45,6 +46,15 @@ public class CategoryScrolledList extends ScrolledList {
 					}
 				},
 				MainViewModel.CATEGORY_SELECTED_NOTIFICATION, mainViewModel);
+
+        NotificationCenter.getDefaultCenter().addObserver(
+                new NotificationObserverFromUI(this) {
+                    @Override
+                    public void onUINotified(Object arg) {
+                        updateRecalls();
+                    }
+                },
+                MainViewModel.RECOGNITION_CHANGED_NOTIFICATION, mainViewModel);
 	}
 
 	private void updateSelection() {
@@ -63,6 +73,15 @@ public class CategoryScrolledList extends ScrolledList {
         }
 	}
 
+    private void updateRecalls() {
+        for (ListItem item : getListItems()) {
+            if (item instanceof CategoryListItem) {
+                CategoryListItem listItem = (CategoryListItem) item;
+                listItem.setRecallValue(mainViewModel.getRecallValue(listItem.getDataSource()));
+            }
+        }
+    }
+
 	private void reloadData() {
 		NotificationCenter.getDefaultCenter().removeObserver(listObserver);
 
@@ -80,6 +99,7 @@ public class CategoryScrolledList extends ScrolledList {
             addItem(mainViewModel.getProject().getCategory(i));
         }
 
+        updateRecalls();
 		updateSelection();
         updateContentLayout();
 	}

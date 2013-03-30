@@ -387,8 +387,13 @@ public class MainWindowController {
                 new NotificationObserverFromUI(shell) {
                     @Override
                     public void onUINotified(Object arg) {
-                        btnRetrain.setText(
-                                "" + (int) Math.round(MainWindowController.this.mainViewModel.getAccuracyProperty().getValue()));
+                        if (MainWindowController.this.mainViewModel.getAccuracyProperty().getValue() == null) {
+                            btnRetrain.setText(null);
+                        } else {
+                            btnRetrain.setText(
+                                    "" + Math.round(
+                                            MainWindowController.this.mainViewModel.getAccuracyProperty().getValue() * 100));
+                        }
                     }
                 },
                 MainViewModel.RECOGNITION_CHANGED_NOTIFICATION,
@@ -735,7 +740,7 @@ public class MainWindowController {
                 Thread trainingThread = new Thread() {
                     @Override
                     public void run() {
-                        mainViewModel.trainRecognizer(progress);
+                        mainViewModel.validateRecognition(progress);
                     }
                 };
                 trainingThread.start();

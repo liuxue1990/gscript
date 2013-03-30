@@ -16,6 +16,7 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MainViewModel {
@@ -62,6 +63,7 @@ public class MainViewModel {
 	public MainViewModel() {
         selectedSynthesizedSamples = new ArrayList<SynthesizedGestureSample>();
         accuracyProperty = new ReadWriteProperty<Double>(null);
+        recallMap = new HashMap<Category, Double>();
 	}
 
 	public Project getProject() {
@@ -268,12 +270,21 @@ public class MainViewModel {
                                 null)));
     }
 
+    public void validateRecognition(ReadWriteProperty<Integer> progress) {
+        progress.setValue(0);
+        getProject().learnProject(progress, 30);
+        accuracyProperty.setValue(Recognizer.crossValidation(project, recallMap, true, true, progress, 69));
+        project.setChangedSinceTraining(false);
+        progress.setValue(100);
+
+        NotificationCenter.getDefaultCenter().postNotification(RECOGNITION_CHANGED_NOTIFICATION, this);
+    }
+
     public void trainRecognizer(ReadWriteProperty<Integer> progress) {
         progress.setValue(0);
         getProject().learnProject(progress, 70);
         recognizer = new Recognizer();
-        double accuracy = recognizer.train(getProject(), progress, 29);
-        accuracyProperty.setValue(accuracy);
+        recognizer.train(getProject(), progress, 29);
         project.setChangedSinceTraining(false);
         progress.setValue(100);
 
@@ -315,5 +326,13 @@ public class MainViewModel {
             return false;
         }
         return project.isLearningNeeded(selectedCategory);
+    }
+
+    public Double getRecallValue(Category category) {
+        if (recallMap == null) {
+            return null;
+        }
+
+        return recallMap.get(category);
     }
 }

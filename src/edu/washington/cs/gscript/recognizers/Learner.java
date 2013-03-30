@@ -208,7 +208,7 @@ public class Learner {
                 Gesture sample = category.getSample(sampleIndex);
                 int[] endLocations = computeEndLocations(sample);
                 featuresMap[categoryIndex][sampleIndex] = sampleFeatureVectors(sample, endLocations);
-                userMarkedMap[categoryIndex][sampleIndex] = computeUserMarked(sample, endLocations);
+                userMarkedMap[categoryIndex][sampleIndex] = computeUserMarked(sample, endLocations, maxNumOfInternalUserMarks(category.getShapes()));
             }
         }
 
@@ -370,7 +370,7 @@ public class Learner {
         boolean[] userMarked;
 
         if (useUserMarks) {
-            userMarked = computeUserMarked(gesture, endLocations);
+            userMarked = computeUserMarked(gesture, endLocations, maxNumOfInternalUserMarks(shapeList));
         } else {
             userMarked = new boolean[endLocations.length];
             Arrays.fill(userMarked, false);
@@ -1090,11 +1090,33 @@ public class Learner {
         return Segmentation.segment(gesture, Learner.SEGMENTATION_ERROR);
     }
 
-    public static boolean[] computeUserMarked(Gesture gesture, int[] endLocations) {
+    private static int minNumOfEndLocations(ArrayList<ShapeSpec> shapes) {
+        return shapes.size() - 1;
+    }
+
+    private static int maxNumOfInternalUserMarks(ArrayList<ShapeSpec> shapes) {
+        for (ShapeSpec shape : shapes) {
+            if (shape.isRepeatable()) {
+                return Integer.MAX_VALUE;
+            }
+        }
+
+        return shapes.size() - 1;
+    }
+
+    private static boolean[] computeUserMarked(Gesture gesture, int[] endLocations, int max) {
         boolean[] userMarked = new boolean[endLocations.length];
 
-        for (int i = 0; i < endLocations.length; ++i) {
+        int numOfMarks = 0;
+        for (int i = 1; i < endLocations.length - 1; ++i) {
             userMarked[i] = gesture.isUserLabeledBreakIndex(endLocations[i]);
+            if (userMarked[i]) {
+                ++numOfMarks;
+            }
+        }
+
+        if (numOfMarks > max) {
+            Arrays.fill(userMarked, false);
         }
 
         return userMarked;

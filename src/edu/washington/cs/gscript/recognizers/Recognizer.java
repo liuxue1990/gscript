@@ -382,8 +382,22 @@ public class Recognizer {
             Learner.findPartsInGesture(gesture, category.getShapes(), matches);
             if (matches.size() == 0) {
 
+                System.err.println(String.format("(TODO) couldn't fit sample to category %d", catIndex));
+
                 for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
-                    addToFeatureList(1.0, featureList);
+                    addToFeatureList(0.2 * Learner.MAX_LOSS, featureList);
+
+                    if (useAngle) {
+                        addToFeatureList(0.5, featureList);
+                    }
+                }
+
+                if (useScale) {
+                    for (int i = 0; i < numOfShapes - 1; ++i) {
+                        for (int j = i + 1; j < numOfShapes; ++j) {
+                            addToFeatureList(0, featureList);
+                        }
+                    }
                 }
 
             } else {

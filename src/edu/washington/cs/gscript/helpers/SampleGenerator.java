@@ -149,7 +149,7 @@ public class SampleGenerator {
         int numOfSamples = category.getNumOfSamples();
         for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
             ArrayList<ArrayList<PartMatchResult>> matches = new ArrayList<ArrayList<PartMatchResult>>();
-            Learner.findPartsInGesture(category.getSample(sampleIndex), shapes, matches);
+            Learner.findPartsInGesture(category.getSample(sampleIndex), true, shapes, matches);
 
             double baseScale = -1;
             double lastAngle = 0;

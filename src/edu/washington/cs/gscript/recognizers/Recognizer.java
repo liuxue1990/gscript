@@ -379,7 +379,7 @@ public class Recognizer {
             }
 
             ArrayList<ArrayList<PartMatchResult>> matches = new ArrayList<ArrayList<PartMatchResult>>();
-            Learner.findPartsInGesture(gesture, category.getShapes(), matches);
+            Learner.findPartsInGesture(gesture, false, category.getShapes(), matches);
             if (matches.size() == 0) {
 
                 System.err.println(String.format("(TODO) couldn't fit sample to category %d", catIndex));

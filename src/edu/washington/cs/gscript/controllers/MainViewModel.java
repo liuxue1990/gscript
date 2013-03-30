@@ -173,7 +173,7 @@ public class MainViewModel {
         }
 
         matchesForSelectedSample = new ArrayList<ArrayList<PartMatchResult>>();
-        Learner.findPartsInGesture(selectedSample, selectedCategory.getShapes(), matchesForSelectedSample);
+        Learner.findPartsInGesture(selectedSample, true, selectedCategory.getShapes(), matchesForSelectedSample);
         NotificationCenter.getDefaultCenter().postNotification(SAMPLE_RECOGNITION_CHANGED_NOTIFICATION, this);
     }
 

@@ -46,7 +46,7 @@ public class Learner {
 
 
         ArrayList<ArrayList<PartMatchResult>> matches = new ArrayList<ArrayList<PartMatchResult>>();
-        Learner.findPartsInGesture(gesture, shapes, matches);
+        Learner.findPartsInGesture(gesture, false, shapes, matches);
 
         if (matches == null) {
             return new HashMap<String, Object>();
@@ -363,11 +363,18 @@ public class Learner {
     }
 
     public static double findPartsInGesture(
-            Gesture gesture, ArrayList<ShapeSpec> shapeList, ArrayList<ArrayList<PartMatchResult>> matches) {
+            Gesture gesture, boolean useUserMarks, ArrayList<ShapeSpec> shapeList, ArrayList<ArrayList<PartMatchResult>> matches) {
 
         int[] endLocations = computeEndLocations(gesture);
         PartFeatureVector[][] sampleFeaturesMap = sampleFeatureVectors(gesture, endLocations);
-        boolean[] userMarked = computeUserMarked(gesture, endLocations);
+        boolean[] userMarked;
+
+        if (useUserMarks) {
+            userMarked = computeUserMarked(gesture, endLocations);
+        } else {
+            userMarked = new boolean[endLocations.length];
+            Arrays.fill(userMarked, false);
+        }
 
         ShapeSpec[] shapes = shapeList.toArray(new ShapeSpec[shapeList.size()]);
         Part[] parts = new Part[shapes.length];

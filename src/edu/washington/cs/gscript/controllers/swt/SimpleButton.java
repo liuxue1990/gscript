@@ -59,6 +59,8 @@ public class SimpleButton extends Composite {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseDown(MouseEvent e) {
+                setFocus();
+
                 pressed = true;
                 hover = true;
                 if (!isDisposed()) {

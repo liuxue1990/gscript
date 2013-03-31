@@ -99,10 +99,41 @@ public class ScrolledList extends ScrolledComposite {
         rowLayout.center = true;
         listContainer.setLayout(rowLayout);
 
+        final Composite focusHelper = new Composite(content, SWT.NONE) {
+            @Override
+            public Point computeSize(int wHint, int hHint, boolean changed) {
+                return new Point(0, 0);
+            }
+        };
+        GridData gd = new GridData();
+        gd.widthHint = gd.heightHint = 0;
+        focusHelper.setLayoutData(gd);
+
         addControlListener(new ControlAdapter() {
             @Override
             public void controlResized(ControlEvent e) {
                 updateContentLayout();
+            }
+        });
+
+        listContainer.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseDown(MouseEvent e) {
+                focusHelper.setFocus();
+            }
+        });
+
+        content.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseDown(MouseEvent e) {
+                focusHelper.setFocus();
+            }
+        });
+
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseDown(MouseEvent e) {
+                focusHelper.setFocus();
             }
         });
 

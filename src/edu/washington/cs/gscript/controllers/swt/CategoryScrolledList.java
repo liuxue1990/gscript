@@ -5,6 +5,8 @@ import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
 import edu.washington.cs.gscript.models.Project;
 import edu.washington.cs.gscript.recognizers.Recognizer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.widgets.Composite;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;

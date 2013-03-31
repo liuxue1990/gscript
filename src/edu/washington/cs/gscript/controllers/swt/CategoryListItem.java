@@ -168,6 +168,14 @@ public class CategoryListItem extends ScrolledList.ListItem {
             }
         });
 
+        renameText.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                stackLayout.topControl = nameLabel;
+                nameContainer.layout();
+            }
+        });
+
 		addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e) {

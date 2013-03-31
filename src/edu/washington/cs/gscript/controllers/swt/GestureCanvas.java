@@ -83,6 +83,8 @@ public class GestureCanvas extends Canvas {
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
+                setFocus();
+
                 isMouseDown = true;
 
                 if (hoverEndLocation == -1) {

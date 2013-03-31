@@ -230,6 +230,7 @@ public class IconWithButtonOverlay extends Canvas {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseDown(MouseEvent e) {
+                setFocus();
                 buttonHover = hitTest(e.x, e.y);
 
                 if (buttonHover == -1) {

@@ -207,7 +207,7 @@ public class MainViewModel {
 			project.addSample(category, gesture);
 
 			if (category == selectedCategory) {
-				selectSample(gesture);
+				selectSample(category.getSample(category.getNumOfSamples() - 1));
 			}
 		}
 	}

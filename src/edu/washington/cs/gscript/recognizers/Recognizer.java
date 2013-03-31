@@ -520,10 +520,10 @@ public class Recognizer {
                 fMin[i] = Math.min(fMin[i], x[i].value);
             }
         }
-
     }
 
     public Category classify(Gesture gesture) {
+        gesture = Project.upSamplingIfNeeded(gesture);
         svm_node[] x = generateSVMFeatures(gesture, project, null, -1, useRotationFeatures, useScaleFeatures);
         scale(x, fMin, fMax, lower, upper);
         int categoryIndex = (int) svm.svm_predict(model, x);

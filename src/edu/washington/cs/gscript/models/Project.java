@@ -15,6 +15,16 @@ public class Project implements Serializable {
 
     private static final long serialVersionUID = 1446681795656083070L;
 
+    public static int MIN_GESETURE_RESOLUTION = 32;
+
+    public static Gesture upSamplingIfNeeded(Gesture gesture) {
+        if (gesture.size() < MIN_GESETURE_RESOLUTION) {
+            gesture = gesture.resample(MIN_GESETURE_RESOLUTION);
+        }
+        return gesture;
+    }
+
+
     private transient ReadWriteProperty<String> fileNameProperty;
 
     private transient ReadWriteProperty<Boolean> dirtyProperty;
@@ -61,6 +71,12 @@ public class Project implements Serializable {
 
         for (Category category : categories) {
             updateParts(category);
+
+            int numOfSamples = category.getNumOfSamples();
+            for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
+                ArrayList<Gesture> samples = category.getSamples();
+                samples.set(sampleIndex, upSamplingIfNeeded(samples.get(sampleIndex)));
+            }
         }
     }
 
@@ -217,6 +233,9 @@ public class Project implements Serializable {
 
     public void addSample(Category category, Gesture sample) {
         checkCategory(category);
+
+        sample = upSamplingIfNeeded(sample);
+
         category.addSample(sample);
         category.setChangedSinceLearning(true);
         setDirty(true);

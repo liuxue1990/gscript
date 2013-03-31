@@ -132,6 +132,10 @@ public class Category implements Serializable {
         return false;
     }
 
+    ArrayList<Gesture> getSamples() {
+        return samples;
+    }
+
     void addSample(Gesture gesture) {
 		samples.add(gesture);
 		NotificationCenter.getDefaultCenter().postNotification(

@@ -21,7 +21,6 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
-import edu.washington.cs.gscript.framework.NotificationObserver;
 
 public class GestureCanvas extends Canvas {
 
@@ -253,12 +252,18 @@ public class GestureCanvas extends Canvas {
         }
 
         layoutParts();
+
+        updateEndLocations();
     }
 
     private void updateEndLocations() {
+        if (gesture == null) {
+            return;
+        }
+
         final int boundingBoxSize = 6;
 
-        endLocations = Learner.computeEndLocations(gesture);
+        endLocations = Learner.computeEndLocations(gesture, mainViewModel.getSelectedCategory());
         isUserLabeledBreaks = new boolean[endLocations.length];
         endLocationBoundingBoxes = new Rectangle[endLocations.length];
 
@@ -443,8 +448,8 @@ public class GestureCanvas extends Canvas {
     private static void renderFeatures(GC gc, double[] fs, int sx, int sy, int width) {
 
         double max = 0;
-        for (int i = 0; i < fs.length; ++i) {
-            max = Math.max(max, Math.abs(fs[i]));
+        for (double f : fs) {
+            max = Math.max(max, Math.abs(f));
         }
 
         double scale = 40 / max;

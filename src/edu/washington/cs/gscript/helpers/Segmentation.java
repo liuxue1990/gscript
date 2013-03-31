@@ -7,7 +7,11 @@ import java.util.ArrayList;
 
 public class Segmentation {
 
-    public static int[] segment(Gesture gesture, double error) {
+    public static int[] segment(Gesture gesture, double error, int minNum) {
+
+        if (gesture.size() < minNum) {
+            throw new RuntimeException("Not enough points in the gesture to segment");
+        }
 
         ArrayList<Integer> breakPoints = new ArrayList<Integer>();
 
@@ -25,6 +29,50 @@ public class Segmentation {
 
             a = b;
             breakPoints.add(a);
+        }
+
+        int numOfBreakPoints = breakPoints.size();
+        while (numOfBreakPoints < minNum) {
+
+            double maxDis = -1;
+            int br = -1;
+            for (int i = 1; i < numOfBreakPoints; ++i) {
+                if (breakPoints.get(i) - breakPoints.get(i - 1) == 1) {
+                    continue;
+                }
+
+                XYT p0 = gesture.get(breakPoints.get(i - 1));
+                XYT p1 = gesture.get(breakPoints.get(i));
+
+                double dis = GSMath.distance(p0.getX(), p0.getY(), p1.getX(), p1.getY());
+
+                if (GSMath.compareDouble(dis, maxDis) > 0) {
+                    maxDis = dis;
+                    br = i;
+                }
+            }
+
+            int i0 = breakPoints.get(br - 1);
+            int i1 = breakPoints.get(br);
+
+            XYT p0 = gesture.get(i0);
+            XYT p1 = gesture.get(i1);
+
+            double minDis = Double.POSITIVE_INFINITY;
+            int ic = -1;
+            for (int i = i0 + 1; i < i1; ++i) {
+                XYT pi = gesture.get(i);
+                double d0 = GSMath.distance(p0.getX(), p0.getY(), pi.getX(), pi.getY());
+                double d1 = GSMath.distance(p1.getX(), p1.getY(), pi.getX(), pi.getY());
+
+                if (Double.compare(Math.abs(d1 - d0), minDis) < 0) {
+                    minDis = Math.abs(d1 - d0);
+                    ic = i;
+                }
+            }
+            breakPoints.add(br, ic);
+
+            numOfBreakPoints++;
         }
 
         int[] result = new int[breakPoints.size()];

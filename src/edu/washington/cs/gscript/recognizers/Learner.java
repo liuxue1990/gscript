@@ -206,7 +206,7 @@ public class Learner {
 
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
                 Gesture sample = category.getSample(sampleIndex);
-                int[] endLocations = computeEndLocations(sample);
+                int[] endLocations = computeEndLocations(sample, minNumOfEndLocations(category.getShapes()));
                 featuresMap[categoryIndex][sampleIndex] = sampleFeatureVectors(sample, endLocations);
                 userMarkedMap[categoryIndex][sampleIndex] = computeUserMarked(sample, endLocations, maxNumOfInternalUserMarks(category.getShapes()));
             }
@@ -365,7 +365,7 @@ public class Learner {
     public static double findPartsInGesture(
             Gesture gesture, boolean useUserMarks, ArrayList<ShapeSpec> shapeList, ArrayList<ArrayList<PartMatchResult>> matches) {
 
-        int[] endLocations = computeEndLocations(gesture);
+        int[] endLocations = computeEndLocations(gesture, minNumOfEndLocations(shapeList));
         PartFeatureVector[][] sampleFeaturesMap = sampleFeatureVectors(gesture, endLocations);
         boolean[] userMarked;
 
@@ -1086,12 +1086,16 @@ public class Learner {
         return Math.acos(Math.max(-1, Math.min(1, dot / l1 / l2)));
     }
 
-    public static int[] computeEndLocations(Gesture gesture) {
-        return Segmentation.segment(gesture, Learner.SEGMENTATION_ERROR);
+    public static int[] computeEndLocations(Gesture gesture, int minNum) {
+        return Segmentation.segment(gesture, Learner.SEGMENTATION_ERROR, minNum);
     }
 
-    private static int minNumOfEndLocations(ArrayList<ShapeSpec> shapes) {
-        return shapes.size() - 1;
+    public static int[] computeEndLocations(Gesture gesture, Category category) {
+        return computeEndLocations(gesture, minNumOfEndLocations(category.getShapes()));
+    }
+
+    public static int minNumOfEndLocations(ArrayList<ShapeSpec> shapes) {
+        return shapes.size() + 1;
     }
 
     private static int maxNumOfInternalUserMarks(ArrayList<ShapeSpec> shapes) {

@@ -48,7 +48,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		super(parent, SWT.BACKGROUND);
 		setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
-        recallFont = new Font(getDisplay(), "Courier New", 10, SWT.BOLD);
+        recallFont = Resources.FONT_COURIER_NEW_10_BOLD;
 
         FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);

@@ -28,7 +28,7 @@ public class TitleBar extends Canvas {
         super(parent, style);
         setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
-        font = new Font(getDisplay(), "Helvetica", 10, SWT.BOLD);
+        font = Resources.FONT_HELVETICA_10_BOLD;
 
         addDisposeListener(new DisposeListener() {
             @Override

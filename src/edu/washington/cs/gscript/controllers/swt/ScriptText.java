@@ -32,8 +32,8 @@ public class ScriptText extends Composite {
         public StatusArea(Composite parent, int style) {
             super(parent, style);
 
-            font0 = new Font(getDisplay(), "Courier New", 11, SWT.BOLD);
-            font1 = new Font(getDisplay(), "Arial", 11, SWT.NORMAL);
+            font0 = Resources.FONT_COURIER_NEW_11_BOLD;
+            font1 = Resources.FONT_ARIAL_11_NORMAL;
 
             addDisposeListener(new DisposeListener() {
                 @Override

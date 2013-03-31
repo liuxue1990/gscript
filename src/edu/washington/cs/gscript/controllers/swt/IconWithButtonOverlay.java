@@ -281,7 +281,13 @@ public class IconWithButtonOverlay extends Canvas {
     }
 
     public void setThumbnail(Image thumbnail) {
-        this.thumbnail = thumbnail;
+        if (this.thumbnail != thumbnail) {
+            Image oldThumbnail = this.thumbnail;
+            this.thumbnail = thumbnail;
+            if (oldThumbnail != null) {
+                oldThumbnail.dispose();
+            }
+        }
         redraw();
     }
 

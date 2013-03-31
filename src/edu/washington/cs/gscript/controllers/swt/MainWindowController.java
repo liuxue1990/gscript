@@ -88,7 +88,7 @@ public class MainWindowController {
         public ButtonRetrain(Composite parent, int style) {
             super(parent, style);
 
-            font = new Font(getDisplay(), "Courier New", 10, SWT.BOLD);
+            font = Resources.FONT_COURIER_NEW_10_BOLD;
             this.addDisposeListener(new DisposeListener() {
                 @Override
                 public void widgetDisposed(DisposeEvent e) {
@@ -167,7 +167,7 @@ public class MainWindowController {
             super(parent, style);
 
             text = "";
-            font = new Font(getDisplay(),"Arial", 12, SWT.BOLD );
+            font = Resources.FONT_ARIAL_12_BOLD;
             this.addDisposeListener(new DisposeListener() {
                 @Override
                 public void widgetDisposed(DisposeEvent e) {
@@ -229,7 +229,7 @@ public class MainWindowController {
 
         public ButtonGreenYes(Composite parent, int style) {
             super(parent, style);
-            font = new Font(getDisplay(), "Arial", 12, SWT.NORMAL);
+            font = Resources.FONT_ARIAL_12_NORMAL;
             addDisposeListener(new DisposeListener() {
                 @Override
                 public void widgetDisposed(DisposeEvent e) {
@@ -289,7 +289,7 @@ public class MainWindowController {
 
         public ButtonRedNo(Composite parent, int style) {
             super(parent, style);
-            font = new Font(getDisplay(), "Arial", 12, SWT.NORMAL);
+            font = Resources.FONT_ARIAL_12_NORMAL;
             addDisposeListener(new DisposeListener() {
                 @Override
                 public void widgetDisposed(DisposeEvent e) {

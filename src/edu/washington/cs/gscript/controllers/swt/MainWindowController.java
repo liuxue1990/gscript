@@ -89,12 +89,6 @@ public class MainWindowController {
             super(parent, style);
 
             font = Resources.FONT_COURIER_NEW_10_BOLD;
-            this.addDisposeListener(new DisposeListener() {
-                @Override
-                public void widgetDisposed(DisposeEvent e) {
-                    font.dispose();
-                }
-            });
         }
 
         public void setText(String text) {
@@ -168,12 +162,6 @@ public class MainWindowController {
 
             text = "";
             font = Resources.FONT_ARIAL_12_BOLD;
-            this.addDisposeListener(new DisposeListener() {
-                @Override
-                public void widgetDisposed(DisposeEvent e) {
-                    font.dispose();
-                }
-            });
         }
 
         public void setText(String text) {
@@ -230,12 +218,6 @@ public class MainWindowController {
         public ButtonGreenYes(Composite parent, int style) {
             super(parent, style);
             font = Resources.FONT_ARIAL_12_NORMAL;
-            addDisposeListener(new DisposeListener() {
-                @Override
-                public void widgetDisposed(DisposeEvent e) {
-                    font.dispose();
-                }
-            });
         }
 
         @Override
@@ -290,12 +272,6 @@ public class MainWindowController {
         public ButtonRedNo(Composite parent, int style) {
             super(parent, style);
             font = Resources.FONT_ARIAL_12_NORMAL;
-            addDisposeListener(new DisposeListener() {
-                @Override
-                public void widgetDisposed(DisposeEvent e) {
-                    font.dispose();
-                }
-            });
         }
 
         @Override

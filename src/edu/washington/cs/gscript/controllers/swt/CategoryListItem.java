@@ -179,7 +179,6 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e) {
-                recallFont.dispose();
                 NotificationCenter.getDefaultCenter().removeObserver(itemObserver);
             }
         });

@@ -35,14 +35,6 @@ public class ScriptText extends Composite {
             font0 = Resources.FONT_COURIER_NEW_11_BOLD;
             font1 = Resources.FONT_ARIAL_11_NORMAL;
 
-            addDisposeListener(new DisposeListener() {
-                @Override
-                public void widgetDisposed(DisposeEvent e) {
-                    font0.dispose();
-                    font1.dispose();
-                }
-            });
-
             addPaintListener(new PaintListener() {
                 @Override
                 public void paintControl(PaintEvent e) {

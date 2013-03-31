@@ -30,13 +30,6 @@ public class TitleBar extends Canvas {
 
         font = Resources.FONT_HELVETICA_10_BOLD;
 
-        addDisposeListener(new DisposeListener() {
-            @Override
-            public void widgetDisposed(DisposeEvent e) {
-                font.dispose();
-            }
-        });
-
         addPaintListener(new PaintListener() {
             @Override
             public void paintControl(PaintEvent e) {

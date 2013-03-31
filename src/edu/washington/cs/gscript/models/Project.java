@@ -3,7 +3,7 @@ package edu.washington.cs.gscript.models;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
-import edu.washington.cs.gscript.helpers.Parser;
+import edu.washington.cs.gscript.helpers.ParserHelper;
 import edu.washington.cs.gscript.recognizers.Learner;
 
 import java.io.IOException;
@@ -326,7 +326,7 @@ public class Project implements Serializable {
             scriptText = "";
         }
 
-        ArrayList<ShapeSpec> shapes = Parser.parseScript(scriptText);
+        ArrayList<ShapeSpec> shapes = ParserHelper.parseScript(scriptText);
 
         if (shapes == null) {
             return false;

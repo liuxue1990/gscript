@@ -9,7 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-public class Parser {
+public class ParserHelper {
 
     public static ArrayList<ShapeSpec> parseScript(String scriptText) {
         try {

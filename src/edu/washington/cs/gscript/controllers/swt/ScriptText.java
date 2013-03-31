@@ -3,7 +3,7 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
-import edu.washington.cs.gscript.helpers.Parser;
+import edu.washington.cs.gscript.helpers.ParserHelper;
 import edu.washington.cs.gscript.models.Category;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
@@ -161,7 +161,7 @@ public class ScriptText extends Composite {
 
     private void updateValidity() {
         valid = true;
-        if (Parser.parseScript(text.getText()) == null) {
+        if (ParserHelper.parseScript(text.getText()) == null) {
             valid = false;
         }
         titleBar.redraw();

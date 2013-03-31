@@ -96,16 +96,18 @@ public class GestureCanvas extends Canvas {
 
 			@Override
 			public void mouseUp(MouseEvent e) {
-                isMouseDown = false;
+                if (isMouseDown) {
+                    isMouseDown = false;
 
-                if (isGesturing) {
-    				isGesturing = false;
-	    			gesturePerformed();
-                } else {
-                    if (hoverEndLocation != -1 && endLocationBoundingBoxes[hoverEndLocation].contains(e.x, e.y)) {
-                        toggleUserLabelAtEndLocation(hoverEndLocation);
+                    if (isGesturing) {
+                        isGesturing = false;
+                        gesturePerformed();
+                    } else {
+                        if (hoverEndLocation != -1 && endLocationBoundingBoxes[hoverEndLocation].contains(e.x, e.y)) {
+                            toggleUserLabelAtEndLocation(hoverEndLocation);
+                        }
+                        hoverEndLocation = getHoverEndLocation(e.x, e.y);
                     }
-                    hoverEndLocation = getHoverEndLocation(e.x, e.y);
                 }
 			}
 		});

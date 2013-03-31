@@ -221,7 +221,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
 		NotificationCenter.getDefaultCenter().addObserver(
 				itemObserver, NotificationCenter.ITEMS_REMOVED_NOTIFICATION, category.getSamplesProperty());
 
-		nameLabel.setText(category.getNameProperty().getValue());
+		nameLabel.setText(category.getNameProperty().getValue() + "  (" + category.getNumOfSamples() + ")");
 
 
 		int width = 110;

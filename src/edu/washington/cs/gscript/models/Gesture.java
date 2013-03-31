@@ -74,8 +74,6 @@ public class Gesture implements Serializable, Iterable<XYT> {
         if (userLabeledBreaks == null) {
             userLabeledBreaks = new ArrayList<Double>();
         }
-
-        System.out.println("Synthesized: " + isSynthesized());
     }
 
     private void updateLength() {

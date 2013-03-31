@@ -50,13 +50,16 @@ public class Gesture implements Serializable, Iterable<XYT> {
 
     private ArrayList<Double> userLabeledBreaks;
 
-	public Gesture(List<XYT> trajectory) {
-        this(trajectory.toArray(new XYT[trajectory.size()]));
+    private boolean synthesized;
+
+	public Gesture(List<XYT> trajectory, boolean synthesized) {
+        this(trajectory.toArray(new XYT[trajectory.size()]), synthesized);
 	}
 
-    private Gesture(XYT[] points) {
+    private Gesture(XYT[] points, boolean synthesized) {
         this.points = points;
         this.bounds = GSMath.boundingBox(Arrays.asList(points));
+        this.synthesized = synthesized;
 
         init();
     }
@@ -71,6 +74,8 @@ public class Gesture implements Serializable, Iterable<XYT> {
         if (userLabeledBreaks == null) {
             userLabeledBreaks = new ArrayList<Double>();
         }
+
+        System.out.println("Synthesized: " + isSynthesized());
     }
 
     private void updateLength() {
@@ -133,6 +138,11 @@ public class Gesture implements Serializable, Iterable<XYT> {
 //        return points.length - 1;
 //    }
 
+
+    public boolean isSynthesized() {
+        return synthesized;
+    }
+
     public boolean isUserLabeledBreakIndex(int index) {
         return isUserLabeledBreak(indexToRatio(index));
     }
@@ -184,7 +194,7 @@ public class Gesture implements Serializable, Iterable<XYT> {
             normalizedPoints.add(XYT.xy((point.getX() - xc) / maxR, (point.getY() - yc) / maxR));
         }
 
-        return new Gesture(normalizedPoints);
+        return new Gesture(normalizedPoints, synthesized);
     }
 
     public Gesture resample(int numOfSamples) {
@@ -225,10 +235,10 @@ public class Gesture implements Serializable, Iterable<XYT> {
             }
         }
 
-        return new Gesture(newPoints);
+        return new Gesture(newPoints, synthesized);
     }
 
     public Gesture subGesture(int beginIndex, int endIndex) {
-        return new Gesture(Arrays.copyOfRange(points, beginIndex, endIndex + 1));
+        return new Gesture(Arrays.copyOfRange(points, beginIndex, endIndex + 1), synthesized);
     }
 }

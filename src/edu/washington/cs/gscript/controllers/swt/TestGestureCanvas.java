@@ -83,7 +83,7 @@ public class TestGestureCanvas extends Canvas {
 
     private void gesturePerformed() {
         if (points.size() > 5) {
-            gesture = new Gesture(points);
+            gesture = new Gesture(points, false);
 
             recognizedCategory = mainViewModel.getRecognizer().classify(gesture);
             paramMap = Learner.findParametersInGesture(gesture, recognizedCategory.getShapes());

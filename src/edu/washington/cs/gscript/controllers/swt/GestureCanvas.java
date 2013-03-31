@@ -222,13 +222,13 @@ public class GestureCanvas extends Canvas {
                 for (int i = 0, n = partBounds.length; i < n; ++i) {
                     if (partBounds[i].contains((int)points.get(0).getX(), (int)points.get(0).getY())) {
                         isForPart = true;
-                        mainViewModel.setUserProvidedPart(relatedParts.get(i), new Gesture(points));
+                        mainViewModel.setUserProvidedPart(relatedParts.get(i), new Gesture(points, false));
                         break;
                     }
                 }
             }
 			if (!isForPart) {
-                mainViewModel.recordSample(mainViewModel.getSelectedCategory(), new Gesture(points));
+                mainViewModel.recordSample(mainViewModel.getSelectedCategory(), new Gesture(points, false));
             }
 		}
 

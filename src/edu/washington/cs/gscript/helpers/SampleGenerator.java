@@ -65,7 +65,7 @@ public class SampleGenerator {
             yf = lastPoint.getY();
         }
 
-        return new Gesture(points);
+        return new Gesture(points, true);
     }
 
     public static Gesture stitch(SynthesizedGestureSample sample, double centerX, double centerY, double radius) {
@@ -87,7 +87,7 @@ public class SampleGenerator {
         for (i =  0; i < xys.length; i += 2) {
             points.add(XYT.xy(xys[i], xys[i + 1]));
         }
-        return new Gesture(points);
+        return new Gesture(points, gesture.isSynthesized());
     }
 
 

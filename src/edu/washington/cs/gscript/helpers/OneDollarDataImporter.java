@@ -57,7 +57,7 @@ public class OneDollarDataImporter {
                     project.addCategoryIfNotExist(name);
                     project.addSample(
                             project.getCategory(project.findCategoryIndexByName(name)),
-                            new Gesture(handler.points));
+                            new Gesture(handler.points, false));
                 }
             }
 
@@ -91,7 +91,7 @@ public class OneDollarDataImporter {
                 }
 
                 project.addCategoryIfNotExist(name);
-                project.addSample(project.getCategory(project.findCategoryIndexByName(name)), new Gesture(points));
+                project.addSample(project.getCategory(project.findCategoryIndexByName(name)), new Gesture(points, false));
             }
         } catch (IOException e) {
             e.printStackTrace();

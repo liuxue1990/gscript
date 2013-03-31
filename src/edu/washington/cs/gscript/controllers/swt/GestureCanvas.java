@@ -244,6 +244,7 @@ public class GestureCanvas extends Canvas {
         if (category != null) {
             int numOfShapes = category.getNumOfShapes();
             relatedParts = new ArrayList<Part>();
+            hoverPartIndex = -1;
 
             for (int shapeIndex = 0; shapeIndex < numOfShapes; ++shapeIndex) {
                 Part part = category.getShape(shapeIndex).getPart();

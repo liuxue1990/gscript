@@ -403,17 +403,7 @@ public class MainWindowController {
         shell.addShellListener(new ShellAdapter() {
             @Override
             public void shellClosed(ShellEvent e) {
-                Project project = MainWindowController.this.mainViewModel.getProject();
-
-                if (project != null && project.isDirty()) {
-                    MessageBox messageBox = new MessageBox(
-                            MainWindowController.this.shell,
-                            SWT.APPLICATION_MODAL | SWT.ICON_ERROR | SWT.YES | SWT.NO);
-                    messageBox.setText("Unsaved Change");
-                    messageBox.setMessage(
-                            "The project has been modified. Are you sure you want to discard the change and quit?");
-                    e.doit = messageBox.open() == SWT.YES;
-                }
+                e.doit = confirmCloseProject();
 
                 if (e.doit) {
                     MainWindowController.this.mainViewModel.newProject();
@@ -435,6 +425,23 @@ public class MainWindowController {
             }
         });
 	}
+
+    private boolean confirmCloseProject() {
+        Project project = MainWindowController.this.mainViewModel.getProject();
+
+        if (project != null && project.isDirty()) {
+            MessageBox messageBox = new MessageBox(
+                    MainWindowController.this.shell,
+                    SWT.APPLICATION_MODAL | SWT.ICON_ERROR | SWT.YES | SWT.NO);
+            messageBox.setText("Unsaved Change");
+            messageBox.setMessage(
+                    "The project has been modified. Are you sure you want to discard the change?");
+
+            return messageBox.open() == SWT.YES;
+        }
+
+        return true;
+    }
 
 	private void reloadProject() {
         NotificationCenter.getDefaultCenter().removeObserver(projectFileStatusObserver);
@@ -521,12 +528,26 @@ public class MainWindowController {
         toolTestRecognizer.setText("Test recognizer...");
         toolTestRecognizer.setAccelerator(SWT.MOD1 + 'T');
 
+        fileNewItem.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onUserActionNew();
+            }
+        });
+
         fileOpenItem.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
                 onUserActionOpen();
 			}
 		});
+
+        fileSaveItem.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onUserActionSave();
+            }
+        });
 
         fileSaveAsItem.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -542,15 +563,15 @@ public class MainWindowController {
             }
         });
 
-        MenuItem fileLoadTestData = new MenuItem(fileMenu, SWT.PUSH);
-        fileLoadTestData.setText("Load test data");
-        fileLoadTestData.setAccelerator(SWT.MOD1 + '0');
-        fileLoadTestData.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                mainViewModel.loadTestData();
-            }
-        });
+//        MenuItem fileLoadTestData = new MenuItem(fileMenu, SWT.PUSH);
+//        fileLoadTestData.setText("Load test data");
+//        fileLoadTestData.setAccelerator(SWT.MOD1 + '0');
+//        fileLoadTestData.addSelectionListener(new SelectionAdapter() {
+//            @Override
+//            public void widgetSelected(SelectionEvent e) {
+//                mainViewModel.loadTestData();
+//            }
+//        });
 
         toolTestRecognizer.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -562,7 +583,17 @@ public class MainWindowController {
 		shell.setMenuBar(mainMenu);
 	}
 
+    private void onUserActionNew() {
+        if (!confirmCloseProject()) {
+            return;
+        }
+        mainViewModel.newProject();
+    }
+
     private void onUserActionOpen() {
+        if (!confirmCloseProject()) {
+            return;
+        }
         FileDialog dialog = new FileDialog(shell, SWT.OPEN);
         dialog.setFilterPath("~/Desktop");
         String fileName = dialog.open();
@@ -579,17 +610,32 @@ public class MainWindowController {
         }
     }
 
-    private void onUserActionSaveAs() {
-        FileDialog dialog = new FileDialog(shell, SWT.SAVE);
-        dialog.setOverwrite(true);
-        dialog.setFilterPath("~/Desktop");
-        String fileName = dialog.open();
+    private void doSave(String fileName) {
         if (fileName != null) {
             try {
                 mainViewModel.saveProject(fileName);
             } catch (IOException e) {
                 errorMessage(shell, "Cannot save to file");
             }
+        }
+    }
+
+    private void onUserActionSave() {
+        String fileName = mainViewModel.getProject().getFileNameProperty().getValue();
+        if (fileName == null) {
+            onUserActionSaveAs();
+        } else {
+            doSave(fileName);
+        }
+    }
+
+    private void onUserActionSaveAs() {
+        FileDialog dialog = new FileDialog(shell, SWT.SAVE);
+        dialog.setOverwrite(true);
+        dialog.setFilterPath("~/Desktop");
+        String fileName = dialog.open();
+        if (fileName != null) {
+            doSave(fileName);
         }
     }
 

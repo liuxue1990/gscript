@@ -109,15 +109,14 @@ public class MainViewModel {
         Project newProject = ((Project)in.readObject());
         in.close();
 
-        newProject.setFileName(fileName);
+        selectCategory(null);
 
+        newProject.setFileName(fileName);
         setProject(newProject);
         NotificationCenter.getDefaultCenter().postNotification(PROJECT_CHANGED_NOTIFICATION, this);
 
         NotificationCenter.getDefaultCenter().addObserver(
                 partsObserver, NotificationCenter.VALUE_CHANGED_NOTIFICATION, project.getPartsTableProperty());
-
-        selectCategory(null);
     }
 
     public void saveProject(String fileName) throws IOException {

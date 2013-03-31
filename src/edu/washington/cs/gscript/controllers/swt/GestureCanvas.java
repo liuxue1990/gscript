@@ -249,15 +249,15 @@ public class GestureCanvas extends Canvas {
                     relatedParts.add(part);
                 }
             }
+
+            updateEndLocations();
         }
 
         layoutParts();
-
-        updateEndLocations();
     }
 
     private void updateEndLocations() {
-        if (gesture == null) {
+        if (gesture == null || mainViewModel.getSelectedCategory() == null) {
             return;
         }
 

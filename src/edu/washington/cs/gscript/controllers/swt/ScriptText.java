@@ -174,6 +174,10 @@ public class ScriptText extends Composite {
             text.removeModifyListener(textModifyListener);
             text.setText(category.getScriptTextProperty().getValue());
             text.addModifyListener(textModifyListener);
+        } else {
+            text.removeModifyListener(textModifyListener);
+            text.setText("");
+            text.addModifyListener(textModifyListener);
         }
 
         updateValidity();

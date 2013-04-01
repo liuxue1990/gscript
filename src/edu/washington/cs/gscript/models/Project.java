@@ -281,8 +281,23 @@ public class Project implements Serializable {
     public void setScript(Category category, String text) {
         checkCategory(category);
         category.getScriptTextReadWriteProperty().setValue(text);
-        if (updateParts(category)) {
+        ArrayList<ShapeSpec> replaced = updateParts(category);
+        if (replaced != null) {
             category.setChangedSinceLearning(true);
+
+            for (ShapeSpec shape : replaced) {
+                for (Category otherCategory : categories) {
+                    if (otherCategory == category) {
+                        continue;
+                    }
+                    for (ShapeSpec otherShape : otherCategory.getShapes()) {
+                        if (otherShape.getPart() == shape.getPart()) {
+                            otherCategory.setChangedSinceLearning(true);
+                            break;
+                        }
+                    }
+                }
+            }
         }
         setDirty(true);
     }
@@ -319,7 +334,7 @@ public class Project implements Serializable {
         return true;
     }
 
-    boolean updateParts(Category category) {
+    ArrayList<ShapeSpec> updateParts(Category category) {
         checkCategory(category);
         String scriptText = category.getScriptTextProperty().getValue();
         if (scriptText == null) {
@@ -329,7 +344,7 @@ public class Project implements Serializable {
         ArrayList<ShapeSpec> shapes = ParserHelper.parseScript(scriptText);
 
         if (shapes == null) {
-            return false;
+            return null;
         }
 
         if (shapes.size() == 0) {
@@ -343,12 +358,13 @@ public class Project implements Serializable {
             shapes.get(i).setPart(getPart(shapes.get(i).getPartName()));
         }
 
-        if (!shapesEquals(category.getShapes(), shapes)) {
+        ArrayList<ShapeSpec> oldShapes = category.getShapes();
+        if (!shapesEquals(oldShapes, shapes)) {
             category.setShapes(shapes);
-            return true;
+            return oldShapes;
         }
 
-        return false;
+        return null;
     }
 
     public void toggleUserLabelAtSampleEndLocation(Category category, Gesture sample, double t) {

@@ -415,6 +415,7 @@ public class Project implements Serializable {
 
         for (Category cat : relatedCategories) {
             cat.setChangedSinceLearning(false);
+            cat.synthesize();
         }
 
         collectGarbageParts();

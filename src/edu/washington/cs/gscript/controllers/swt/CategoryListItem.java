@@ -146,6 +146,7 @@ public class CategoryListItem extends ScrolledList.ListItem {
                 renameText.setText(category.getNameProperty().getValue());
                 nameContainer.layout();
                 renameText.setFocus();
+                renameText.selectAll();
             }
         });
 
@@ -171,6 +172,10 @@ public class CategoryListItem extends ScrolledList.ListItem {
         renameText.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) {
+                String newName = renameText.getText();
+                if (!newName.contains(" ") && !newName.equals(category.getNameProperty().getValue())) {
+                    mainViewModel.getProject().renameCategory(category, renameText.getText());
+                }
                 stackLayout.topControl = nameLabel;
                 nameContainer.layout();
             }

@@ -128,6 +128,10 @@ public class SampleGenerator {
         xs.add(new DataPoint(x, label));
     }
 
+    public void clear() {
+        collection.clear();
+    }
+
     public void reset() {
         ArrayList<ShapeSpec> shapes = category.getShapes();
         collection = new ArrayList<SynthesizedGestureSample>();

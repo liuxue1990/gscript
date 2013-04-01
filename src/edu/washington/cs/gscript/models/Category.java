@@ -150,8 +150,11 @@ public class Category implements Serializable {
 
     void setShapes(ArrayList<ShapeSpec> shapes) {
         this.shapes = new ArrayList<ShapeSpec>(shapes);
+        sampleGenerator.clear();
         NotificationCenter.getDefaultCenter().postNotification(
                 NotificationCenter.VALUE_CHANGED_NOTIFICATION, shapesProperty);
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.VALUE_CHANGED_NOTIFICATION, synthesizedSamplesProperty);
     }
 
     public ArrayList<SynthesizedGestureSample> getSynthesizedSamples() {

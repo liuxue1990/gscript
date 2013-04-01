@@ -500,6 +500,9 @@ public class MainWindowController {
         MenuItem fileImportOneDollarData = new MenuItem(fileMenu, SWT.PUSH);
         fileImportOneDollarData.setText("Import $1 data...");
 
+        MenuItem toolClearLabels = new MenuItem(toolMenu, SWT.PUSH);
+        toolClearLabels.setText("Clear labeled points");
+
         MenuItem toolTestRecognizer = new MenuItem(toolMenu, SWT.PUSH);
         toolTestRecognizer.setText("Test recognizer...");
         toolTestRecognizer.setAccelerator(SWT.MOD1 + 'T');
@@ -553,6 +556,13 @@ public class MainWindowController {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onUserActionTestRecognizer();
+            }
+        });
+
+        toolClearLabels.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mainViewModel.resetUserLabelsInSelectedCategory();
             }
         });
 

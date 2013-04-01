@@ -358,6 +358,15 @@ public class Project implements Serializable {
         setDirty(true);
     }
 
+    public void resetUserLabeledBreaksInCategory(Category category) {
+        checkCategory(category);
+        for (Gesture sample : category.getSamples()) {
+            sample.resetUserLabels();
+        }
+        category.setChangedSinceLearning(true);
+        setDirty(true);
+    }
+
     public boolean isLearningNeeded(Category category) {
         ArrayList<Category> relatedCategories = Learner.findRelatedCategories(this, category);
 

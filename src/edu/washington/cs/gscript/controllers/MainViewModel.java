@@ -247,6 +247,12 @@ public class MainViewModel {
         recognizeSelectedSample();
     }
 
+    public void resetUserLabelsInSelectedCategory() {
+        if (selectedCategory != null) {
+            project.resetUserLabeledBreaksInCategory(selectedCategory);
+        }
+    }
+
     public void loadTestData() {
         project.importCategories(OneDollarDataImporter.importDiretory("/Users/hlv/repos/gscript/data/one_dollar/s02/medium"));
     }

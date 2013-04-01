@@ -172,6 +172,12 @@ public class Gesture implements Serializable, Iterable<XYT> {
                 USER_LABELED_BREAKS_CHANGED_NOTIFICATION, this);
     }
 
+    void resetUserLabels() {
+        userLabeledBreaks.clear();
+        NotificationCenter.getDefaultCenter().postNotification(
+                USER_LABELED_BREAKS_CHANGED_NOTIFICATION, this);
+    }
+
     public Gesture normalize() {
         Gesture resampled = resample(1024);
 

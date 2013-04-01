@@ -67,7 +67,7 @@ public class GestureCanvas extends Canvas {
     };
 
 	public GestureCanvas(Composite parent, MainViewModel viewModel) {
-		super(parent, SWT.BACKGROUND);
+		super(parent, SWT.DOUBLE_BUFFERED | SWT.BACKGROUND);
 		setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
 		isMouseDown = false;

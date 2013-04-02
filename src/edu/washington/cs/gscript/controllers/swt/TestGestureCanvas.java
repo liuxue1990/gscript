@@ -76,12 +76,21 @@ public class TestGestureCanvas extends Canvas {
         });
     }
 
+    public Gesture getGesture() {
+        return gesture;
+    }
+
+    public void reset() {
+        gesture = null;
+        redraw();
+    }
+
     private void addPoint(double x, double y, long t) {
         points.add(XYT.xyt(x, y, t & 0xFFFFFFFFL));
         redraw();
     }
 
-    private void gesturePerformed() {
+    protected void gesturePerformed() {
         if (points.size() > 5) {
             gesture = new Gesture(points, false);
 

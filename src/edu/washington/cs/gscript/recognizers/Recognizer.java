@@ -92,6 +92,7 @@ public class Recognizer {
 
         int numOfFolds = 10;
 
+        Random random = new Random(2951);
         ArrayList<Double> yList = new ArrayList<Double>();
         ArrayList<Gesture> sampleList = new ArrayList<Gesture>();
         Map<Gesture, Integer> sampleFoldMap = new HashMap<Gesture, Integer>();
@@ -101,8 +102,14 @@ public class Recognizer {
         for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
             Category category = project.getCategory(categoryIndex);
             int numOfSamples = category.getNumOfSamples();
+            ArrayList<Integer> sampleIds = new ArrayList<Integer>();
+            for (int i = 0; i < numOfSamples; ++i) {
+                sampleIds.add(i);
+            }
+            Collections.shuffle(sampleIds, random);
+
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
-                Gesture sample = category.getSample(sampleIndex);
+                Gesture sample = category.getSample(sampleIds.get(sampleIndex));
                 sampleList.add(sample);
                 yList.add((double)categoryIndex);
 

@@ -6,21 +6,73 @@ import edu.washington.cs.gscript.recognizers.Learner;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class OneDollarRecognizer {
+
+    private static double D =  0.5 * (-1 + Math.sqrt(5)); // 0.6180339887499
+
+    private static double[] normalize(double[] vector) {
+        double[] c = GSMath.boundingCircle(vector);
+        GSMath.shift(vector, -c[0], -c[1], vector);
+        GSMath.rotate(vector, -Math.atan2(vector[1], vector[0]), vector);
+        return GSMath.normalizeByBox(vector, vector);
+    }
+
+    private static double distanceAtBestAngle(double[] template, double[] vector, double tha, double thb, double dth) {
+        double x1 = GSMath.linearInterpolate(tha, thb, 1 - D);
+        double f1 = distanceAtAngle(template, vector, x1);
+        double x2 = GSMath.linearInterpolate(tha, thb, D);
+        double f2 = distanceAtAngle(template, vector, x2);
+
+        while (Double.compare(Math.abs(thb - tha), dth) > 0) {
+            if (Double.compare(f1, f2) < 0) {
+                thb = x2;
+                x2 = x1;
+                f2 = f1;
+                x1 = GSMath.linearInterpolate(tha, thb, 1 - D);
+                f1 = distanceAtAngle(template, vector, x1);
+            } else {
+                tha = x1;
+                x1 = x2;
+                f1 = f2;
+                x2 = GSMath.linearInterpolate(tha, thb, D);
+                f2 = distanceAtAngle(template, vector, x2);
+            }
+        }
+
+        return Math.min(f1, f2);
+    }
+
+    private static double distanceAtAngle(double[] template, double[] vector, double angle) {
+        double cos = Math.cos(angle);
+        double sin = Math.sin(angle);
+
+        double d = 0;
+
+        for (int i = 0; i < template.length; i += 2) {
+            double x0 = template[i];
+            double y0 = template[i + 1];
+            double x1 = vector[i];
+            double y1 = vector[i + 1];
+
+            double x2 = x1 * cos - y1 * sin;
+            double y2 = x1 * sin + y1 * cos;
+
+            d += GSMath.distance(x0, y0, x2, y2);
+        }
+
+        return d;
+    }
+
 
     private final int numOfSamplingPoints;
 
     private Map<String, ArrayList<double[]>> templates;
 
-    private Map<String, ArrayList<double[]>> polarTemplates;
-
     public OneDollarRecognizer(int numOfSamplingPoints) {
         this.numOfSamplingPoints = numOfSamplingPoints;
         templates = new LinkedHashMap<String, ArrayList<double[]>>();
-        polarTemplates = new LinkedHashMap<String, ArrayList<double[]>>();
     }
 
     private static void addToTemplate(
@@ -32,24 +84,24 @@ public class OneDollarRecognizer {
             templateMap.put(name, templates);
         }
 
-        templates.add(vector);
+        templates.add(normalize(vector));
     }
 
     public void addGestureAsTemplate(String name, Gesture gesture) {
-        double[] resampled = Learner.gestureFeatures(gesture, numOfSamplingPoints);
-        double[] vector = GSMath.normalizeByMagnitude(resampled, null);
-
-        addToTemplate(templates, name, vector);
-
-        vector = GSMath.normalizeByRadius(resampled, null);
-        addToTemplate(polarTemplates, name, vector);
+        addToTemplate(
+                templates,
+                name,
+                Learner.gestureFeatures(gesture, numOfSamplingPoints));
     }
 
     public String recognize(Gesture gesture) {
-        return recognize(GSMath.normalizeByMagnitude(Learner.gestureFeatures(gesture, numOfSamplingPoints), null));
+        return recognize(
+                Learner.gestureFeatures(gesture, numOfSamplingPoints));
     }
 
     private String recognize(double[] vector) {
+        normalize(vector);
+
         double min = Double.MAX_VALUE;
         String name = null;
 
@@ -64,7 +116,7 @@ public class OneDollarRecognizer {
             double d = Double.MAX_VALUE;
 
             for (double[] v : vectors) {
-                d = Math.min(d, Learner.distanceToTemplateAligned(vector, v));
+                d = Math.min(d, distanceAtBestAngle(vector, v, - Math.PI / 4, Math.PI / 4, Math.PI / 180 * 2));
             }
 
             if (d < min) {
@@ -76,77 +128,5 @@ public class OneDollarRecognizer {
         return name;
     }
 
-//	private void resample(ArrayList<GestureSegment> segments, ArrayList<double[]> vectors) {
-//
-//		for (GestureSegment segment : segments) {
-//
-//		}
-//
-//	}
-//
-//	private double computeScore2(double[] vector1, int from, int to, double[] vector2) {
-//		return 0;
-//	}
-//
-//	private double computeScore2(
-//			double[] v, ArrayList<GestureSegment> segments, ArrayList<double[]> vectorSegment) {
-//
-//		int n = segments.size();
-//		int m = v.length;
-//
-//		double[][] cost = new double[n + 1][m + 1];
-//
-//		for (int i = n; i >= 0; --i) {
-//			cost[i][m] = 0;
-//		}
-//
-//		for (int i = n - 1; i >= 0; --i) {
-//		}
-//
-//		return cost[0][0];
-//	}
-//
-//	public String recognize2(ClippedGesture clippedGesture) {
-//
-//		ArrayList<GestureSegment> segments =
-//				clippedGesture.getOriginalGesture().clip2(clippedGesture.getClipRect());
-//
-//		double min = Double.MAX_VALUE;
-//		String name = null;
-//
-//		for (Entry<String, ArrayList<double[]>> entry : polarTemplates.entrySet()) {
-//
-//			ArrayList<double[]> vectors = entry.getValue();
-//
-//			if (vectors == null || vectors.size() == 0) {
-//				continue;
-//			}
-//
-//			double d = 0;
-//
-//			for (double[] v : vectors) {
-//			}
-//
-//			d /= vectors.size();
-//
-//			if (d < min) {
-//				min = d;
-//				name = entry.getKey();
-//			}
-//		}
-//
-//		return name;
-//	}
 
-//	public String recognizeClippedGesture(ClippedGesture clippedGesture) {
-//
-//		Gesture gesture = clippedGesture.forceToGesture();
-//
-//		double[] vector = gesture.resample(64);
-//		double[] center = Util.center(vector);
-//
-//
-//
-//		return null;
-//	}
 }

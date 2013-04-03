@@ -389,7 +389,11 @@ public class GestureCanvas extends Canvas {
         for (int partIndex = 0; partIndex < relatedParts.size(); ++partIndex) {
             Part part = relatedParts.get(partIndex);
 
-            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
+            gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW));
+
+            if (hoverPartIndex != -1) {
+                gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
+            }
 
             if (partIndex == hoverPartIndex) {
                 gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW));

@@ -13,7 +13,7 @@ public class Learner {
 
     public static int SEGMENTATION_ERROR = 1;
 
-    public static final double MAX_LOSS = Math.PI;
+    public static final double MAX_LOSS = distanceFromDotProduct(-1);
 
     private Learner() {
 
@@ -505,7 +505,8 @@ public class Learner {
 
                     } else {
 //                        double score = distanceToTemplateAligned(u.getFeatures(), vf);
-                        double score = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+//                        double score = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+                        double score = distanceFromDotProduct(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
 //                        if (GSMath.compareDouble(score, Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))))) != 0) {
 //                            System.out.println(score + " vs " + Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b)))));
 //                        }
@@ -540,6 +541,11 @@ public class Learner {
         }
 
         return loss[0][0];
+    }
+
+    private static double distanceFromDotProduct(double dot) {
+//        return 1 - dot;
+        return Math.acos(dot);
     }
 
     public static double findRepetitionGreedy2(
@@ -588,10 +594,10 @@ public class Learner {
                     double loss;
 
                     if (matches.size() < 2) {
-                        loss = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+                        loss = distanceFromDotProduct(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
                     } else {
                         double angle2 = matches.get(matches.size() - 1).getAlignedAngle() + da;
-                        loss = Math.acos(Math.min(1, Math.max(-1, a * Math.cos(angle2) + b * Math.sin(angle2))));
+                        loss = distanceFromDotProduct(Math.min(1, Math.max(-1, a * Math.cos(angle2) + b * Math.sin(angle2))));
                     }
 
                     if (GSMath.compareDouble(loss, minLoss) < 0) {
@@ -623,10 +629,10 @@ public class Learner {
 
                 double newLoss;
                 if (i < 2) {
-                    newLoss = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+                    newLoss = distanceFromDotProduct(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
                 } else {
                     double newAngle = matches.get(i - 1).getAlignedAngle() + da;
-                    newLoss = Math.acos(Math.min(1, Math.max(-1, a * Math.cos(newAngle) + b * Math.sin(newAngle))));
+                    newLoss = distanceFromDotProduct(Math.min(1, Math.max(-1, a * Math.cos(newAngle) + b * Math.sin(newAngle))));
                 }
 
                 int k = 0;
@@ -678,7 +684,7 @@ public class Learner {
 
             double a = abMap[from][to][0];
             double b = abMap[from][to][1];
-            double loss = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+            double loss = distanceFromDotProduct(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
 
             if (GSMath.compareDouble(loss, loss0) < 0) {
                 loss0 = loss;
@@ -702,7 +708,7 @@ public class Learner {
 
                 double a = abMap[from][to][0];
                 double b = abMap[from][to][1];
-                double loss = Math.acos(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
+                double loss = distanceFromDotProduct(Math.min(1, Math.max(-1, Math.sqrt(a * a + b * b))));
 
                 if (GSMath.compareDouble(loss, loss1) < 0) {
                     loss1 = loss;
@@ -733,7 +739,7 @@ public class Learner {
 
                     double a = abMap[from][to][0];
                     double b = abMap[from][to][1];
-                    double loss = Math.acos(Math.min(1, Math.max(-1, a * Math.cos(angle2) + b * Math.sin(angle2))));
+                    double loss = distanceFromDotProduct(Math.min(1, Math.max(-1, a * Math.cos(angle2) + b * Math.sin(angle2))));
 
                     if (GSMath.compareDouble(loss, loss2) < 0) {
                         loss2 = loss;
@@ -847,7 +853,7 @@ public class Learner {
                     double b = abMap[beginIndex + i][beginIndex + j][1];
 
                     double[] features = sampleFeaturesMap[beginIndex + i][beginIndex + j].getFeatures();
-                    double d = (Math.acos(Math.max(-1, Math.min(1, a * Math.cos(angle) + b * Math.sin(angle)))) + loss[j][k - 1] * (k - 1)) / k;
+                    double d = (distanceFromDotProduct(Math.max(-1, Math.min(1, a * Math.cos(angle) + b * Math.sin(angle)))) + loss[j][k - 1] * (k - 1)) / k;
 //                    double d = (distanceToTemplateAtAngle(template, features, angle) + loss[j][k - 1] * (k - 1)) / k;
 //
 //                    double dd = distanceToTemplateAtAngle(template, features, angle);
@@ -1060,7 +1066,7 @@ public class Learner {
             dot += features1[i] * xt + features1[i + 1] * yt;
         }
 
-        return Math.acos(Math.max(-1, Math.min(1, dot / l1 / l2)));
+        return distanceFromDotProduct(Math.max(-1, Math.min(1, dot / l1 / l2)));
 //        return (1 - Math.max(-1, Math.min(1, dot / l1 / l2)));
     }
 

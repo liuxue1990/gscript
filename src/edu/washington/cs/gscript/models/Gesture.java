@@ -178,6 +178,10 @@ public class Gesture implements Serializable, Iterable<XYT> {
                 USER_LABELED_BREAKS_CHANGED_NOTIFICATION, this);
     }
 
+    int getNumOfUserLabeledBreaks() {
+        return userLabeledBreaks.size();
+    }
+
     public Gesture normalize() {
         Gesture resampled = resample(1024);
 

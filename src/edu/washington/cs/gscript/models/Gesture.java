@@ -52,6 +52,10 @@ public class Gesture implements Serializable, Iterable<XYT> {
 
     private boolean synthesized;
 
+    private int lastResampledSamplingNumber = -1;
+
+    private Gesture resampled = null;
+
 	public Gesture(List<XYT> trajectory, boolean synthesized) {
         this(trajectory.toArray(new XYT[trajectory.size()]), synthesized);
 	}
@@ -206,6 +210,10 @@ public class Gesture implements Serializable, Iterable<XYT> {
     }
 
     public Gesture resample(int numOfSamples) {
+        if (numOfSamples == lastResampledSamplingNumber) {
+            return resampled;
+        }
+
         if (points.length < 2) {
             throw new RuntimeException("The original gesture has too few data points");
         }
@@ -243,7 +251,9 @@ public class Gesture implements Serializable, Iterable<XYT> {
             }
         }
 
-        return new Gesture(newPoints, synthesized);
+        lastResampledSamplingNumber = numOfSamples;
+        resampled = new Gesture(newPoints, synthesized);
+        return resampled;
     }
 
     public Gesture subGesture(int beginIndex, int endIndex) {

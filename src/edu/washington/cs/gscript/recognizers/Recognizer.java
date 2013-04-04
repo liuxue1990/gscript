@@ -126,7 +126,7 @@ public class Recognizer {
 
         svm_node[][] featureList = new svm_node[numOfTotalSamples][];
         for (int i = 0; i < numOfTotalSamples; ++i) {
-            featureList[i] = generateSVMFeatures(sampleList.get(i), project, null, -1, useAngle, useScale);
+            featureList[i] = generateSVMFeatures(sampleList.get(i), project, project, null, -1, useAngle, useScale);
         }
 
         double[] fMax = new double[featureList[0].length];
@@ -247,6 +247,13 @@ public class Recognizer {
         return accuracy;
     }
 
+    private static svm_print_interface svm_print_null = new svm_print_interface() {
+        @Override
+        public void print(String s) {
+
+        }
+    };
+
     private static svm_model train_svm_model(ArrayList<svm_node[]> xList, ArrayList<Double> yList, double[] fMin, double[] fMax, double lower, double upper) {
         computeScale(xList, fMin, fMax);
 
@@ -284,22 +291,23 @@ public class Recognizer {
 
         param.gamma = 1.0 / fMin.length;
 
+        svm.svm_set_print_string_function(svm_print_null);
+
         return svm.svm_train(problem, param);
     }
 
-    public void train(Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
-
+    public void train(Project project, Project projectForData, ReadWriteProperty<Integer> progress, int progressTotal) {
         this.project = project;
+        this.projectForData = projectForData;
 
         int currentProgress = progress.getValue();
 
         ArrayList<svm_node[]> xList = new ArrayList<svm_node[]>();
         ArrayList<Double> yList = new ArrayList<Double>();
 
-        int maxIndex = 0;
-        int numOfCategories = project.getNumOfCategories();
+        int numOfCategories = projectForData.getNumOfCategories();
         for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
-            Category category = project.getCategory(catIndex);
+            Category category = projectForData.getCategory(catIndex);
             int numOfSamples = category.getNumOfSamples();
 
             if (numOfSamples == 0) {
@@ -308,16 +316,9 @@ public class Recognizer {
 
             for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
                 Gesture sample = category.getSample(sampleIndex);
-                svm_node[] x = generateSVMFeatures(sample, project, null, -1, useRotationFeatures, useScaleFeatures);
-                maxIndex = x.length;
+                svm_node[] x = generateSVMFeatures(sample, project, projectForData, null, -1, useRotationFeatures, useScaleFeatures);
                 xList.add(x);
                 yList.add((double)catIndex);
-
-//                System.out.print(catIndex);
-//                for (int i = 0; i < x.length; ++i) {
-//                    System.out.print(" " + x[i].index + ":" + x[i].value);
-//                }
-//                System.out.println();
             }
 
             if (progress != null) {
@@ -335,6 +336,10 @@ public class Recognizer {
         if (progress != null) {
             progress.setValue(currentProgress + progressTotal);
         }
+    }
+
+    public void train(Project project, ReadWriteProperty<Integer> progress, int progressTotal) {
+        train(project, project, progress, progressTotal);
     }
 
     private static void updateProtractorFeatures(svm_node[] features, Gesture gesture, Project project, Map<Gesture, Integer> sampleFoldMap, int foldIndex) {
@@ -358,13 +363,13 @@ public class Recognizer {
         featureList.add(node);
     }
 
-    public static svm_node[] generateSVMFeatures(Gesture gesture, Project project, Map<Gesture, Integer> sampleFoldMap, int foldIndex, boolean useAngle, boolean useScale) {
+    public static svm_node[] generateSVMFeatures(Gesture gesture, Project project, Project projectForData, Map<Gesture, Integer> sampleFoldMap, int foldIndex, boolean useAngle, boolean useScale) {
         int numOfCategories = project.getNumOfCategories();
 
         ArrayList<svm_node> featureList = new ArrayList<svm_node>();
 
         for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
-            Category category = project.getCategory(catIndex);
+            Category category = projectForData.getCategory(catIndex);
 
             if (category.getNumOfSamples() == 0) {
                 continue;
@@ -374,11 +379,11 @@ public class Recognizer {
         }
 
         for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
-            Category category = project.getCategory(catIndex);
-
-            if (category.getNumOfSamples() == 0) {
+            if (projectForData.getCategory(catIndex).getNumOfSamples() == 0) {
                 continue;
             }
+
+            Category category = project.getCategory(catIndex);
 
             int numOfShapes = category.getNumOfShapes();
             if (numOfShapes <= 1 && !category.getShape(0).isRepeatable()) {
@@ -439,7 +444,7 @@ public class Recognizer {
         svm_node[] features = new svm_node[featureList.size()];
         featureList.toArray(features);
 
-        updateProtractorFeatures(features, gesture, project, sampleFoldMap, foldIndex);
+        updateProtractorFeatures(features, gesture, projectForData, sampleFoldMap, foldIndex);
 
         return features;
     }
@@ -482,6 +487,8 @@ public class Recognizer {
 
 
     private Project project;
+    private Project projectForData;
+
     private svm_model model;
 
     private double[] fMax;
@@ -496,10 +503,6 @@ public class Recognizer {
     public Recognizer() {
         useRotationFeatures = true;
         useScaleFeatures = true;
-    }
-
-    public Project getProject() {
-        return project;
     }
 
     private static void scale(svm_node[] x, double[] fMin, double[] fMax, double lower, double upper) {
@@ -531,7 +534,7 @@ public class Recognizer {
 
     public Category classify(Gesture gesture) {
         gesture = Project.upSamplingIfNeeded(gesture);
-        svm_node[] x = generateSVMFeatures(gesture, project, null, -1, useRotationFeatures, useScaleFeatures);
+        svm_node[] x = generateSVMFeatures(gesture, project, projectForData, null, -1, useRotationFeatures, useScaleFeatures);
         scale(x, fMin, fMax, lower, upper);
         int categoryIndex = (int) svm.svm_predict(model, x);
         return project.getCategory(categoryIndex);

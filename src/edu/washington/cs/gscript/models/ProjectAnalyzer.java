@@ -7,11 +7,20 @@ public class ProjectAnalyzer {
         System.out.println("# of categories : " + project.getNumOfCategories());
 
         int totalNumOfSamples = 0;
+        int totalNumOfSynthesis = 0;
         for (int categoryIndex = 0; categoryIndex < numOfCategories; ++categoryIndex) {
             Category category = project.getCategory(categoryIndex);
-            totalNumOfSamples += category.getNumOfSamples();
+            int numOfSamples = category.getNumOfSamples();
+            totalNumOfSamples += numOfSamples;
+            for (int sampleIndex = 0; sampleIndex < numOfSamples; ++sampleIndex) {
+                Gesture sample = category.getSample(sampleIndex);
+                if (sample.isSynthesized()) {
+                    ++totalNumOfSynthesis;
+                }
+            }
         }
         System.out.println("# of samples : " + totalNumOfSamples);
+        System.out.println("# of synthesized samples : " + totalNumOfSynthesis);
 
         int numOfScripts = 0;
         int numOfLinesInScripts = 0;

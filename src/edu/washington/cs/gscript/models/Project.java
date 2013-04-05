@@ -248,6 +248,12 @@ public class Project implements Serializable {
         setDirty(true);
     }
 
+    public void shuffleSamples(Category category) {
+        checkCategory(category);
+        category.shuffleSample();
+        setDirty(true);
+    }
+
     public void importCategories(Project project) {
         ArrayList<Category> modifiedCategories = new ArrayList<Category>();
         ArrayList<Category> addedCategories = new ArrayList<Category>();

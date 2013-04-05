@@ -231,6 +231,19 @@ public class MainViewModel {
         return matchesForSelectedSample;
     }
 
+    public void importProject(String fileName) {
+        try {
+            ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName));
+            Project prj = (Project)in.readObject();
+            in.close();
+            project.importCategories(prj);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void importOneDollarGestures(String dirName) {
         project.importCategories(OneDollarDataImporter.importDiretory(dirName));
     }

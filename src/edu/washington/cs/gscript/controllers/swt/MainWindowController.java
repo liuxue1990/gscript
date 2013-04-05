@@ -3,7 +3,7 @@ package edu.washington.cs.gscript.controllers.swt;
 import edu.washington.cs.gscript.controllers.MainViewModel;
 import edu.washington.cs.gscript.framework.ReadWriteProperty;
 import edu.washington.cs.gscript.framework.swt.NotificationObserverFromUI;
-import edu.washington.cs.gscript.models.Project;
+import edu.washington.cs.gscript.models.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.*;
@@ -13,9 +13,6 @@ import org.eclipse.swt.widgets.*;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
-import edu.washington.cs.gscript.models.Rect;
-import edu.washington.cs.gscript.models.Gesture;
-import edu.washington.cs.gscript.models.XYT;
 
 import java.io.IOException;
 
@@ -333,6 +330,8 @@ public class MainWindowController {
 
     private ButtonRefresh btnAnalyze;
 
+    private String lastPath = null;
+
 	public MainWindowController(Shell shell, MainViewModel mainViewModel) {
         this.shell = shell;
 		this.mainViewModel = mainViewModel;
@@ -497,6 +496,9 @@ public class MainWindowController {
 
         new MenuItem(fileMenu, SWT.SEPARATOR);
 
+        MenuItem fileImportProject = new MenuItem(fileMenu, SWT.PUSH);
+        fileImportProject.setText("Import project ...");
+
         MenuItem fileImportOneDollarData = new MenuItem(fileMenu, SWT.PUSH);
         fileImportOneDollarData.setText("Import $1 data...");
 
@@ -506,6 +508,16 @@ public class MainWindowController {
         MenuItem toolTestRecognizer = new MenuItem(toolMenu, SWT.PUSH);
         toolTestRecognizer.setText("Test recognizer...");
         toolTestRecognizer.setAccelerator(SWT.MOD1 + 'T');
+
+        MenuItem toolShuffle = new MenuItem(toolMenu, SWT.PUSH);
+        toolShuffle.setText("Shuffle samples");
+
+        toolShuffle.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                mainViewModel.getProject().shuffleSamples(mainViewModel.getSelectedCategory());
+            }
+        });
 
         fileNewItem.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -532,6 +544,13 @@ public class MainWindowController {
             @Override
             public void widgetSelected(SelectionEvent e) {
                 onUserActionSaveAs();
+            }
+        });
+
+        fileImportProject.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                onUserActionImportProject();
             }
         });
 
@@ -569,6 +588,14 @@ public class MainWindowController {
 		shell.setMenuBar(mainMenu);
 	}
 
+    private String getCurrentPath() {
+        if (lastPath == null) {
+            return ".";
+        }
+
+        return lastPath;
+    }
+
     private void onUserActionNew() {
         if (!confirmCloseProject()) {
             return;
@@ -581,9 +608,10 @@ public class MainWindowController {
             return;
         }
         FileDialog dialog = new FileDialog(shell, SWT.OPEN);
-        dialog.setFilterPath("~/Desktop");
+        dialog.setFilterPath(getCurrentPath());
         String fileName = dialog.open();
         if (fileName != null) {
+            lastPath = fileName.substring(0, fileName.lastIndexOf("/"));
             try {
                 mainViewModel.openProject(fileName);
             } catch (IOException e) {
@@ -618,10 +646,29 @@ public class MainWindowController {
     private void onUserActionSaveAs() {
         FileDialog dialog = new FileDialog(shell, SWT.SAVE);
         dialog.setOverwrite(true);
-        dialog.setFilterPath("~/Desktop");
+        dialog.setFilterPath(getCurrentPath());
         String fileName = dialog.open();
         if (fileName != null) {
+            lastPath = fileName.substring(0, fileName.lastIndexOf("/"));
             doSave(fileName);
+        }
+    }
+
+    private void onUserActionImportProject() {
+        FileDialog dialog = new FileDialog(shell, SWT.OPEN);
+        dialog.setFilterPath(getCurrentPath());
+        String fileName = dialog.open();
+        if (fileName != null) {
+            lastPath = fileName.substring(0, fileName.lastIndexOf("/"));
+
+//            for (int catIndex = 0, numOfCats = mainViewModel.getProject().getNumOfCategories(); catIndex < numOfCats; ++catIndex) {
+//
+//                Category cat = mainViewModel.getProject().getCategory(catIndex);
+//                while (cat.getNumOfSamples() > 0) {
+//                    mainViewModel.getProject().removeSample(cat, cat.getSample(0));
+//                }
+//            }
+            mainViewModel.importProject(fileName);
         }
     }
 
@@ -631,6 +678,7 @@ public class MainWindowController {
         String dirName = dialog.open();
 
         if (dirName != null) {
+            lastPath = dirName;
             mainViewModel.importOneDollarGestures(dirName);
         }
     }

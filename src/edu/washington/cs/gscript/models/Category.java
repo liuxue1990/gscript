@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.Property;
@@ -147,6 +148,12 @@ public class Category implements Serializable {
 		NotificationCenter.getDefaultCenter().postNotification(
 				NotificationCenter.ITEMS_REMOVED_NOTIFICATION, samplesProperty, Arrays.asList(gesture));
 	}
+
+    void shuffleSample() {
+        Collections.shuffle(samples);
+        NotificationCenter.getDefaultCenter().postNotification(
+                NotificationCenter.ITEMS_ADDED_NOTIFICATION, samplesProperty, Arrays.asList());
+    }
 
     void setShapes(ArrayList<ShapeSpec> shapes) {
         this.shapes = new ArrayList<ShapeSpec>(shapes);

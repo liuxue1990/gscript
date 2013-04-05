@@ -92,7 +92,8 @@ public class Recognizer {
 
         int numOfFolds = 10;
 
-        Random random = new Random(2951);
+//        Random random = new Random(2951);
+        Random random = new Random();
         ArrayList<Double> yList = new ArrayList<Double>();
         ArrayList<Gesture> sampleList = new ArrayList<Gesture>();
         Map<Gesture, Integer> sampleFoldMap = new HashMap<Gesture, Integer>();
@@ -355,6 +356,41 @@ public class Recognizer {
             features[fId++].value = minDistance(gesture, category, sampleFoldMap, foldIndex) / Learner.MAX_LOSS;
         }
     }
+
+//    private static void updateProtractorFeatures(svm_node[] features, Gesture gesture, Project project, Map<Gesture, Integer> sampleFoldMap, int foldIndex) {
+//        int fId = 0;
+//
+//        double minDistance = Double.POSITIVE_INFINITY;
+//        int best = -1;
+//
+//        int numOfCategories = project.getNumOfCategories();
+//        for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
+//            Category category = project.getCategory(catIndex);
+//
+//            if (category.getNumOfSamples() == 0) {
+//                continue;
+//            }
+//
+//            double d = minDistance(gesture, category, sampleFoldMap, foldIndex) / Learner.MAX_LOSS;
+//            if (d < minDistance) {
+//                minDistance = d;
+//                best = catIndex;
+//            }
+//        }
+//        for (int catIndex = 0; catIndex < numOfCategories; ++catIndex) {
+//            Category category = project.getCategory(catIndex);
+//
+//            if (category.getNumOfSamples() == 0) {
+//                continue;
+//            }
+//
+//            if (catIndex == best) {
+//                features[fId++].value = 0;
+//            } else {
+//                features[fId++].value = 1;
+//            }
+//        }
+//    }
 
     private static void addToFeatureList(double value, ArrayList<svm_node> featureList) {
         svm_node node = new svm_node();

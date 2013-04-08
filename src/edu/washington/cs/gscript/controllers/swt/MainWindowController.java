@@ -14,6 +14,7 @@ import org.eclipse.swt.widgets.*;
 import edu.washington.cs.gscript.framework.NotificationCenter;
 import edu.washington.cs.gscript.framework.NotificationObserver;
 
+import java.io.File;
 import java.io.IOException;
 
 public class MainWindowController {
@@ -611,7 +612,7 @@ public class MainWindowController {
         dialog.setFilterPath(getCurrentPath());
         String fileName = dialog.open();
         if (fileName != null) {
-            lastPath = fileName.substring(0, fileName.lastIndexOf("/"));
+            lastPath = fileName.substring(0, fileName.lastIndexOf(File.separator));
             try {
                 mainViewModel.openProject(fileName);
             } catch (IOException e) {
@@ -649,7 +650,7 @@ public class MainWindowController {
         dialog.setFilterPath(getCurrentPath());
         String fileName = dialog.open();
         if (fileName != null) {
-            lastPath = fileName.substring(0, fileName.lastIndexOf("/"));
+            lastPath = fileName.substring(0, fileName.lastIndexOf(File.separator));
             doSave(fileName);
         }
     }
@@ -659,7 +660,7 @@ public class MainWindowController {
         dialog.setFilterPath(getCurrentPath());
         String fileName = dialog.open();
         if (fileName != null) {
-            lastPath = fileName.substring(0, fileName.lastIndexOf("/"));
+            lastPath = fileName.substring(0, fileName.lastIndexOf(File.separator));
 
 //            for (int catIndex = 0, numOfCats = mainViewModel.getProject().getNumOfCategories(); catIndex < numOfCats; ++catIndex) {
 //
@@ -674,7 +675,7 @@ public class MainWindowController {
 
     private void onUserActionImportOneDollarData() {
         DirectoryDialog dialog = new DirectoryDialog(shell);
-        dialog.setFilterPath("/Users/hlv/repos/gscript/data/one_dollar");
+        dialog.setFilterPath(new File("data" + File.separator + "one_dollar").getAbsolutePath());
         String dirName = dialog.open();
 
         if (dirName != null) {

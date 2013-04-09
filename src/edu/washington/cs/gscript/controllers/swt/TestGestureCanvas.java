@@ -34,7 +34,7 @@ public class TestGestureCanvas extends Canvas {
     private Map<String, Object> paramMap;
 
     public TestGestureCanvas(Composite parent, MainViewModel viewModel) {
-        super(parent, SWT.BACKGROUND);
+        super(parent, SWT.DOUBLE_BUFFERED | SWT.BACKGROUND);
         setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE));
 
         this.mainViewModel = viewModel;

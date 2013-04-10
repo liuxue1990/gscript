@@ -236,9 +236,7 @@ public class Recognizer {
                 Category[] cats = new Category[n];
                 for (int i = 0; i < n; ++i) {
                     cats[i] = project.getCategory(ids.get(i));
-                    System.out.print(row[ids.get(i)] + "  ");
                 }
-                System.out.println();
 
                 recallMap.put(category, new RecognitionInfo(recall, cats));
             }

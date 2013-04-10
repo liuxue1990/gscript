@@ -40,7 +40,16 @@ public class SampleScrolledList extends ScrolledList {
 				},
 				MainViewModel.CATEGORY_SELECTED_NOTIFICATION, mainViewModel);
 
-		NotificationCenter.getDefaultCenter().addObserver(
+        NotificationCenter.getDefaultCenter().addObserver(
+                new NotificationObserverFromUI(this) {
+                    @Override
+                    public void onUINotified(Object arg) {
+                        reloadData();
+                    }
+                },
+                MainViewModel.RECOGNITION_CHANGED_NOTIFICATION, mainViewModel);
+
+        NotificationCenter.getDefaultCenter().addObserver(
 				new NotificationObserverFromUI(this) {
 					@Override
 					public void onUINotified(Object arg) {

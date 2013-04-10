@@ -45,9 +45,11 @@ public class MainViewModel {
 
     private Recognizer recognizer;
 
-    private transient ReadWriteProperty<Double> accuracyProperty;
+    private ReadWriteProperty<Double> accuracyProperty;
 
-    private transient Map<Category, Recognizer.RecognitionInfo> recallMap;
+    private Map<Category, Recognizer.RecognitionInfo> recallMap;
+
+    private Map<Gesture, Category> crossValidationMap;
 
     private NotificationObserver partsObserver = new NotificationObserver() {
         @Override
@@ -60,6 +62,7 @@ public class MainViewModel {
         selectedSynthesizedSamples = new ArrayList<SynthesizedGestureSample>();
         accuracyProperty = new ReadWriteProperty<Double>(null);
         recallMap = new HashMap<Category, Recognizer.RecognitionInfo>();
+        crossValidationMap = new HashMap<Gesture, Category>();
 	}
 
 	public Project getProject() {
@@ -88,8 +91,10 @@ public class MainViewModel {
 
     private void setProject(Project project) {
         this.project = project;
+
         accuracyProperty.setValue(null);
-        recallMap.clear();;
+        recallMap.clear();
+        crossValidationMap.clear();
 
         NotificationCenter.getDefaultCenter().postNotification(RECOGNITION_CHANGED_NOTIFICATION, this);
     }
@@ -301,7 +306,8 @@ public class MainViewModel {
         try {
             getProject().learnProject(progress, 30);
             recallMap.clear();
-            accuracyProperty.setValue(Recognizer.crossValidation(project, recallMap, true, true, progress, 69));
+            crossValidationMap.clear();
+            accuracyProperty.setValue(Recognizer.crossValidation(project, recallMap, crossValidationMap, true, true, progress, 69));
             project.setChangedSinceTraining(false);
         } catch (Exception e) {
         }
@@ -367,5 +373,13 @@ public class MainViewModel {
         }
 
         return recallMap.get(category);
+    }
+
+    public Category getRecognizedClass(Gesture gesture) {
+        if (crossValidationMap == null) {
+            return null;
+        }
+
+        return crossValidationMap.get(gesture);
     }
 }

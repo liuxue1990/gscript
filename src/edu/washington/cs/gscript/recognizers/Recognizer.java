@@ -82,7 +82,8 @@ public class Recognizer {
     }
 
     public static double crossValidation(
-            Project project, Map<Category, RecognitionInfo> recallMap, boolean useAngle, boolean useScale, ReadWriteProperty<Integer> progress, int progressTotal) {
+            Project project, Map<Category, RecognitionInfo> recallMap, Map<Gesture, Category> resultMap,
+            boolean useAngle, boolean useScale, ReadWriteProperty<Integer> progress, int progressTotal) {
 
         int currentProgress = 0;
 
@@ -179,6 +180,10 @@ public class Recognizer {
                 }
                 scale(features, fMin, fMax, lower, upper);
                 results[i] = svm.svm_predict(model, features);
+
+                if (resultMap != null) {
+                    resultMap.put(sample, project.getCategory((int)results[i]));
+                }
             }
 
             if (progress != null) {

@@ -21,7 +21,7 @@ import java.util.LinkedList;
 }
 
 prog returns [LinkedList<ShapeSpec> shapeList]
-    : exprs EOF! {$shapeList = $exprs.shapeList;}
+    : exprs EOF {$shapeList = $exprs.shapeList;}
     ;
 
 exprs returns [LinkedList<ShapeSpec> shapeList]

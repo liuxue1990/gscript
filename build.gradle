@@ -1,0 +1,19 @@
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.1'
+  }
+}
+
+allprojects {
+  repositories {
+    jcenter()
+  }
+}
+
+subprojects {
+  version = rootProject.version
+  buildDir = new File(rootProject.buildDir, it.name)
+}

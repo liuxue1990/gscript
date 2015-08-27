@@ -22,8 +22,9 @@ dependencies {
   }
 }
 
-mainClassName = 'package edu.washington.cs.gscript.controllers.swt.Main'
+mainClassName = 'edu.washington.cs.gscript.controllers.swt.Main'
 
 run {
   systemProperty "java.util.logging.config.file", file("logging.properties")
+  jvmArgs '-XstartOnFirstThread'
 }
